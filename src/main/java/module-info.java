@@ -9,4 +9,6 @@ module com.carnetentretien.carnetentretien {
 
     opens com.carnetentretien.carnetentretien to javafx.fxml;
     exports com.carnetentretien.carnetentretien;
+
+    opens com.carnetentretien.carnetentretien.controller to javafx.fxml;
 }
