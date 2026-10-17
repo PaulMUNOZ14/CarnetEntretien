@@ -1,11 +1,11 @@
 module com.carnetentretien.carnetentretien {
     requires javafx.controls;
     requires javafx.fxml;
-    requires javafx.web;
 
     requires org.controlsfx.controls;
     requires org.kordamp.ikonli.javafx;
-    requires eu.hansolo.tilesfx;
+    requires org.kordamp.ikonli.core;
+    requires java.sql;
 
     opens com.carnetentretien.carnetentretien to javafx.fxml;
     exports com.carnetentretien.carnetentretien;
