@@ -61,15 +61,21 @@
     </top>
 
     <center>
-      <VBox spacing="15.0" styleClass="card">
-        <HBox alignment="CENTER_LEFT" spacing="10.0">
-          <Label styleClass="section-title" text="Historique des opérations" HBox.hgrow="ALWAYS" />
-          <Region HBox.hgrow="ALWAYS" />
-          <Button onAction="#modifierEntretienSelectionne" styleClass="btn, btn-edit" text="✎ Modifier Intervention" />
-          <Button onAction="#supprimerEntretienSelectionne" styleClass="btn, btn-delete" text="✖ Supprimer Intervention" />
-        </HBox>
+      <VBox spacing="15.0">
+        <VBox spacing="10.0" styleClass="card">
+          <Label styleClass="section-title" text="État de santé du véhicule" />
+          <VBox fx:id="conteneurJauges" spacing="12.0" />
+        </VBox>
 
-        <ListView fx:id="listeEntretiensUI" VBox.vgrow="ALWAYS" />
+        <VBox spacing="15.0" styleClass="card" VBox.vgrow="ALWAYS">
+          <HBox alignment="CENTER_LEFT" spacing="10.0">
+            <Label styleClass="section-title" text="Historique des opérations" HBox.hgrow="ALWAYS" />
+            <Region HBox.hgrow="ALWAYS" />
+            <Button onAction="#modifierEntretienSelectionne" styleClass="btn, btn-edit" text="✎ Modifier" />
+            <Button onAction="#supprimerEntretienSelectionne" styleClass="btn, btn-delete" text="✖ Supprimer" />
+          </HBox>
+          <ListView fx:id="listeEntretiensUI" VBox.vgrow="ALWAYS" />
+        </VBox>
       </VBox>
     </center>
 

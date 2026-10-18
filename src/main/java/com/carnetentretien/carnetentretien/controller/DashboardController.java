@@ -15,7 +15,9 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import com.carnetentretien.carnetentretien.service.CalculateurEntretien;
 
+import java.util.List;
 import java.util.Optional;
 
 public class DashboardController {
@@ -33,6 +35,7 @@ public class DashboardController {
     @FXML private DatePicker champDate;
     @FXML private TextField champKmRealisation;
     @FXML private TextField champCout;
+    @FXML private VBox conteneurJauges;
 
     private Vehicule vehiculeSelectionne = null;
     private Entretien entretienSelectionne = null;
@@ -63,9 +66,57 @@ public class DashboardController {
     private void afficherDetails(Vehicule v) {
         panneauDetails.setDisable(false);
         titreDetails.setText("Historique : " + v.getMarque() + " " + v.getModele());
-
+        
         ObservableList<Entretien> factures = FXCollections.observableArrayList(EntretienDB.getEntretiensPourVehicule(v.getId()));
         listeEntretiensUI.setItems(factures);
+
+        conteneurJauges.getChildren().clear();
+
+        List<Preconisation> regles = PreconisationDB.getToutesLesPreconisations();
+        List<CalculateurEntretien.Bilan> bilans = CalculateurEntretien.analyserEntretien(v, factures, regles);
+
+        if (bilans.isEmpty()) {
+            Label lblEmpty = new Label("Aucune règle de préconisation configurée.\nCliquez sur le bouton 'Règles' en haut à gauche.");
+            lblEmpty.setStyle("-fx-text-fill: #7f8c8d; -fx-font-style: italic;");
+            conteneurJauges.getChildren().add(lblEmpty);
+        } else {
+            for (CalculateurEntretien.Bilan bilan : bilans) {
+                Label lblTitre = new Label(bilan.piece.toUpperCase() + " : " + bilan.statut);
+                lblTitre.setStyle("-fx-font-weight: bold; -fx-font-size: 13px;");
+
+                ProgressBar jauge = new ProgressBar();
+                jauge.setMaxWidth(Double.MAX_VALUE);
+
+                double pourcentagePourJauge = Math.min(bilan.pourcentage / 100.0, 1.0);
+                String couleurDominante = "#2ecc71";
+
+                if (bilan.pourcentage == 0) {
+                    jauge.setProgress(0);
+                    couleurDominante = "#95a5a6";
+                } else {
+                    jauge.setProgress(pourcentagePourJauge);
+                    if (bilan.pourcentage >= 100) { couleurDominante = "#e74c3c"; }
+                    else if (bilan.pourcentage >= 80) { couleurDominante = "#f39c12"; }
+                }
+
+                jauge.setStyle("-fx-accent: " + couleurDominante + ";");
+                lblTitre.setStyle("-fx-text-fill: " + couleurDominante + "; -fx-font-weight: bold;");
+
+                String[] detailsDecoupes = bilan.details.split("\n");
+
+                Label lblPrediction = new Label("📅 " + detailsDecoupes[0]);
+                String couleurTextePrevi = bilan.pourcentage >= 100 ? "#e74c3c" : "#2c3e50";
+                lblPrediction.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: " + couleurTextePrevi + "; -fx-padding: 3 0 0 0;");
+
+                Label lblHistorique = new Label(detailsDecoupes.length > 1 ? "   └ " + detailsDecoupes[1] : "");
+                lblHistorique.setStyle("-fx-font-size: 12px; -fx-text-fill: #95a5a6; -fx-font-style: italic;");
+
+                VBox blocJauge = new VBox(4, lblTitre, jauge, lblPrediction, lblHistorique);
+                blocJauge.setStyle("-fx-padding: 0 0 15 0;");
+
+                conteneurJauges.getChildren().add(blocJauge);
+            }
+        }
     }
 
     @FXML

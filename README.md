@@ -28,12 +28,12 @@ Ce projet propose un outil pour toute personne souhaitant suivre sérieusement l
 - [x] Gestion des entretiens réalisés (historique)
 - [x] Formulaire de modification/suppression de véhicule
 - [x] Gestion des préconisations constructeur (intervalles km/mois)
+- [x] Tableau de bord avec jauges d'usure (ProgressIndicator + CSS)
+- [x] Alertes visuelles (À prévoir / Urgent)
+- [x] Algorithme de prédiction des échéances (extrapolation du kilométrage)
 
 ### En cours / À venir
 
-- [ ] Algorithme de prédiction des échéances (extrapolation du kilométrage)
-- [ ] Tableau de bord avec jauges d'usure (ProgressIndicator + CSS)
-- [ ] Alertes visuelles (À prévoir / Urgent)
 - [ ] Export des données en SVG, XSLX...
 - [ ] Export en installeur autonome (via `jpackage`)
 
@@ -100,11 +100,13 @@ CarnetEntretien/
     │   │   │   ├── EntretienDB.java        # Gestionnaire de l'entretien dans la BDD
     │   │   │   ├── PreconisationDB.java    # Gestionnaire des préconisations dans la BDD
     │   │   │   └── VehiculeDB.java         # Gestionnaire des vehicules dans la BDD
-    │   │   └── controller/                 # Contrôleurs FXML
-    │   │       └── DashboardController     # Contrôleur du tableau de bord
+    │   │   ├── controller/                 # Contrôleurs FXML
+    │   │   │   └── DashboardController     # Contrôleur du tableau de bord
+    │   │   └── service/                    # Logique métier
+    │   │       └── CalculateurEntretien    # Classe qui détermine quand prévoir un entretien
     │   ├── resources/com/carnetentretien/carnetentretien/
-    │   │   ├── style.css                   # css
-    │   │   └── hello-view.fxml             # fxml
+    │   │   ├── style.css                   # Styles globaux
+    │   │   └── hello-view.fxml             # Interface principale
     │   └── module-info.java
     └── test/java/                          # Tests unitaires JUnit
 ```
