@@ -20,7 +20,11 @@
 
   <VBox minWidth="350.0" prefWidth="350.0" spacing="20.0" styleClass="sidebar">
 
-    <Label styleClass="header-title" text="Mon Garage" />
+    <HBox alignment="CENTER_LEFT" spacing="10.0">
+      <Label styleClass="header-title" text="Mon Garage" HBox.hgrow="ALWAYS" />
+      <Region HBox.hgrow="ALWAYS" />
+      <Button onAction="#ouvrirParametresPreconisations" style="-fx-font-size: 12px; -fx-padding: 5 10;" styleClass="btn, btn-edit" text="Règles" />
+    </HBox>
 
     <ListView fx:id="listeVehiculesUI" VBox.vgrow="ALWAYS" />
 

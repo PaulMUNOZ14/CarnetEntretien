@@ -27,10 +27,10 @@ Ce projet propose un outil pour toute personne souhaitant suivre sérieusement l
 - [x] Persistance des données
 - [x] Gestion des entretiens réalisés (historique)
 - [x] Formulaire de modification/suppression de véhicule
+- [x] Gestion des préconisations constructeur (intervalles km/mois)
 
 ### En cours / À venir
 
-- [ ] Gestion des préconisations constructeur (intervalles km/mois)
 - [ ] Algorithme de prédiction des échéances (extrapolation du kilométrage)
 - [ ] Tableau de bord avec jauges d'usure (ProgressIndicator + CSS)
 - [ ] Alertes visuelles (À prévoir / Urgent)
@@ -93,14 +93,17 @@ CarnetEntretien/
     │   │   ├── Launcher.java               # Lanceur de l'application
     │   │   ├── model/                      # Objets métier (Vehicule, Entretien...)
     │   │   │   ├── Entretien.java          # Objet Entretien
+    │   │   │   ├── Preconisation.java      # Objet Preconisation
     │   │   │   └── Vehicule.java           # Objet Vehicule
     │   │   ├── db/                         # Accès base de données (DatabaseManager, VehiculeDB...)
     │   │   │   ├── DatabaseManager.java    # Gestionnaire de la base de données
     │   │   │   ├── EntretienDB.java        # Gestionnaire de l'entretien dans la BDD
+    │   │   │   ├── PreconisationDB.java    # Gestionnaire des préconisations dans la BDD
     │   │   │   └── VehiculeDB.java         # Gestionnaire des vehicules dans la BDD
     │   │   └── controller/                 # Contrôleurs FXML
     │   │       └── DashboardController     # Contrôleur du tableau de bord
     │   ├── resources/com/carnetentretien/carnetentretien/
+    │   │   ├── style.css                   # css
     │   │   └── hello-view.fxml             # fxml
     │   └── module-info.java
     └── test/java/                          # Tests unitaires JUnit
@@ -129,9 +132,14 @@ CarnetEntretien/
 | `kilometrage_realisation` | INTEGER | Kilométrage du véhicule au moment de l'opération |
 | `cout` | REAL | cout de l'opération |
 
-### Tables prévues (à venir)
+### Tables `Preconisation`
 
-- `Preconisation` : plan d'entretien constructeur (intervalle km/mois)
+| Colonne | Type | Description |
+|---------|------|-------------|
+| `id` | INTEGER PK | Identifiant unique |
+| `type_operation` | TEXT | Type d'opération |
+| `intervalle_km` | INTEGER | Intervalle en kilomètres |
+| `intervalle_mois` | INTEGER | Intervalle en mois|
 
 ## Principe de la prédiction
 

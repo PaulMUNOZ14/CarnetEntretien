@@ -11,7 +11,10 @@
 
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-<junit.version>5.12.1</junit.version>  </properties>
+    <junit.version>5.12.1</junit.version>
+    <maven.compiler.source>21</maven.compiler.source>
+    <maven.compiler.target>21</maven.compiler.target>
+  </properties>
 
   <dependencies>
     <dependency>
@@ -43,6 +46,11 @@
       <artifactId>junit-jupiter-api</artifactId>
       <version>${junit.version}</version>
       <scope>test</scope>
+    </dependency>
+    <dependency>
+      <groupId>org.slf4j</groupId>
+      <artifactId>slf4j-simple</artifactId>
+      <version>1.7.36</version>
     </dependency>
     <dependency>
       <groupId>org.junit.jupiter</groupId>

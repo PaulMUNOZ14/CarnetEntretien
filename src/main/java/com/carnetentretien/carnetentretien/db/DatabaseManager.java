@@ -38,10 +38,18 @@ public class DatabaseManager {
                 + " FOREIGN KEY (vehicule_id) REFERENCES Vehicule(id)\n"
                 + ");";
 
+        String sqlPreconisation = "CREATE TABLE IF NOT EXISTS Preconisation (\n"
+                + " id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
+                + " type_operation TEXT NOT NULL,\n"
+                + " intervalle_km INTEGER NOT NULL,\n"
+                + " intervalle_mois INTEGER NOT NULL\n"
+                + ");";
+
         try (Connection conn = connect();
              Statement stmt = conn.createStatement()) {
             stmt.execute(sqlVehicule);
             stmt.execute(sqlEntretien);
+            stmt.execute(sqlPreconisation);
             System.out.println("Base de données initialisée avec succès.");
         } catch (SQLException e) {
             System.out.println("Erreur lors de la création de la table : " + e.getMessage());
