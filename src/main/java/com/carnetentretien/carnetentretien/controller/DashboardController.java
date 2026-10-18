@@ -7,13 +7,12 @@ import com.carnetentretien.carnetentretien.model.Vehicule;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
-import javafx.scene.control.*;
-import javafx.scene.layout.VBox;
 import javafx.geometry.Insets;
-import javafx.scene.control.ButtonBar;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Dialog;
+import javafx.scene.control.*;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
+
+import java.util.Optional;
 
 public class DashboardController {
 
@@ -22,7 +21,8 @@ public class DashboardController {
     @FXML private TextField champModele;
     @FXML private TextField champKmActuel;
     @FXML private TextField champKmAnnuel;
-    @FXML private VBox panneauDetails;
+
+    @FXML private BorderPane panneauDetails;
     @FXML private Label titreDetails;
     @FXML private ListView<Entretien> listeEntretiensUI;
     @FXML private TextField champOperation;
@@ -31,6 +31,7 @@ public class DashboardController {
     @FXML private TextField champCout;
 
     private Vehicule vehiculeSelectionne = null;
+    private Entretien entretienSelectionne = null;
 
     @FXML
     public void initialize() {
@@ -40,6 +41,12 @@ public class DashboardController {
             if (newSelection != null) {
                 vehiculeSelectionne = newSelection;
                 afficherDetails(vehiculeSelectionne);
+            }
+        });
+
+        listeEntretiensUI.getSelectionModel().selectedItemProperty().addListener((observable, oldSelection, newSelection) -> {
+            if (newSelection != null) {
+                entretienSelectionne = newSelection;
             }
         });
     }
@@ -93,14 +100,23 @@ public class DashboardController {
     @FXML
     public void supprimerVehiculeSelectionne() {
         if (vehiculeSelectionne != null) {
-            VehiculeDB.supprimerVehicule(vehiculeSelectionne.getId());
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Confirmer la suppression");
+            alert.setHeaderText("Supprimer le véhicule " + vehiculeSelectionne.getMarque() + " ?");
+            alert.setContentText("Toutes les factures et l'historique associés seront définitivement effacés.");
 
-            panneauDetails.setDisable(true);
-            titreDetails.setText("Sélectionnez un véhicule");
-            listeEntretiensUI.setItems(FXCollections.observableArrayList());
-            vehiculeSelectionne = null;
+            Optional<ButtonType> result = alert.showAndWait();
 
-            chargerVehicules();
+            if (result.isPresent() && result.get() == ButtonType.OK) {
+                VehiculeDB.supprimerVehicule(vehiculeSelectionne.getId());
+
+                panneauDetails.setDisable(true);
+                titreDetails.setText("Sélectionnez un véhicule");
+                listeEntretiensUI.setItems(FXCollections.observableArrayList());
+                vehiculeSelectionne = null;
+
+                chargerVehicules();
+            }
         }
     }
 
@@ -144,8 +160,71 @@ public class DashboardController {
             dialog.showAndWait().ifPresent(vehiculeModifie -> {
                 VehiculeDB.modifierVehicule(vehiculeModifie);
                 chargerVehicules();
-
                 afficherDetails(vehiculeModifie);
+            });
+        }
+    }
+
+    @FXML
+    public void supprimerEntretienSelectionne() {
+        if (entretienSelectionne != null && vehiculeSelectionne != null) {
+
+            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
+            alert.setTitle("Confirmer la suppression");
+            alert.setHeaderText("Supprimer cette opération ?");
+            alert.setContentText("Facture : " + entretienSelectionne.getTypeOperation() + " du " + entretienSelectionne.getDateRealisation());
+
+            Optional<ButtonType> result = alert.showAndWait();
+
+            if (result.isPresent() && result.get() == ButtonType.OK) {
+                EntretienDB.supprimerEntretien(entretienSelectionne.getId());
+                afficherDetails(vehiculeSelectionne);
+                entretienSelectionne = null;
+            }
+        }
+    }
+
+    @FXML
+    public void modifierEntretienSelectionne() {
+        if (entretienSelectionne != null && vehiculeSelectionne != null) {
+            Dialog<Entretien> dialog = new Dialog<>();
+            dialog.setTitle("Modifier l'entretien");
+            dialog.setHeaderText("Correction de : " + entretienSelectionne.getTypeOperation());
+
+            ButtonType btnSauvegarder = new ButtonType("Sauvegarder", ButtonBar.ButtonData.OK_DONE);
+            dialog.getDialogPane().getButtonTypes().addAll(btnSauvegarder, ButtonType.CANCEL);
+
+            GridPane grid = new GridPane();
+            grid.setHgap(10); grid.setVgap(10); grid.setPadding(new Insets(20, 20, 10, 10));
+
+            TextField editOperation = new TextField(entretienSelectionne.getTypeOperation());
+            DatePicker editDate = new DatePicker(entretienSelectionne.getDateRealisation());
+            TextField editKm = new TextField(String.valueOf(entretienSelectionne.getKilometrageRealisation()));
+            TextField editCout = new TextField(String.valueOf(entretienSelectionne.getCout()));
+
+            grid.add(new Label("Opération :"), 0, 0); grid.add(editOperation, 1, 0);
+            grid.add(new Label("Date :"), 0, 1); grid.add(editDate, 1, 1);
+            grid.add(new Label("Km :"), 0, 2); grid.add(editKm, 1, 2);
+            grid.add(new Label("Coût (€) :"), 0, 3); grid.add(editCout, 1, 3);
+
+            dialog.getDialogPane().setContent(grid);
+
+            dialog.setResultConverter(dialogButton -> {
+                if (dialogButton == btnSauvegarder) {
+                    try {
+                        return new Entretien(entretienSelectionne.getId(), vehiculeSelectionne.getId(),
+                                editOperation.getText(), editDate.getValue(),
+                                Integer.parseInt(editKm.getText()), Double.parseDouble(editCout.getText()));
+                    } catch (Exception e) {
+                        return null;
+                    }
+                }
+                return null;
+            });
+
+            dialog.showAndWait().ifPresent(entretienModifie -> {
+                EntretienDB.modifierEntretien(entretienModifie);
+                afficherDetails(vehiculeSelectionne);
             });
         }
     }

@@ -59,4 +59,37 @@ public class EntretienDB {
         }
         return liste;
     }
+
+    public static void modifierEntretien(Entretien entretien) {
+        String sql = "UPDATE Entretien_Fait SET type_operation = ?, date_realisation = ?, kilometrage_realisation = ?, cout = ? WHERE id = ?";
+
+        try (Connection conn = DatabaseManager.connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, entretien.getTypeOperation());
+            pstmt.setDate(2, Date.valueOf(entretien.getDateRealisation()));
+            pstmt.setInt(3, entretien.getKilometrageRealisation());
+            pstmt.setDouble(4, entretien.getCout());
+            pstmt.setInt(5, entretien.getId());
+
+            pstmt.executeUpdate();
+            System.out.println("Entretien mis à jour !");
+        } catch (SQLException e) {
+            System.out.println("Erreur de modification de l'entretien : " + e.getMessage());
+        }
+    }
+
+    public static void supprimerEntretien(int id) {
+        String sql = "DELETE FROM Entretien_Fait WHERE id = ?";
+
+        try (Connection conn = DatabaseManager.connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, id);
+            pstmt.executeUpdate();
+            System.out.println("Entretien supprimé !");
+        } catch (SQLException e) {
+            System.out.println("Erreur de suppression de l'entretien : " + e.getMessage());
+        }
+    }
 }

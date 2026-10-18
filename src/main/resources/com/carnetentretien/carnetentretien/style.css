@@ -1,0 +1,109 @@
+.root {
+    -fx-font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    -fx-background-color: #f4f6f8;
+}
+
+.sidebar {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #e1e4e8;
+    -fx-border-width: 0 1 0 0;
+    -fx-padding: 20;
+}
+
+.card {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-border-color: #e1e4e8;
+    -fx-padding: 20;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.05), 10, 0, 0, 4);
+}
+
+.header-title {
+    -fx-font-size: 24px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #2c3e50;
+}
+.section-title {
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #34495e;
+}
+
+.text-field, .date-picker, .btn {
+    -fx-pref-height: 38px;
+    -fx-min-height: 38px;
+    -fx-max-height: 38px;
+    -fx-font-size: 13px;
+    -fx-background-radius: 5;
+    -fx-border-radius: 5;
+}
+
+.text-field, .date-picker {
+    -fx-background-color: #f9fbfc;
+    -fx-border-color: #ced4da;
+    -fx-padding: 0 10;
+}
+
+.text-field:focused, .date-picker:focused {
+    -fx-border-color: #3498db;
+    -fx-background-color: #ffffff;
+}
+
+.date-picker .text-field {
+    -fx-pref-height: 36px;
+    -fx-min-height: 36px;
+    -fx-padding: 0 5;
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+
+.btn {
+    -fx-padding: 0 15;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+    -fx-alignment: center;
+}
+
+.btn-success {
+    -fx-background-color: #2ecc71;
+    -fx-text-fill: white;
+}
+.btn-success:hover { -fx-background-color: #27ae60; }
+
+.btn-primary {
+    -fx-background-color: #3498db;
+    -fx-text-fill: white;
+}
+.btn-primary:hover { -fx-background-color: #2980b9; }
+
+.btn-edit {
+    -fx-background-color: transparent;
+    -fx-border-color: #f39c12;
+    -fx-text-fill: #f39c12;
+}
+.btn-edit:hover { -fx-background-color: #f39c12; -fx-text-fill: white; }
+
+.btn-delete {
+    -fx-background-color: transparent;
+    -fx-border-color: #e74c3c;
+    -fx-text-fill: #e74c3c;
+}
+.btn-delete:hover { -fx-background-color: #e74c3c; -fx-text-fill: white; }
+
+.list-view {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+}
+.list-cell {
+    -fx-background-color: transparent;
+    -fx-padding: 12 10;
+    -fx-border-color: transparent transparent #ecf0f1 transparent;
+    -fx-font-size: 14px;
+}
+.list-cell:selected {
+    -fx-background-color: #ebf5fb;
+    -fx-text-fill: #2980b9;
+    -fx-font-weight: bold;
+    -fx-background-radius: 5;
+}

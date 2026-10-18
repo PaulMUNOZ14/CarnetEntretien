@@ -1,65 +1,90 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
+<?import java.net.URL?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ListView?>
-<?import javafx.scene.control.SplitPane?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
 <?import javafx.scene.layout.VBox?>
-<?import javafx.scene.text.Font?>
 
-<SplitPane dividerPositions="0.4" prefHeight="600.0" prefWidth="900.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.carnetentretien.carnetentretien.controller.DashboardController">
+<HBox prefHeight="700.0" prefWidth="1150.0" styleClass="root" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.carnetentretien.carnetentretien.controller.DashboardController">
 
-  <VBox spacing="15.0">
-    <padding><Insets bottom="15.0" left="15.0" right="15.0" top="15.0" /></padding>
-    <Label text="Mon Garage" textFill="#2c3e50">
-      <font><Font name="System Bold" size="20.0" /></font>
-    </Label>
+  <stylesheets>
+    <URL value="@style.css" />
+  </stylesheets>
+
+  <VBox minWidth="350.0" prefWidth="350.0" spacing="20.0" styleClass="sidebar">
+
+    <Label styleClass="header-title" text="Mon Garage" />
 
     <ListView fx:id="listeVehiculesUI" VBox.vgrow="ALWAYS" />
 
-    <VBox spacing="10.0" style="-fx-background-color: #f8f9fa; -fx-padding: 10; -fx-background-radius: 5;">
-      <Label text="Nouveau Véhicule" style="-fx-font-weight: bold;" />
-      <HBox spacing="5.0">
+    <VBox spacing="15.0" styleClass="card">
+      <Label styleClass="section-title" text="Nouveau véhicule" />
+      <HBox spacing="10.0">
         <TextField fx:id="champMarque" promptText="Marque" HBox.hgrow="ALWAYS" />
         <TextField fx:id="champModele" promptText="Modèle" HBox.hgrow="ALWAYS" />
       </HBox>
-      <HBox spacing="5.0">
+      <HBox spacing="10.0">
         <TextField fx:id="champKmActuel" promptText="Km Actuel" HBox.hgrow="ALWAYS" />
-        <TextField fx:id="champKmAnnuel" promptText="Km Annuel" HBox.hgrow="ALWAYS" />
+        <TextField fx:id="champKmAnnuel" promptText="Km / An" HBox.hgrow="ALWAYS" />
       </HBox>
-      <Button text="Ajouter Véhicule" onAction="#ajouterNouveauVehicule" maxWidth="Infinity" style="-fx-background-color: #27ae60; -fx-text-fill: white; -fx-font-weight: bold;" />
+      <Button maxWidth="Infinity" onAction="#ajouterNouveauVehicule" styleClass="btn, btn-success" text="+ Enregistrer le véhicule" />
     </VBox>
   </VBox>
 
-  <VBox fx:id="panneauDetails" spacing="15.0" disable="true">
-    <padding><Insets bottom="15.0" left="15.0" right="15.0" top="15.0" /></padding>
+  <BorderPane fx:id="panneauDetails" disable="true" HBox.hgrow="ALWAYS">
+    <padding>
+      <Insets bottom="30.0" left="40.0" right="40.0" top="30.0" />
+    </padding>
 
-    <HBox alignment="CENTER_LEFT" spacing="15.0">
-      <Label HBox.hgrow="ALWAYS" fx:id="titreDetails" maxWidth="Infinity" text="Sélectionnez un véhicule" textFill="#2980b9">
-        <font><Font name="System Bold" size="22.0"/></font>
-      </Label>
-      <Button onAction="#modifierVehiculeSelectionne" style="-fx-background-color: #f39c12; -fx-text-fill: white; -fx-font-weight: bold;" text="Modifier"/>
-      <Button onAction="#supprimerVehiculeSelectionne" style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold;" text="Supprimer"/>
-    </HBox>
+    <top>
+      <HBox alignment="CENTER_LEFT" spacing="15.0">
+        <padding><Insets bottom="20.0" /></padding>
 
-    <Label text="Historique des entretiens :" />
-    <ListView fx:id="listeEntretiensUI" VBox.vgrow="ALWAYS" />
+        <Label fx:id="titreDetails" styleClass="header-title" text="Sélectionnez un véhicule" HBox.hgrow="ALWAYS" />
 
-    <VBox spacing="10.0" style="-fx-background-color: #f8f9fa; -fx-padding: 10; -fx-background-radius: 5;">
-      <Label text="Ajouter une facture / opération" style="-fx-font-weight: bold;" />
-      <HBox spacing="5.0">
-        <TextField fx:id="champOperation" promptText="Opération (ex: Vidange)" HBox.hgrow="ALWAYS" />
-        <DatePicker fx:id="champDate" promptText="Date" HBox.hgrow="ALWAYS" />
+        <Region HBox.hgrow="ALWAYS" />
+
+        <Button onAction="#modifierVehiculeSelectionne" styleClass="btn, btn-edit" text="✎ Modifier Vehicule" />
+        <Button onAction="#supprimerVehiculeSelectionne" styleClass="btn, btn-delete" text="✖ Supprimer Vehicule" />
       </HBox>
-      <HBox spacing="5.0">
-        <TextField fx:id="champKmRealisation" promptText="Kilométrage" HBox.hgrow="ALWAYS" />
-        <TextField fx:id="champCout" promptText="Coût total (€)" HBox.hgrow="ALWAYS" />
-      </HBox>
-      <Button text="Ajouter l'entretien" onAction="#ajouterNouvelEntretien" maxWidth="Infinity" style="-fx-background-color: #2980b9; -fx-text-fill: white; -fx-font-weight: bold;" />
-    </VBox>
-  </VBox>
-</SplitPane>
+    </top>
+
+    <center>
+      <VBox spacing="15.0" styleClass="card">
+        <HBox alignment="CENTER_LEFT" spacing="10.0">
+          <Label styleClass="section-title" text="Historique des opérations" HBox.hgrow="ALWAYS" />
+          <Region HBox.hgrow="ALWAYS" />
+          <Button onAction="#modifierEntretienSelectionne" styleClass="btn, btn-edit" text="✎ Modifier Intervention" />
+          <Button onAction="#supprimerEntretienSelectionne" styleClass="btn, btn-delete" text="✖ Supprimer Intervention" />
+        </HBox>
+
+        <ListView fx:id="listeEntretiensUI" VBox.vgrow="ALWAYS" />
+      </VBox>
+    </center>
+
+    <bottom>
+      <VBox spacing="15.0" styleClass="card">
+        <BorderPane.margin><Insets top="20.0" /></BorderPane.margin>
+
+        <Label styleClass="section-title" text="Ajouter une facture / intervention" />
+
+        <HBox alignment="CENTER_LEFT" spacing="15.0">
+          <TextField fx:id="champOperation" promptText="Type d'opération (ex: Vidange)" HBox.hgrow="ALWAYS" />
+          <DatePicker fx:id="champDate" promptText="Date d'intervention" HBox.hgrow="ALWAYS" />
+          <TextField fx:id="champKmRealisation" promptText="Kilométrage" HBox.hgrow="ALWAYS" />
+          <TextField fx:id="champCout" promptText="Coût TTC (€)" HBox.hgrow="ALWAYS" />
+
+          <Button minWidth="150.0" onAction="#ajouterNouvelEntretien" styleClass="btn, btn-primary" text="+ Ajouter la facture" />
+        </HBox>
+      </VBox>
+    </bottom>
+  </BorderPane>
+
+</HBox>
