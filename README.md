@@ -36,7 +36,7 @@ Ce projet propose un outil pour toute personne souhaitant suivre sérieusement l
 - [ ] Alertes visuelles (À prévoir / Urgent)
 - [ ] Export en installeur autonome (via `jpackage`)
 
-## Stack technique
+## Fiche technique
 
 | Composant | Technologie |
 |-----------|-------------|
@@ -45,7 +45,7 @@ Ce projet propose un outil pour toute personne souhaitant suivre sérieusement l
 | Build | Maven |
 | Base de données | SQLite (via `sqlite-jdbc`) |
 | Icônes | Ikonli |
-| UI avancée | ControlsFX |
+| UI | ControlsFX |
 | Tests | JUnit 5 |
 
 ## Prérequis
