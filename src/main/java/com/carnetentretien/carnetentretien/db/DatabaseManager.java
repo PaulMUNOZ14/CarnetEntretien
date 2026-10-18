@@ -20,8 +20,7 @@ public class DatabaseManager {
     }
 
     public static void initDatabase() {
-        // Requête SQL pour créer la table Vehicule si elle n'existe pas
-        String sql = "CREATE TABLE IF NOT EXISTS Vehicule (\n"
+        String sqlVehicule = "CREATE TABLE IF NOT EXISTS Vehicule (\n"
                 + " id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
                 + " marque TEXT NOT NULL,\n"
                 + " modele TEXT NOT NULL,\n"
@@ -29,9 +28,20 @@ public class DatabaseManager {
                 + " kilometrage_annuel_estime INTEGER NOT NULL\n"
                 + ");";
 
+        String sqlEntretien = "CREATE TABLE IF NOT EXISTS Entretien_Fait (\n"
+                + " id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
+                + " vehicule_id INTEGER NOT NULL,\n"
+                + " type_operation TEXT NOT NULL,\n"
+                + " date_realisation DATE NOT NULL,\n"
+                + " kilometrage_realisation INTEGER NOT NULL,\n"
+                + " cout REAL NOT NULL,\n"
+                + " FOREIGN KEY (vehicule_id) REFERENCES Vehicule(id)\n"
+                + ");";
+
         try (Connection conn = connect();
              Statement stmt = conn.createStatement()) {
-            stmt.execute(sql);
+            stmt.execute(sqlVehicule);
+            stmt.execute(sqlEntretien);
             System.out.println("Base de données initialisée avec succès.");
         } catch (SQLException e) {
             System.out.println("Erreur lors de la création de la table : " + e.getMessage());

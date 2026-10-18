@@ -25,11 +25,11 @@ Ce projet propose un outil pour toute personne souhaitant suivre sérieusement l
 - [x] Base de données SQLite locale
 - [x] Ajout et affichage des véhicules
 - [x] Persistance des données
+- [x] Gestion des entretiens réalisés (historique)
 
 ### En cours / À venir
 
 - [ ] Formulaire de modification/suppression de véhicule
-- [ ] Gestion des entretiens réalisés (historique)
 - [ ] Gestion des préconisations constructeur (intervalles km/mois)
 - [ ] Algorithme de prédiction des échéances (extrapolation du kilométrage)
 - [ ] Tableau de bord avec jauges d'usure (ProgressIndicator + CSS)
@@ -91,9 +91,11 @@ CarnetEntretien/
     │   │   ├── HelloApplication.java       # Point d'entrée JavaFX
     │   │   ├── Launcher.java               # Lanceur de l'application
     │   │   ├── model/                      # Objets métier (Vehicule, Entretien...)
+    │   │   │   ├── Entretien.java          # Objet Entretien
     │   │   │   └── Vehicule.java           # Objet Vehicule
     │   │   ├── db/                         # Accès base de données (DatabaseManager, VehiculeDB...)
     │   │   │   ├── DatabaseManager.java    # Gestionnaire de la base de données
+    │   │   │   ├── EntretienDB.java        # Gestionnaire de l'entretien dans la BDD
     │   │   │   └── VehiculeDB.java         # Gestionnaire des vehicules dans la BDD
     │   │   └── controller/                 # Contrôleurs FXML
     │   │       └── DashboardController     # Contrôleur du tableau de bord
@@ -115,9 +117,19 @@ CarnetEntretien/
 | `kilometrage_actuel` | INTEGER | Dernier kilométrage relevé |
 | `kilometrage_annuel_estime` | INTEGER | Estimation km/an |
 
+### Table `Entretien_Fait`
+
+| Colonne | Type | Description |
+|---------|------|-------------|
+| `id` | INTEGER PK | Identifiant unique |
+| `vehicule_id` | INTEGER | Identifiant du véhicule |
+| `type_operation` | TEXT | Type d'opération |
+| `date_realisation` | DATE | Date de réalisation |
+| `kilometrage_realisation` | INTEGER | Kilométrage du véhicule au moment de l'opération |
+| `cout` | REAL | cout de l'opération |
+
 ### Tables prévues (à venir)
 
-- `Entretien_Fait` : historique des interventions (type, date, km, coût, facture)
 - `Preconisation` : plan d'entretien constructeur (intervalle km/mois)
 
 ## Principe de la prédiction

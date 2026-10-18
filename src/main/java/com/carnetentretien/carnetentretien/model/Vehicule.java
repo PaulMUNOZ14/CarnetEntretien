@@ -30,4 +30,9 @@ public class Vehicule {
 
     public int getKilometrageAnnuelEstime() { return kilometrageAnnuelEstime; }
     public void setKilometrageAnnuelEstime(int kilometrageAnnuelEstime) { this.kilometrageAnnuelEstime = kilometrageAnnuelEstime; }
+
+    @Override
+    public String toString() {
+        return marque + " " + modele + " - " + kilometrageActuel + " km";
+    }
 }

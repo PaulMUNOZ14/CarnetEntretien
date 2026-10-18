@@ -1,8 +1,6 @@
 package com.carnetentretien.carnetentretien;
 
 import com.carnetentretien.carnetentretien.db.DatabaseManager;
-import com.carnetentretien.carnetentretien.db.VehiculeDB;
-import com.carnetentretien.carnetentretien.model.Vehicule;
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
