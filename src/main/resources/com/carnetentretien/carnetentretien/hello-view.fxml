@@ -38,9 +38,13 @@
   <VBox fx:id="panneauDetails" spacing="15.0" disable="true">
     <padding><Insets bottom="15.0" left="15.0" right="15.0" top="15.0" /></padding>
 
-    <Label fx:id="titreDetails" text="Sélectionnez un véhicule" textFill="#2980b9">
-      <font><Font name="System Bold" size="22.0" /></font>
-    </Label>
+    <HBox alignment="CENTER_LEFT" spacing="15.0">
+      <Label HBox.hgrow="ALWAYS" fx:id="titreDetails" maxWidth="Infinity" text="Sélectionnez un véhicule" textFill="#2980b9">
+        <font><Font name="System Bold" size="22.0"/></font>
+      </Label>
+      <Button onAction="#modifierVehiculeSelectionne" style="-fx-background-color: #f39c12; -fx-text-fill: white; -fx-font-weight: bold;" text="Modifier"/>
+      <Button onAction="#supprimerVehiculeSelectionne" style="-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-font-weight: bold;" text="Supprimer"/>
+    </HBox>
 
     <Label text="Historique des entretiens :" />
     <ListView fx:id="listeEntretiensUI" VBox.vgrow="ALWAYS" />

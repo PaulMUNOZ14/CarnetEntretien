@@ -26,14 +26,15 @@ Ce projet propose un outil pour toute personne souhaitant suivre sérieusement l
 - [x] Ajout et affichage des véhicules
 - [x] Persistance des données
 - [x] Gestion des entretiens réalisés (historique)
+- [x] Formulaire de modification/suppression de véhicule
 
 ### En cours / À venir
 
-- [ ] Formulaire de modification/suppression de véhicule
 - [ ] Gestion des préconisations constructeur (intervalles km/mois)
 - [ ] Algorithme de prédiction des échéances (extrapolation du kilométrage)
 - [ ] Tableau de bord avec jauges d'usure (ProgressIndicator + CSS)
 - [ ] Alertes visuelles (À prévoir / Urgent)
+- [ ] Export des données en SVG, XSLX...
 - [ ] Export en installeur autonome (via `jpackage`)
 
 ## Fiche technique

@@ -31,6 +31,45 @@ public class VehiculeDB {
         }
     }
 
+    public static void modifierVehicule(Vehicule vehicule) {
+        String sql = "UPDATE Vehicule SET marque = ?, modele = ?, kilometrage_actuel = ?, kilometrage_annuel_estime = ? WHERE id = ?";
+
+        try (Connection conn = DatabaseManager.connect();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setString(1, vehicule.getMarque());
+            pstmt.setString(2, vehicule.getModele());
+            pstmt.setInt(3, vehicule.getKilometrageActuel());
+            pstmt.setInt(4, vehicule.getKilometrageAnnuelEstime());
+            pstmt.setInt(5, vehicule.getId());
+
+            pstmt.executeUpdate();
+            System.out.println("Véhicule mis à jour !");
+        } catch (SQLException e) {
+            System.out.println("Erreur de modification : " + e.getMessage());
+        }
+    }
+
+    public static void supprimerVehicule(int id) {
+        String sqlEntretiens = "DELETE FROM Entretien_Fait WHERE vehicule_id = ?";
+        String sqlVehicule = "DELETE FROM Vehicule WHERE id = ?";
+
+        try (Connection conn = DatabaseManager.connect();
+             PreparedStatement pstmtEntretiens = conn.prepareStatement(sqlEntretiens);
+             PreparedStatement pstmtVehicule = conn.prepareStatement(sqlVehicule)) {
+
+            pstmtEntretiens.setInt(1, id);
+            pstmtEntretiens.executeUpdate();
+
+            pstmtVehicule.setInt(1, id);
+            pstmtVehicule.executeUpdate();
+
+            System.out.println("Véhicule et historique supprimés !");
+        } catch (SQLException e) {
+            System.out.println("Erreur de suppression : " + e.getMessage());
+        }
+    }
+
     public static List<Vehicule> getTousLesVehicules() {
         List<Vehicule> listeVehicules = new ArrayList<>();
         String sql = "SELECT * FROM Vehicule";
