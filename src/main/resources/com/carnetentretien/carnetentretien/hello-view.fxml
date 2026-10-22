@@ -3,99 +3,107 @@
 <?import java.net.URL?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
-<?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
-<?import javafx.scene.control.ListView?>
-<?import javafx.scene.control.TextField?>
-<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.FlowPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<HBox prefHeight="700.0" prefWidth="1150.0" styleClass="root" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.carnetentretien.carnetentretien.controller.DashboardController">
+<StackPane fx:id="racine" minHeight="650.0" minWidth="1000.0" prefHeight="750.0" prefWidth="1100.0" styleClass="root" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.carnetentretien.carnetentretien.controller.DashboardController">
 
   <stylesheets>
     <URL value="@style.css" />
   </stylesheets>
 
-  <VBox minWidth="350.0" prefWidth="350.0" spacing="20.0" styleClass="sidebar">
+  <!-- ===================== ÉCRAN 1 : ACCUEIL ===================== -->
+  <VBox fx:id="vueAccueil">
 
-    <HBox alignment="CENTER_LEFT" spacing="10.0">
-      <Label styleClass="header-title" text="Mon Garage" HBox.hgrow="ALWAYS" />
+    <HBox alignment="CENTER_LEFT" spacing="16.0" styleClass="entete">
+      <Label styleClass="titre-page" text="🚗  Mon carnet d'entretien" />
       <Region HBox.hgrow="ALWAYS" />
-      <Button onAction="#ouvrirParametresPreconisations" style="-fx-font-size: 12px; -fx-padding: 5 10;" styleClass="btn, btn-edit" text="Règles" />
+      <Button onAction="#ouvrirReglages" styleClass="btn, btn-discret" text="⚙  Réglages" />
     </HBox>
 
-    <ListView fx:id="listeVehiculesUI" VBox.vgrow="ALWAYS" />
+    <ScrollPane fitToWidth="true" styleClass="zone-defilement" VBox.vgrow="ALWAYS">
+      <VBox spacing="24.0">
+        <padding>
+          <Insets bottom="30.0" left="40.0" right="40.0" top="30.0" />
+        </padding>
 
-    <VBox spacing="15.0" styleClass="card">
-      <Label styleClass="section-title" text="Nouveau véhicule" />
-      <HBox spacing="10.0">
-        <TextField fx:id="champMarque" promptText="Marque" HBox.hgrow="ALWAYS" />
-        <TextField fx:id="champModele" promptText="Modèle" HBox.hgrow="ALWAYS" />
-      </HBox>
-      <HBox spacing="10.0">
-        <TextField fx:id="champKmActuel" promptText="Km Actuel" HBox.hgrow="ALWAYS" />
-        <TextField fx:id="champKmAnnuel" promptText="Km / An" HBox.hgrow="ALWAYS" />
-      </HBox>
-      <Button maxWidth="Infinity" onAction="#ajouterNouveauVehicule" styleClass="btn, btn-success" text="+ Enregistrer le véhicule" />
-    </VBox>
+        <Label styleClass="titre-section" text="Choisissez votre véhicule" />
+
+        <VBox fx:id="blocBienvenue" spacing="10.0" styleClass="carte-message">
+          <Label styleClass="carte-message-titre" text="👋  Bienvenue !" />
+          <Label styleClass="texte-doux" text="Commençons simplement : appuyez sur le grand bouton vert « Ajouter un véhicule » en bas de l'écran." wrapText="true" />
+        </VBox>
+
+        <FlowPane fx:id="conteneurVehicules" hgap="24.0" vgap="24.0" />
+      </VBox>
+    </ScrollPane>
+
+    <HBox alignment="CENTER" styleClass="barre-actions">
+      <Button onAction="#ajouterVehicule" styleClass="btn, btn-succes, btn-grand" text="➕  Ajouter un véhicule" />
+    </HBox>
   </VBox>
 
-  <BorderPane fx:id="panneauDetails" disable="true" HBox.hgrow="ALWAYS">
-    <padding>
-      <Insets bottom="30.0" left="40.0" right="40.0" top="30.0" />
-    </padding>
+  <!-- ===================== ÉCRAN 2 : UN VÉHICULE ===================== -->
+  <VBox fx:id="vueVehicule" managed="false" visible="false">
 
-    <top>
-      <HBox alignment="CENTER_LEFT" spacing="15.0">
-        <padding><Insets bottom="20.0" /></padding>
+    <HBox alignment="CENTER_LEFT" spacing="16.0" styleClass="entete">
+      <Button onAction="#retourAccueil" styleClass="btn, btn-secondaire" text="⬅  Retour à mes véhicules" />
+      <Region HBox.hgrow="ALWAYS" />
+      <Button onAction="#ouvrirReglages" styleClass="btn, btn-discret" text="⚙  Réglages" />
+    </HBox>
 
-        <Label fx:id="titreDetails" styleClass="header-title" text="Sélectionnez un véhicule" HBox.hgrow="ALWAYS" />
+    <ScrollPane fitToWidth="true" styleClass="zone-defilement" VBox.vgrow="ALWAYS">
+      <VBox spacing="22.0">
+        <padding>
+          <Insets bottom="30.0" left="40.0" right="40.0" top="26.0" />
+        </padding>
 
-        <Region HBox.hgrow="ALWAYS" />
-
-        <Button onAction="#modifierVehiculeSelectionne" styleClass="btn, btn-edit" text="✎ Modifier Vehicule" />
-        <Button onAction="#supprimerVehiculeSelectionne" styleClass="btn, btn-delete" text="✖ Supprimer Vehicule" />
-      </HBox>
-    </top>
-
-    <center>
-      <VBox spacing="15.0">
-        <VBox spacing="10.0" styleClass="card">
-          <Label styleClass="section-title" text="État de santé du véhicule" />
-          <VBox fx:id="conteneurJauges" spacing="12.0" />
+        <VBox spacing="4.0">
+          <Label fx:id="titreVehicule" styleClass="titre-page" wrapText="true" />
+          <Label fx:id="sousTitreVehicule" styleClass="texte-doux" wrapText="true" />
         </VBox>
 
-        <VBox spacing="15.0" styleClass="card" VBox.vgrow="ALWAYS">
-          <HBox alignment="CENTER_LEFT" spacing="10.0">
-            <Label styleClass="section-title" text="Historique des opérations" HBox.hgrow="ALWAYS" />
-            <Region HBox.hgrow="ALWAYS" />
-            <Button onAction="#modifierEntretienSelectionne" styleClass="btn, btn-edit" text="✎ Modifier" />
-            <Button onAction="#supprimerEntretienSelectionne" styleClass="btn, btn-delete" text="✖ Supprimer" />
-            <Button onAction="#exporterHistorique" styleClass="btn, btn-primary" text="📥 Exporter vers Excel" />
-          </HBox>
-          <ListView fx:id="listeEntretiensUI" VBox.vgrow="ALWAYS" />
-        </VBox>
-      </VBox>
-    </center>
-
-    <bottom>
-      <VBox spacing="15.0" styleClass="card">
-        <BorderPane.margin><Insets top="20.0" /></BorderPane.margin>
-
-        <Label styleClass="section-title" text="Ajouter une facture / intervention" />
-
-        <HBox alignment="CENTER_LEFT" spacing="15.0">
-          <TextField fx:id="champOperation" promptText="Type d'opération (ex: Vidange)" HBox.hgrow="ALWAYS" />
-          <DatePicker fx:id="champDate" promptText="Date d'intervention" HBox.hgrow="ALWAYS" />
-          <TextField fx:id="champKmRealisation" promptText="Kilométrage" HBox.hgrow="ALWAYS" />
-          <TextField fx:id="champCout" promptText="Coût TTC (€)" HBox.hgrow="ALWAYS" />
-
-          <Button minWidth="150.0" onAction="#ajouterNouvelEntretien" styleClass="btn, btn-primary" text="+ Ajouter la facture" />
+        <HBox spacing="12.0">
+          <Button onAction="#mettreAJourKilometrage" styleClass="btn, btn-primaire, btn-moyen" text="📍  Mettre à jour le kilométrage" />
+          <Button onAction="#modifierVehicule" styleClass="btn, btn-modif, btn-moyen" text="✏  Modifier" />
+          <Button onAction="#supprimerVehicule" styleClass="btn, btn-danger, btn-moyen" text="🗑  Supprimer" />
         </HBox>
-      </VBox>
-    </bottom>
-  </BorderPane>
 
-</HBox>
+        <HBox fx:id="bandeauEtat" alignment="CENTER_LEFT" styleClass="bandeau">
+          <Label fx:id="messageBandeau" maxWidth="Infinity" wrapText="true" HBox.hgrow="ALWAYS" />
+        </HBox>
+
+        <VBox spacing="6.0">
+          <Label styleClass="titre-section" text="Ce qu'il faut surveiller" />
+          <Label styleClass="texte-doux" text="Plus la barre est pleine, plus l'entretien approche." wrapText="true" />
+        </VBox>
+        <VBox fx:id="conteneurJauges" spacing="14.0" />
+
+        <HBox alignment="CENTER_LEFT" spacing="12.0">
+          <Label styleClass="titre-section" text="Ce qui a déjà été fait" />
+          <Region HBox.hgrow="ALWAYS" />
+          <Label fx:id="totalDepense" styleClass="texte-doux" />
+        </HBox>
+        <VBox fx:id="conteneurHistorique" spacing="10.0" />
+      </VBox>
+    </ScrollPane>
+
+    <HBox alignment="CENTER" spacing="16.0" styleClass="barre-actions">
+      <Button onAction="#ajouterEntretien" styleClass="btn, btn-succes, btn-grand" text="✔  J'ai fait un entretien" />
+      <Button onAction="#exporterHistorique" styleClass="btn, btn-secondaire, btn-grand" text="📥  Exporter en CSV" />
+    </HBox>
+  </VBox>
+
+  <!-- Message de confirmation (apparaît quelques secondes puis disparaît) -->
+  <Label fx:id="toast" mouseTransparent="true" styleClass="toast" visible="false" StackPane.alignment="BOTTOM_CENTER">
+    <StackPane.margin>
+      <Insets bottom="120.0" />
+    </StackPane.margin>
+  </Label>
+
+</StackPane>

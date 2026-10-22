@@ -6,380 +6,787 @@ import com.carnetentretien.carnetentretien.db.VehiculeDB;
 import com.carnetentretien.carnetentretien.model.Entretien;
 import com.carnetentretien.carnetentretien.model.Preconisation;
 import com.carnetentretien.carnetentretien.model.Vehicule;
+import com.carnetentretien.carnetentretien.service.CalculateurEntretien;
 import com.carnetentretien.carnetentretien.service.ExportService;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
+import javafx.animation.FadeTransition;
+import javafx.animation.PauseTransition;
+import javafx.animation.SequentialTransition;
+import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
-import javafx.scene.control.*;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.GridPane;
+import javafx.geometry.Pos;
+import javafx.scene.Node;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Button;
+import javafx.scene.control.ButtonBar;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.ContentDisplay;
+import javafx.scene.control.DatePicker;
+import javafx.scene.control.Dialog;
+import javafx.scene.control.Label;
+import javafx.scene.control.ProgressBar;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import com.carnetentretien.carnetentretien.service.CalculateurEntretien;
+import javafx.stage.Window;
+import javafx.util.Duration;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.FormatStyle;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
+import java.util.Locale;
+import java.util.function.Supplier;
 
 public class DashboardController {
 
-    @FXML private ListView<Vehicule> listeVehiculesUI;
-    @FXML private TextField champMarque;
-    @FXML private TextField champModele;
-    @FXML private TextField champKmActuel;
-    @FXML private TextField champKmAnnuel;
+    private static final String FEUILLE_STYLE = "/com/carnetentretien/carnetentretien/style.css";
+    private static final DateTimeFormatter FORMAT_DATE =
+            DateTimeFormatter.ofLocalizedDate(FormatStyle.LONG).withLocale(Locale.FRANCE);
 
-    @FXML private BorderPane panneauDetails;
-    @FXML private Label titreDetails;
-    @FXML private ListView<Entretien> listeEntretiensUI;
-    @FXML private TextField champOperation;
-    @FXML private DatePicker champDate;
-    @FXML private TextField champKmRealisation;
-    @FXML private TextField champCout;
+    // Niveaux d'état
+    private static final int OK = 0;
+    private static final int PREVOIR = 1;
+    private static final int URGENT = 2;
+    private static final int INCONNU = 3;
+    private static final int AUCUNE_REGLE = -1;
+
+    @FXML private StackPane racine;
+    @FXML private VBox vueAccueil;
+    @FXML private VBox vueVehicule;
+    @FXML private VBox blocBienvenue;
+    @FXML private FlowPane conteneurVehicules;
+    @FXML private Label titreVehicule;
+    @FXML private Label sousTitreVehicule;
+    @FXML private HBox bandeauEtat;
+    @FXML private Label messageBandeau;
     @FXML private VBox conteneurJauges;
+    @FXML private VBox conteneurHistorique;
+    @FXML private Label totalDepense;
+    @FXML private Label toast;
 
     private Vehicule vehiculeSelectionne = null;
-    private Entretien entretienSelectionne = null;
+    private SequentialTransition animationToast;
 
     @FXML
     public void initialize() {
+        installerReglesParDefaut();
+        afficherAccueil();
+    }
+
+    /** Au tout premier lancement, on propose des règles courantes pour que l'écran ne soit jamais vide. */
+    private void installerReglesParDefaut() {
+        if (!PreconisationDB.getToutesLesPreconisations().isEmpty()) return;
+
+        Object[][] defauts = {
+                {"Vidange", 15000, 12},
+                {"Filtre à air", 30000, 24},
+                {"Filtre d'habitacle", 15000, 12},
+                {"Plaquettes de frein", 40000, 48},
+                {"Liquide de frein", 60000, 24},
+                {"Pneus", 40000, 48},
+                {"Courroie de distribution", 120000, 72}
+        };
+        for (Object[] d : defauts) {
+            PreconisationDB.ajouterPreconisation(
+                    new Preconisation(0, (String) d[0], (Integer) d[1], (Integer) d[2]));
+        }
+    }
+
+    private void afficherAccueil() {
+        vehiculeSelectionne = null;
+        montrer(vueVehicule, false);
+        montrer(vueAccueil, true);
         chargerVehicules();
+    }
 
-        listeVehiculesUI.getSelectionModel().selectedItemProperty().addListener((observable, oldSelection, newSelection) -> {
-            if (newSelection != null) {
-                vehiculeSelectionne = newSelection;
-                afficherDetails(vehiculeSelectionne);
-            }
-        });
+    @FXML
+    public void retourAccueil() {
+        afficherAccueil();
+    }
 
-        listeEntretiensUI.getSelectionModel().selectedItemProperty().addListener((observable, oldSelection, newSelection) -> {
-            if (newSelection != null) {
-                entretienSelectionne = newSelection;
-            }
-        });
+    private void ouvrirVehicule(Vehicule v) {
+        vehiculeSelectionne = v;
+        montrer(vueAccueil, false);
+        montrer(vueVehicule, true);
+        afficherVehicule();
     }
 
     private void chargerVehicules() {
-        ObservableList<Vehicule> items = FXCollections.observableArrayList(VehiculeDB.getTousLesVehicules());
-        listeVehiculesUI.setItems(items);
+        List<Vehicule> vehicules = VehiculeDB.getTousLesVehicules();
+        conteneurVehicules.getChildren().clear();
+        montrer(blocBienvenue, vehicules.isEmpty());
+
+        for (Vehicule v : vehicules) {
+            conteneurVehicules.getChildren().add(creerCarteVehicule(v));
+        }
     }
 
-    private void afficherDetails(Vehicule v) {
-        panneauDetails.setDisable(false);
-        titreDetails.setText("Historique : " + v.getMarque() + " " + v.getModele());
+    private Button creerCarteVehicule(Vehicule v) {
+        Label icone = new Label("🚗");
+        icone.getStyleClass().add("carte-icone");
 
-        ObservableList<Entretien> factures = FXCollections.observableArrayList(EntretienDB.getEntretiensPourVehicule(v.getId()));
-        listeEntretiensUI.setItems(factures);
+        Label nom = new Label(v.getMarque() + " " + v.getModele());
+        nom.getStyleClass().add("carte-titre");
+        nom.setWrapText(true);
+        nom.setAlignment(Pos.CENTER);
+        nom.setMaxWidth(260);
+
+        Label compteur = new Label(km(v.getKilometrageActuel()) + " km");
+        compteur.getStyleClass().add("carte-km");
+
+        Label etat = creerBadge(niveauGlobal(analyser(v)));
+
+        VBox contenu = new VBox(8, icone, nom, compteur, etat);
+        contenu.setAlignment(Pos.CENTER);
+
+        Button carte = new Button();
+        carte.setGraphic(contenu);
+        carte.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+        carte.getStyleClass().add("carte-vehicule");
+        carte.setOnAction(e -> ouvrirVehicule(v));
+        return carte;
+    }
+
+    @FXML
+    public void ajouterVehicule() {
+        Vehicule nouveau = saisirVehicule(null);
+        if (nouveau != null) {
+            VehiculeDB.ajouterVehicule(nouveau);
+            chargerVehicules();
+            toast("✔  Véhicule enregistré");
+        }
+    }
+
+    private void afficherVehicule() {
+        Vehicule v = vehiculeSelectionne;
+        if (v == null) return;
+
+        titreVehicule.setText("🚗  " + v.getMarque() + " " + v.getModele());
+        sousTitreVehicule.setText("Compteur : " + km(v.getKilometrageActuel()) + " km   -   environ " + km(v.getKilometrageAnnuelEstime()) + " km par an");
+
+        List<CalculateurEntretien.Bilan> bilans = analyser(v);
+        afficherBandeau(bilans);
 
         conteneurJauges.getChildren().clear();
-
-        List<Preconisation> regles = PreconisationDB.getToutesLesPreconisations();
-        List<CalculateurEntretien.Bilan> bilans = CalculateurEntretien.analyserEntretien(v, factures, regles);
-
         if (bilans.isEmpty()) {
-            Label lblEmpty = new Label("Aucune règle de préconisation configurée.\nCliquez sur le bouton 'Règles' en haut à gauche.");
-            lblEmpty.setStyle("-fx-text-fill: #7f8c8d; -fx-font-style: italic;");
-            conteneurJauges.getChildren().add(lblEmpty);
+            Label vide = new Label("Aucun entretien n'est surveillé pour le moment.\n" + "Appuyez sur « ⚙ Réglages » en haut de l'écran pour en ajouter.");
+            vide.getStyleClass().add("historique-vide");
+            vide.setWrapText(true);
+            conteneurJauges.getChildren().add(vide);
         } else {
-            for (CalculateurEntretien.Bilan bilan : bilans) {
-                Label lblTitre = new Label(bilan.piece.toUpperCase() + " : " + bilan.statut);
-                lblTitre.setStyle("-fx-font-weight: bold; -fx-font-size: 13px;");
-
-                ProgressBar jauge = new ProgressBar();
-                jauge.setMaxWidth(Double.MAX_VALUE);
-
-                double pourcentagePourJauge = Math.min(bilan.pourcentage / 100.0, 1.0);
-                String couleurDominante = "#2ecc71";
-
-                if (bilan.pourcentage == 0) {
-                    jauge.setProgress(0);
-                    couleurDominante = "#95a5a6";
-                } else {
-                    jauge.setProgress(pourcentagePourJauge);
-                    if (bilan.pourcentage >= 100) { couleurDominante = "#e74c3c"; }
-                    else if (bilan.pourcentage >= 80) { couleurDominante = "#f39c12"; }
-                }
-
-                jauge.setStyle("-fx-accent: " + couleurDominante + ";");
-                lblTitre.setStyle("-fx-text-fill: " + couleurDominante + "; -fx-font-weight: bold;");
-
-                String[] detailsDecoupes = bilan.details.split("\n");
-
-                Label lblPrediction = new Label("📅 " + detailsDecoupes[0]);
-                String couleurTextePrevi = bilan.pourcentage >= 100 ? "#e74c3c" : "#2c3e50";
-                lblPrediction.setStyle("-fx-font-size: 14px; -fx-font-weight: bold; -fx-text-fill: " + couleurTextePrevi + "; -fx-padding: 3 0 0 0;");
-
-                Label lblHistorique = new Label(detailsDecoupes.length > 1 ? "   └ " + detailsDecoupes[1] : "");
-                lblHistorique.setStyle("-fx-font-size: 12px; -fx-text-fill: #95a5a6; -fx-font-style: italic;");
-
-                VBox blocJauge = new VBox(4, lblTitre, jauge, lblPrediction, lblHistorique);
-                blocJauge.setStyle("-fx-padding: 0 0 15 0;");
-
-                conteneurJauges.getChildren().add(blocJauge);
+            for (CalculateurEntretien.Bilan b : bilans) {
+                conteneurJauges.getChildren().add(creerCarteJauge(b));
             }
         }
+
+        afficherHistorique(v);
     }
 
-    @FXML
-    public void ajouterNouveauVehicule() {
-        try {
-            Vehicule v = new Vehicule(0, champMarque.getText(), champModele.getText(),
-                    Integer.parseInt(champKmActuel.getText()), Integer.parseInt(champKmAnnuel.getText()));
-            VehiculeDB.ajouterVehicule(v);
-            chargerVehicules();
-            champMarque.clear(); champModele.clear(); champKmActuel.clear(); champKmAnnuel.clear();
-        } catch (NumberFormatException e) {
-            System.out.println("Erreur : Kilomètres invalides.");
+    private void afficherBandeau(List<CalculateurEntretien.Bilan> bilans) {
+        int niveau = niveauGlobal(bilans);
+        String message;
+        switch (niveau) {
+            case URGENT -> {
+                long n = bilans.stream().filter(b -> niveauDe(b.pourcentage) == URGENT).count();
+                message = "⚠  " + (n > 1 ? n + " entretiens sont à faire maintenant" : "Un entretien est à faire maintenant");
+            }
+            case PREVOIR -> message = "⏰  Pensez à prévoir un entretien bientôt";
+            case OK -> message = "✔  Tout va bien : rien à faire pour le moment";
+            case INCONNU -> message = "ℹ  Ajoutez vos entretiens déjà faits pour recevoir des conseils";
+            default -> message = "ℹ  Aucun entretien à surveiller : ouvrez les « Réglages »";
         }
+        messageBandeau.setText(message);
+        bandeauEtat.getStyleClass().removeAll("bandeau-ok", "bandeau-prevoir", "bandeau-urgent", "bandeau-neutre");
+        bandeauEtat.getStyleClass().add("bandeau-" + suffixe(niveau));
     }
 
-    @FXML
-    public void ajouterNouvelEntretien() {
-        if (vehiculeSelectionne == null || champDate.getValue() == null) return;
+    private VBox creerCarteJauge(CalculateurEntretien.Bilan b) {
+        int niveau = niveauDe(b.pourcentage);
 
-        try {
-            Entretien e = new Entretien(0, vehiculeSelectionne.getId(), champOperation.getText(),
-                    champDate.getValue(), Integer.parseInt(champKmRealisation.getText()),
-                    Double.parseDouble(champCout.getText()));
+        Label nom = new Label(b.piece);
+        nom.getStyleClass().add("jauge-titre");
+        nom.setWrapText(true);
 
-            EntretienDB.ajouterEntretien(e);
+        Region espace = new Region();
+        HBox.setHgrow(espace, Priority.ALWAYS);
 
-            afficherDetails(vehiculeSelectionne);
+        HBox haut = new HBox(12, nom, espace, creerBadge(niveau));
+        haut.setAlignment(Pos.CENTER_LEFT);
 
-            champOperation.clear(); champKmRealisation.clear(); champCout.clear(); champDate.setValue(null);
+        ProgressBar barre = new ProgressBar(Math.max(0, Math.min(b.pourcentage / 100.0, 1.0)));
+        barre.setMaxWidth(Double.MAX_VALUE);
+        barre.getStyleClass().add("barre-" + suffixe(niveau));
 
-        } catch (NumberFormatException ex) {
-            System.out.println("Erreur : Valeurs numériques invalides pour l'entretien.");
+        String[] details = b.details.split("\n");
+        Label prevision = new Label("📅  " + details[0]);
+        prevision.getStyleClass().add("jauge-prevision");
+        prevision.setWrapText(true);
+
+        VBox carte = new VBox(10, haut, barre, prevision);
+        if (details.length > 1) {
+            Label historique = new Label(details[1]);
+            historique.getStyleClass().add("jauge-historique");
+            historique.setWrapText(true);
+            carte.getChildren().add(historique);
         }
+        carte.getStyleClass().addAll("carte-jauge", "jauge-" + suffixe(niveau));
+        return carte;
     }
 
-    @FXML
-    public void supprimerVehiculeSelectionne() {
-        if (vehiculeSelectionne != null) {
-            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-            alert.setTitle("Confirmer la suppression");
-            alert.setHeaderText("Supprimer le véhicule " + vehiculeSelectionne.getMarque() + " ?");
-            alert.setContentText("Toutes les factures et l'historique associés seront définitivement effacés.");
+    private void afficherHistorique(Vehicule v) {
+        List<Entretien> liste = new ArrayList<>(EntretienDB.getEntretiensPourVehicule(v.getId()));
+        liste.sort(Comparator.comparing(Entretien::getDateRealisation).reversed());
 
-            Optional<ButtonType> result = alert.showAndWait();
+        conteneurHistorique.getChildren().clear();
+        double total = 0;
 
-            if (result.isPresent() && result.get() == ButtonType.OK) {
-                VehiculeDB.supprimerVehicule(vehiculeSelectionne.getId());
-
-                panneauDetails.setDisable(true);
-                titreDetails.setText("Sélectionnez un véhicule");
-                listeEntretiensUI.setItems(FXCollections.observableArrayList());
-                vehiculeSelectionne = null;
-
-                chargerVehicules();
+        if (liste.isEmpty()) {
+            Label vide = new Label("Vous n'avez encore rien enregistré.\n" + "Appuyez sur le bouton vert « J'ai fait un entretien » en bas de l'écran pour commencer.");
+            vide.getStyleClass().add("historique-vide");
+            vide.setWrapText(true);
+            vide.setMaxWidth(Double.MAX_VALUE);
+            conteneurHistorique.getChildren().add(vide);
+        } else {
+            for (Entretien e : liste) {
+                total += e.getCout();
+                conteneurHistorique.getChildren().add(creerLigneHistorique(e));
             }
         }
+        totalDepense.setText(liste.isEmpty() ? "" : String.format(Locale.FRANCE, "Total dépensé : %,.2f €", total).replace('\u202F', '\u00A0'));
     }
 
-    @FXML
-    public void modifierVehiculeSelectionne() {
-        if (vehiculeSelectionne != null) {
-            Dialog<Vehicule> dialog = new Dialog<>();
-            dialog.setTitle("Modifier le véhicule");
-            dialog.setHeaderText("Modifiez les informations de : " + vehiculeSelectionne.getMarque() + " " + vehiculeSelectionne.getModele());
+    private HBox creerLigneHistorique(Entretien e) {
+        Label titre = new Label(e.getTypeOperation());
+        titre.getStyleClass().add("historique-titre");
+        titre.setWrapText(true);
 
-            ButtonType btnSauvegarder = new ButtonType("Sauvegarder", ButtonBar.ButtonData.OK_DONE);
-            dialog.getDialogPane().getButtonTypes().addAll(btnSauvegarder, ButtonType.CANCEL);
+        Label detail = new Label(e.getDateRealisation().format(FORMAT_DATE) + "   -   " + km(e.getKilometrageRealisation()) + " km");
+        detail.getStyleClass().add("historique-detail");
 
-            GridPane grid = new GridPane();
-            grid.setHgap(10); grid.setVgap(10); grid.setPadding(new Insets(20, 20, 10, 10));
+        VBox texte = new VBox(3, titre, detail);
+        HBox.setHgrow(texte, Priority.ALWAYS);
 
-            TextField editMarque = new TextField(vehiculeSelectionne.getMarque());
-            TextField editModele = new TextField(vehiculeSelectionne.getModele());
-            TextField editKmActuel = new TextField(String.valueOf(vehiculeSelectionne.getKilometrageActuel()));
-            TextField editKmAnnuel = new TextField(String.valueOf(vehiculeSelectionne.getKilometrageAnnuelEstime()));
+        Label prix = new Label(String.format(Locale.FRANCE, "%.2f €", e.getCout()));
+        prix.getStyleClass().add("historique-prix");
 
-            grid.add(new Label("Marque :"), 0, 0); grid.add(editMarque, 1, 0);
-            grid.add(new Label("Modèle :"), 0, 1); grid.add(editModele, 1, 1);
-            grid.add(new Label("Km Actuel :"), 0, 2); grid.add(editKmActuel, 1, 2);
-            grid.add(new Label("Km Annuel :"), 0, 3); grid.add(editKmAnnuel, 1, 3);
-
-            dialog.getDialogPane().setContent(grid);
-
-            dialog.setResultConverter(dialogButton -> {
-                if (dialogButton == btnSauvegarder) {
-                    try {
-                        return new Vehicule(vehiculeSelectionne.getId(), editMarque.getText(), editModele.getText(),
-                                Integer.parseInt(editKmActuel.getText()), Integer.parseInt(editKmAnnuel.getText()));
-                    } catch (NumberFormatException e) {
-                        return null;
-                    }
-                }
-                return null;
-            });
-
-            dialog.showAndWait().ifPresent(vehiculeModifie -> {
-                VehiculeDB.modifierVehicule(vehiculeModifie);
-                chargerVehicules();
-                afficherDetails(vehiculeModifie);
-            });
-        }
-    }
-
-    @FXML
-    public void supprimerEntretienSelectionne() {
-        if (entretienSelectionne != null && vehiculeSelectionne != null) {
-
-            Alert alert = new Alert(Alert.AlertType.CONFIRMATION);
-            alert.setTitle("Confirmer la suppression");
-            alert.setHeaderText("Supprimer cette opération ?");
-            alert.setContentText("Facture : " + entretienSelectionne.getTypeOperation() + " du " + entretienSelectionne.getDateRealisation());
-
-            Optional<ButtonType> result = alert.showAndWait();
-
-            if (result.isPresent() && result.get() == ButtonType.OK) {
-                EntretienDB.supprimerEntretien(entretienSelectionne.getId());
-                afficherDetails(vehiculeSelectionne);
-                entretienSelectionne = null;
-            }
-        }
-    }
-
-    @FXML
-    public void modifierEntretienSelectionne() {
-        if (entretienSelectionne != null && vehiculeSelectionne != null) {
-            Dialog<Entretien> dialog = new Dialog<>();
-            dialog.setTitle("Modifier l'entretien");
-            dialog.setHeaderText("Correction de : " + entretienSelectionne.getTypeOperation());
-
-            ButtonType btnSauvegarder = new ButtonType("Sauvegarder", ButtonBar.ButtonData.OK_DONE);
-            dialog.getDialogPane().getButtonTypes().addAll(btnSauvegarder, ButtonType.CANCEL);
-
-            GridPane grid = new GridPane();
-            grid.setHgap(10); grid.setVgap(10); grid.setPadding(new Insets(20, 20, 10, 10));
-
-            TextField editOperation = new TextField(entretienSelectionne.getTypeOperation());
-            DatePicker editDate = new DatePicker(entretienSelectionne.getDateRealisation());
-            TextField editKm = new TextField(String.valueOf(entretienSelectionne.getKilometrageRealisation()));
-            TextField editCout = new TextField(String.valueOf(entretienSelectionne.getCout()));
-
-            grid.add(new Label("Opération :"), 0, 0); grid.add(editOperation, 1, 0);
-            grid.add(new Label("Date :"), 0, 1); grid.add(editDate, 1, 1);
-            grid.add(new Label("Km :"), 0, 2); grid.add(editKm, 1, 2);
-            grid.add(new Label("Coût (€) :"), 0, 3); grid.add(editCout, 1, 3);
-
-            dialog.getDialogPane().setContent(grid);
-
-            dialog.setResultConverter(dialogButton -> {
-                if (dialogButton == btnSauvegarder) {
-                    try {
-                        return new Entretien(entretienSelectionne.getId(), vehiculeSelectionne.getId(),
-                                editOperation.getText(), editDate.getValue(),
-                                Integer.parseInt(editKm.getText()), Double.parseDouble(editCout.getText()));
-                    } catch (Exception e) {
-                        return null;
-                    }
-                }
-                return null;
-            });
-
-            dialog.showAndWait().ifPresent(entretienModifie -> {
-                EntretienDB.modifierEntretien(entretienModifie);
-                afficherDetails(vehiculeSelectionne);
-            });
-        }
-    }
-
-    @FXML
-    public void ouvrirParametresPreconisations() {
-        Dialog<Void> dialog = new Dialog<>();
-        dialog.setTitle("Paramètres d'entretien");
-        dialog.setHeaderText("Règles et préconisations constructeur");
-        dialog.getDialogPane().getButtonTypes().add(ButtonType.CLOSE);
-
-        VBox vbox = new VBox(15);
-        vbox.setPadding(new Insets(20));
-
-        ListView<Preconisation> listePrecoUI = new ListView<>();
-        listePrecoUI.getItems().addAll(PreconisationDB.getToutesLesPreconisations());
-        listePrecoUI.setPrefHeight(150);
-
-        Button btnSupprimer = new Button("✖ Supprimer");
-        btnSupprimer.setStyle("-fx-background-color: #e74c3c; -fx-text-fill: white; -fx-cursor: hand;");
-        btnSupprimer.setOnAction(e -> {
-            Preconisation selection = listePrecoUI.getSelectionModel().getSelectedItem();
-            if (selection != null) {
-                PreconisationDB.supprimerPreconisation(selection.getId());
-                listePrecoUI.getItems().setAll(PreconisationDB.getToutesLesPreconisations());
+        Button modifier = bouton("✏  Modifier", "btn-modif", "btn-petit");
+        modifier.setOnAction(ev -> {
+            Entretien modifie = saisirEntretien(e);
+            if (modifie != null) {
+                EntretienDB.modifierEntretien(modifie);
+                afficherVehicule();
+                toast("✔  Modification enregistrée");
             }
         });
 
-        Button btnModifier = new Button("✎ Modifier");
-        btnModifier.setStyle("-fx-background-color: #f39c12; -fx-text-fill: white; -fx-cursor: hand;");
-        btnModifier.setOnAction(e -> {
-            Preconisation selection = listePrecoUI.getSelectionModel().getSelectedItem();
-            if (selection != null) {
-                Dialog<Preconisation> dialogModif = new Dialog<>();
-                dialogModif.setTitle("Modifier la règle");
-                ButtonType btnSauvegarder = new ButtonType("Sauvegarder", ButtonBar.ButtonData.OK_DONE);
-                dialogModif.getDialogPane().getButtonTypes().addAll(btnSauvegarder, ButtonType.CANCEL);
+        Button supprimer = bouton("🗑  Supprimer", "btn-danger", "btn-petit");
+        supprimer.setOnAction(ev -> {
+            if (confirmer("Supprimer cette ligne", "Voulez-vous vraiment supprimer « " + e.getTypeOperation() + " » du " + e.getDateRealisation().format(FORMAT_DATE) + " ?", "Oui, supprimer")) {
+                EntretienDB.supprimerEntretien(e.getId());
+                afficherVehicule();
+                toast("✔  Ligne supprimée");
+            }
+        });
 
-                GridPane grid = new GridPane();
-                grid.setHgap(10); grid.setVgap(10); grid.setPadding(new Insets(20));
+        HBox ligne = new HBox(16, texte, prix, modifier, supprimer);
+        ligne.setAlignment(Pos.CENTER_LEFT);
+        ligne.getStyleClass().add("ligne-historique");
+        return ligne;
+    }
 
-                TextField editOp = new TextField(selection.getTypeOperation());
-                TextField editKm = new TextField(String.valueOf(selection.getIntervalleKm()));
-                TextField editMois = new TextField(String.valueOf(selection.getIntervalleMois()));
+    @FXML
+    public void modifierVehicule() {
+        if (vehiculeSelectionne == null) return;
+        Vehicule modifie = saisirVehicule(vehiculeSelectionne);
+        if (modifie != null) {
+            VehiculeDB.modifierVehicule(modifie);
+            vehiculeSelectionne = modifie;
+            afficherVehicule();
+            toast("✔  Modifications enregistrées");
+        }
+    }
 
-                grid.add(new Label("Opération :"), 0, 0); grid.add(editOp, 1, 0);
-                grid.add(new Label("Intervalle Km :"), 0, 1); grid.add(editKm, 1, 1);
-                grid.add(new Label("Intervalle Mois :"), 0, 2); grid.add(editMois, 1, 2);
-                dialogModif.getDialogPane().setContent(grid);
+    @FXML
+    public void supprimerVehicule() {
+        if (vehiculeSelectionne == null) return;
+        boolean oui = confirmer("Supprimer ce véhicule", "Voulez-vous vraiment supprimer « " + vehiculeSelectionne.getMarque() + " " + vehiculeSelectionne.getModele() + " » ?\n\n" + "Tout son historique d'entretien sera aussi effacé. Cette action est définitive.", "Oui, supprimer");
+        if (oui) {
+            VehiculeDB.supprimerVehicule(vehiculeSelectionne.getId());
+            afficherAccueil();
+            toast("✔  Véhicule supprimé");
+        }
+    }
 
-                dialogModif.setResultConverter(dialogButton -> {
-                    if (dialogButton == btnSauvegarder) {
-                        try {
-                            return new Preconisation(selection.getId(), editOp.getText(),
-                                    Integer.parseInt(editKm.getText()), Integer.parseInt(editMois.getText()));
-                        } catch (NumberFormatException ex) { return null; }
-                    }
+    @FXML
+    public void mettreAJourKilometrage() {
+        if (vehiculeSelectionne == null) return;
+        Vehicule v = vehiculeSelectionne;
+
+        TextField champ = champ("Ex : " + (v.getKilometrageActuel() + 500));
+        champ.setText(String.valueOf(v.getKilometrageActuel()));
+
+        boolean ok = demander("Mettre à jour le kilométrage",
+                "Regardez le compteur de votre voiture et écrivez le nombre affiché.",
+                List.of(groupe("Que indique votre compteur aujourd'hui ?", champ, "Écrivez uniquement des chiffres, sans le « km ».")), "✔  Enregistrer", () -> {
+                    if (!estEntier(champ.getText())) return "Le kilométrage doit être un nombre, par exemple 45000.";
+                    if (parseEntier(champ.getText()) < v.getKilometrageActuel())
+                        return "Ce nombre est plus petit que l'ancien (" + km(v.getKilometrageActuel()) + " km). Vérifiez votre compteur, ou utilisez « Modifier » pour corriger une erreur.";
                     return null;
                 });
+        if (ok) {
+            v.setKilometrageActuel(parseEntier(champ.getText()));
+            VehiculeDB.modifierVehicule(v);
+            afficherVehicule();
+            toast("✔  Kilométrage mis à jour");
+        }
+    }
 
-                dialogModif.showAndWait().ifPresent(pModifiee -> {
-                    PreconisationDB.modifierPreconisation(pModifiee);
-                    listePrecoUI.getItems().setAll(PreconisationDB.getToutesLesPreconisations());
-                });
-            }
-        });
-
-        HBox actionsRegles = new HBox(10, btnModifier, btnSupprimer);
-
-        HBox form = new HBox(10);
-        TextField txtOp = new TextField(); txtOp.setPromptText("Opération (ex: Vidange)");
-        TextField txtKm = new TextField(); txtKm.setPromptText("Km (ex: 20000)"); txtKm.setPrefWidth(120);
-        TextField txtMois = new TextField(); txtMois.setPromptText("Mois (ex: 12)"); txtMois.setPrefWidth(120);
-
-        Button btnAdd = new Button("+ Ajouter");
-        btnAdd.setStyle("-fx-background-color: #2ecc71; -fx-text-fill: white; -fx-cursor: hand;");
-        btnAdd.setOnAction(e -> {
-            try {
-                Preconisation p = new Preconisation(0, txtOp.getText(), Integer.parseInt(txtKm.getText()), Integer.parseInt(txtMois.getText()));
-                PreconisationDB.ajouterPreconisation(p);
-                listePrecoUI.getItems().setAll(PreconisationDB.getToutesLesPreconisations());
-                txtOp.clear(); txtKm.clear(); txtMois.clear();
-            } catch (NumberFormatException ex) {
-                System.out.println("Erreur de saisie.");
-            }
-        });
-
-        form.getChildren().addAll(txtOp, txtKm, txtMois, btnAdd);
-        vbox.getChildren().addAll(new Label("Règles actuelles :"), listePrecoUI, actionsRegles, new Label("Nouvelle règle :"), form);
-
-        dialog.getDialogPane().setContent(vbox);
-        dialog.showAndWait();
+    @FXML
+    public void ajouterEntretien() {
+        if (vehiculeSelectionne == null) return;
+        Entretien nouveau = saisirEntretien(null);
+        if (nouveau != null) {
+            EntretienDB.ajouterEntretien(nouveau);
+            afficherVehicule();
+            toast("✔  Entretien enregistré");
+        }
     }
 
     @FXML
     public void exporterHistorique() {
-        if (vehiculeSelectionne != null) {
-            List<Entretien> factures = EntretienDB.getEntretiensPourVehicule(vehiculeSelectionne.getId());
-            ExportService.exporterHistoriqueCSV(vehiculeSelectionne, factures);
+        if (vehiculeSelectionne == null) return;
+        List<Entretien> factures = EntretienDB.getEntretiensPourVehicule(vehiculeSelectionne.getId());
+        if (factures.isEmpty()) {
+            toast("Rien à enregistrer : l'historique est vide");
+            return;
         }
+        ExportService.exporterHistoriqueCSV(vehiculeSelectionne, factures);
+        toast("✔  Export terminé");
+    }
+
+    @FXML
+    public void ouvrirReglages() {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        preparer(dialog, "Réglages des entretiens");
+
+        ButtonType fermer = new ButtonType("Fermer", ButtonBar.ButtonData.CANCEL_CLOSE);
+        dialog.getDialogPane().getButtonTypes().add(fermer);
+        dialog.getDialogPane().lookupButton(fermer).getStyleClass().addAll("btn", "btn-primaire");
+
+        Label intro = new Label("Voici la liste des entretiens que l'application surveille pour vous, " + "avec leur fréquence. Vous pouvez la changer si votre carnet constructeur indique autre chose.");
+        intro.setWrapText(true);
+        intro.getStyleClass().add("texte-doux");
+
+        VBox liste = new VBox(10);
+        liste.setPadding(new Insets(4));
+        remplirReglages(liste);
+
+        ScrollPane defilement = new ScrollPane(liste);
+        defilement.setFitToWidth(true);
+        defilement.setPrefHeight(340);
+        defilement.getStyleClass().add("zone-defilement");
+
+        Button ajouter = bouton("➕  Ajouter un entretien à surveiller", "btn-succes");
+        ajouter.setOnAction(e -> {
+            Preconisation p = saisirRegle(null);
+            if (p != null) {
+                PreconisationDB.ajouterPreconisation(p);
+                remplirReglages(liste);
+            }
+        });
+
+        VBox contenu = new VBox(16, intro, defilement, ajouter);
+        contenu.setPrefWidth(660);
+        contenu.setPadding(new Insets(10, 10, 0, 10));
+        dialog.getDialogPane().setContent(contenu);
+
+        dialog.showAndWait();
+
+        if (vehiculeSelectionne != null) afficherVehicule(); else chargerVehicules();
+    }
+
+    private void remplirReglages(VBox liste) {
+        liste.getChildren().clear();
+        List<Preconisation> regles = PreconisationDB.getToutesLesPreconisations();
+
+        if (regles.isEmpty()) {
+            Label vide = new Label("Aucun entretien surveillé. Appuyez sur le bouton vert ci-dessous pour en ajouter un.");
+            vide.getStyleClass().add("historique-vide");
+            vide.setWrapText(true);
+            liste.getChildren().add(vide);
+            return;
+        }
+
+        for (Preconisation p : regles) {
+            Label nom = new Label(p.getTypeOperation());
+            nom.getStyleClass().add("historique-titre");
+            nom.setWrapText(true);
+            Label freq = new Label("Tous les " + km(p.getIntervalleKm()) + " km ou tous les " + p.getIntervalleMois() + " mois");
+            freq.getStyleClass().add("historique-detail");
+            VBox texte = new VBox(3, nom, freq);
+            HBox.setHgrow(texte, Priority.ALWAYS);
+
+            Button modifier = bouton("✏  Modifier", "btn-modif", "btn-petit");
+            modifier.setOnAction(e -> {
+                Preconisation modifiee = saisirRegle(p);
+                if (modifiee != null) {
+                    PreconisationDB.modifierPreconisation(modifiee);
+                    remplirReglages(liste);
+                }
+            });
+
+            Button supprimer = bouton("🗑  Supprimer", "btn-danger", "btn-petit");
+            supprimer.setOnAction(e -> {
+                if (confirmer("Ne plus surveiller",
+                        "Voulez-vous arrêter de surveiller « " + p.getTypeOperation() + " » ?", "Oui, arrêter")) {
+                    PreconisationDB.supprimerPreconisation(p.getId());
+                    remplirReglages(liste);
+                }
+            });
+
+            HBox ligne = new HBox(14, texte, modifier, supprimer);
+            ligne.setAlignment(Pos.CENTER_LEFT);
+            ligne.getStyleClass().add("ligne-historique");
+            liste.getChildren().add(ligne);
+        }
+    }
+
+    /** Retourne le véhicule saisi, ou null si l'utilisateur a annulé. */
+    private Vehicule saisirVehicule(Vehicule existant) {
+        TextField marque = champ("Ex : Renault");
+        TextField modele = champ("Ex : Clio");
+        TextField kmCompteur = champ("Ex : 45000");
+        TextField kmAnnuel = champ("Ex : 12000");
+
+        if (existant != null) {
+            marque.setText(existant.getMarque());
+            modele.setText(existant.getModele());
+            kmCompteur.setText(String.valueOf(existant.getKilometrageActuel()));
+            kmAnnuel.setText(String.valueOf(existant.getKilometrageAnnuelEstime()));
+        } else {
+            kmAnnuel.setText("12000");
+        }
+
+        boolean ok = demander(
+                existant == null ? "Ajouter un véhicule" : "Modifier le véhicule",
+                "Remplissez les 4 cases, puis appuyez sur « Enregistrer ».",
+                List.of(
+                        groupe("Marque de la voiture", marque, null),
+                        groupe("Modèle", modele, null),
+                        groupe("Kilomètres affichés au compteur", kmCompteur, "Écrivez uniquement des chiffres. Exemple : 45000"),
+                        groupe("Kilomètres parcourus en une année (environ)", kmAnnuel,
+                                "Si vous ne savez pas, gardez 12000 : c'est la moyenne en France.")),
+                "✔  Enregistrer",
+                () -> {
+                    if (marque.getText().isBlank()) return "Veuillez écrire la marque de la voiture (exemple : Renault).";
+                    if (modele.getText().isBlank()) return "Veuillez écrire le modèle de la voiture (exemple : Clio).";
+                    if (!estEntier(kmCompteur.getText())) return "Le kilométrage du compteur doit être un nombre, par exemple 45000.";
+                    if (!estEntier(kmAnnuel.getText()) || parseEntier(kmAnnuel.getText()) == 0)
+                        return "Les kilomètres par an doivent être un nombre supérieur à 0, par exemple 12000.";
+                    return null;
+                });
+
+        if (!ok) return null;
+        return new Vehicule(existant != null ? existant.getId() : 0,
+                marque.getText().trim(), modele.getText().trim(),
+                parseEntier(kmCompteur.getText()), parseEntier(kmAnnuel.getText()));
+    }
+
+    /** Retourne l'entretien saisi, ou null si l'utilisateur a annulé. */
+    private Entretien saisirEntretien(Entretien existant) {
+        ComboBox<String> type = new ComboBox<>();
+        type.setEditable(true);
+        type.setMaxWidth(Double.MAX_VALUE);
+        type.setPromptText("Choisissez dans la liste");
+        for (Preconisation p : PreconisationDB.getToutesLesPreconisations()) {
+            type.getItems().add(p.getTypeOperation());
+        }
+        if (existant != null) type.setValue(existant.getTypeOperation());
+
+        DatePicker date = new DatePicker(existant != null ? existant.getDateRealisation() : LocalDate.now());
+        date.setMaxWidth(Double.MAX_VALUE);
+
+        TextField kmField = champ("Ex : 45000");
+        kmField.setText(String.valueOf(existant != null ? existant.getKilometrageRealisation()
+                : vehiculeSelectionne.getKilometrageActuel()));
+
+        TextField coutField = champ("Ex : 89,90");
+        if (existant != null) coutField.setText(String.format(Locale.FRANCE, "%.2f", existant.getCout()));
+
+        boolean ok = demander(
+                existant == null ? "J'ai fait un entretien" : "Modifier l'entretien",
+                "Répondez aux 4 questions, puis appuyez sur « Enregistrer ».",
+                List.of(
+                        groupe("Qu'est-ce qui a été fait ?", type, "Cliquez sur la flèche pour voir la liste, ou écrivez vous-même."),
+                        groupe("À quelle date ?", date, "Aujourd'hui est déjà choisi. Cliquez sur le calendrier pour changer."),
+                        groupe("Combien de kilomètres au compteur ce jour-là ?", kmField, null),
+                        groupe("Combien cela a-t-il coûté ? (en euros)", coutField, "Si vous ne savez plus, laissez vide.")),
+                "✔  Enregistrer",
+                () -> {
+                    String nom = type.getEditor().getText();
+                    if (nom == null || nom.isBlank()) return "Veuillez indiquer ce qui a été fait (exemple : Vidange).";
+                    if (date.getValue() == null) return "Veuillez choisir la date de l'entretien.";
+                    if (date.getValue().isAfter(LocalDate.now())) return "La date ne peut pas être dans le futur.";
+                    if (!estEntier(kmField.getText())) return "Le kilométrage doit être un nombre, par exemple 45000.";
+                    if (!estMontant(coutField.getText())) return "Le prix doit être un nombre, par exemple 89,90.";
+                    return null;
+                });
+
+        if (!ok) return null;
+        return new Entretien(existant != null ? existant.getId() : 0, vehiculeSelectionne.getId(),
+                type.getEditor().getText().trim(), date.getValue(),
+                parseEntier(kmField.getText()), parseMontant(coutField.getText()));
+    }
+
+    /** Retourne la règle saisie, ou null si l'utilisateur a annulé. */
+    private Preconisation saisirRegle(Preconisation existante) {
+        TextField nom = champ("Ex : Vidange");
+        TextField kmField = champ("Ex : 15000");
+        TextField mois = champ("Ex : 12");
+        if (existante != null) {
+            nom.setText(existante.getTypeOperation());
+            kmField.setText(String.valueOf(existante.getIntervalleKm()));
+            mois.setText(String.valueOf(existante.getIntervalleMois()));
+        }
+
+        boolean ok = demander(
+                existante == null ? "Nouvel entretien à surveiller" : "Modifier la règle",
+                "Ces informations se trouvent dans le carnet d'entretien fourni avec la voiture.",
+                List.of(
+                        groupe("Nom de l'entretien", nom, null),
+                        groupe("À renouveler tous les combien de kilomètres ?", kmField, "Exemple : 15000"),
+                        groupe("… ou tous les combien de mois ?", mois, "Exemple : 12 (le premier des deux arrivé déclenche l'alerte)")),
+                "✔  Enregistrer",
+                () -> {
+                    if (nom.getText().isBlank()) return "Veuillez donner un nom à l'entretien (exemple : Vidange).";
+                    if (!estEntier(kmField.getText()) || parseEntier(kmField.getText()) == 0)
+                        return "Les kilomètres doivent être un nombre supérieur à 0, par exemple 15000.";
+                    if (!estEntier(mois.getText()) || parseEntier(mois.getText()) == 0)
+                        return "Les mois doivent être un nombre supérieur à 0, par exemple 12.";
+                    return null;
+                });
+
+        if (!ok) return null;
+        return new Preconisation(existante != null ? existante.getId() : 0, nom.getText().trim(),
+                parseEntier(kmField.getText()), parseEntier(mois.getText()));
+    }
+
+    /**
+     * Affiche une fenêtre de saisie. Elle reste ouverte tant que la validation renvoie un message d'erreur,
+     * lequel est affiché en rouge dans la fenêtre. Retourne true si l'utilisateur a validé.
+     */
+    private boolean demander(String titre, String consigne, List<Node> champs, String texteOk, Supplier<String> validation) {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        preparer(dialog, titre);
+
+        ButtonType ok = new ButtonType(texteOk, ButtonBar.ButtonData.OK_DONE);
+        ButtonType annuler = new ButtonType("Annuler", ButtonBar.ButtonData.CANCEL_CLOSE);
+        dialog.getDialogPane().getButtonTypes().addAll(ok, annuler);
+
+        Label intro = new Label(consigne);
+        intro.setWrapText(true);
+        intro.getStyleClass().add("texte-doux");
+
+        Label erreur = new Label();
+        erreur.setWrapText(true);
+        erreur.setMaxWidth(Double.MAX_VALUE);
+        erreur.getStyleClass().add("message-erreur");
+        montrer(erreur, false);
+
+        VBox contenu = new VBox(18);
+        contenu.setPadding(new Insets(10, 10, 0, 10));
+        contenu.setPrefWidth(560);
+        contenu.getChildren().add(intro);
+        contenu.getChildren().addAll(champs);
+        contenu.getChildren().add(erreur);
+        dialog.getDialogPane().setContent(contenu);
+
+        Button boutonOk = (Button) dialog.getDialogPane().lookupButton(ok);
+        boutonOk.getStyleClass().addAll("btn", "btn-succes");
+        dialog.getDialogPane().lookupButton(annuler).getStyleClass().addAll("btn", "btn-secondaire");
+
+        boutonOk.addEventFilter(ActionEvent.ACTION, ev -> {
+            String message = validation.get();
+            if (message != null) {
+                erreur.setText("⚠  " + message);
+                montrer(erreur, true);
+                ev.consume();               // la fenêtre reste ouverte
+                dialog.getDialogPane().getScene().getWindow().sizeToScene();
+            }
+        });
+
+        return dialog.showAndWait().filter(r -> r == ok).isPresent();
+    }
+
+    /** Fenêtre « Êtes-vous sûr ? ». Le bouton par défaut est « Non » pour éviter les erreurs. */
+    private boolean confirmer(String titre, String question, String texteOui) {
+        ButtonType oui = new ButtonType(texteOui, ButtonBar.ButtonData.OK_DONE);
+        ButtonType non = new ButtonType("Non, je garde", ButtonBar.ButtonData.CANCEL_CLOSE);
+
+        Alert alerte = new Alert(Alert.AlertType.WARNING, question, oui, non);
+        preparer(alerte, titre);
+        alerte.getDialogPane().setMinWidth(540);
+
+        Button boutonOui = (Button) alerte.getDialogPane().lookupButton(oui);
+        Button boutonNon = (Button) alerte.getDialogPane().lookupButton(non);
+        boutonOui.getStyleClass().addAll("btn", "btn-danger");
+        boutonNon.getStyleClass().addAll("btn", "btn-succes");
+        boutonOui.setDefaultButton(false);
+        boutonNon.setDefaultButton(true);
+
+        return alerte.showAndWait().filter(r -> r == oui).isPresent();
+    }
+
+    private void preparer(Dialog<?> dialog, String titre) {
+        dialog.setTitle(titre);
+        dialog.setHeaderText(null);
+        dialog.setGraphic(null);
+        dialog.getDialogPane().getStylesheets().add(getClass().getResource(FEUILLE_STYLE).toExternalForm());
+        dialog.initOwner(fenetreActive());
+    }
+
+    private Window fenetreActive() {
+        return Window.getWindows().stream()
+                .filter(Window::isShowing)
+                .filter(Window::isFocused)
+                .findFirst()
+                .orElse(racine.getScene().getWindow());
+    }
+
+    private VBox groupe(String question, Node champ, String aide) {
+        Label q = new Label(question);
+        q.getStyleClass().add("question-champ");
+        q.setWrapText(true);
+        VBox boite = new VBox(6, q, champ);
+        if (aide != null) {
+            Label a = new Label(aide);
+            a.getStyleClass().add("aide-champ");
+            a.setWrapText(true);
+            boite.getChildren().add(a);
+        }
+        return boite;
+    }
+
+    private TextField champ(String exemple) {
+        TextField t = new TextField();
+        t.setPromptText(exemple);
+        return t;
+    }
+
+    private Button bouton(String texte, String... classes) {
+        Button b = new Button(texte);
+        b.getStyleClass().add("btn");
+        b.getStyleClass().addAll(classes);
+        return b;
+    }
+
+    private Label creerBadge(int niveau) {
+        String texte = switch (niveau) {
+            case OK -> "✔  Tout va bien";
+            case PREVOIR -> "⏰  À prévoir bientôt";
+            case URGENT -> "⚠  À faire maintenant";
+            case INCONNU -> "Pas encore d'information";
+            default -> "Aucun entretien surveillé";
+        };
+        Label badge = new Label(texte);
+        badge.getStyleClass().addAll("badge", "badge-" + suffixe(niveau));
+        return badge;
+    }
+
+    /** Petit message qui apparaît en bas de l'écran puis disparaît tout seul. */
+    private void toast(String message) {
+        if (animationToast != null) animationToast.stop();
+        toast.setText(message);
+        toast.setOpacity(1);
+        toast.setVisible(true);
+
+        PauseTransition pause = new PauseTransition(Duration.seconds(3));
+        FadeTransition fondu = new FadeTransition(Duration.millis(600), toast);
+        fondu.setToValue(0);
+        animationToast = new SequentialTransition(pause, fondu);
+        animationToast.setOnFinished(e -> toast.setVisible(false));
+        animationToast.play();
+    }
+
+    private void montrer(Node n, boolean visible) {
+        n.setVisible(visible);
+        n.setManaged(visible);
+    }
+
+    /** Analyse un véhicule ; les entretiens les plus urgents sont placés en premier. */
+    private List<CalculateurEntretien.Bilan> analyser(Vehicule v) {
+        List<Entretien> historique = EntretienDB.getEntretiensPourVehicule(v.getId());
+        List<Preconisation> regles = PreconisationDB.getToutesLesPreconisations();
+        List<CalculateurEntretien.Bilan> bilans =
+                new ArrayList<>(CalculateurEntretien.analyserEntretien(v, historique, regles));
+        bilans.sort(Comparator.comparingDouble((CalculateurEntretien.Bilan b) -> b.pourcentage).reversed());
+        return bilans;
+    }
+
+    private int niveauDe(double pourcentage) {
+        if (pourcentage >= 100) return URGENT;
+        if (pourcentage >= 80) return PREVOIR;
+        if (pourcentage > 0) return OK;
+        return INCONNU;
+    }
+
+    private int niveauGlobal(List<CalculateurEntretien.Bilan> bilans) {
+        if (bilans.isEmpty()) return AUCUNE_REGLE;
+        boolean urgent = false, prevoir = false, ok = false;
+        for (CalculateurEntretien.Bilan b : bilans) {
+            int n = niveauDe(b.pourcentage);
+            if (n == URGENT) urgent = true;
+            else if (n == PREVOIR) prevoir = true;
+            else if (n == OK) ok = true;
+        }
+        if (urgent) return URGENT;
+        if (prevoir) return PREVOIR;
+        if (ok) return OK;
+        return INCONNU;
+    }
+
+    private String suffixe(int niveau) {
+        return switch (niveau) {
+            case OK -> "ok";
+            case PREVOIR -> "prevoir";
+            case URGENT -> "urgent";
+            default -> "neutre";
+        };
+    }
+
+    private static String sansEspaces(String s) {
+        return s == null ? "" : s.replaceAll("[\\s\\u00A0\\u202F]", "");
+    }
+
+    private static boolean estEntier(String s) {
+        return sansEspaces(s).matches("\\d{1,9}");
+    }
+
+    private static int parseEntier(String s) {
+        return Integer.parseInt(sansEspaces(s));
+    }
+
+    private static boolean estMontant(String s) {
+        String propre = sansEspaces(s).replace("€", "").replace(',', '.');
+        return propre.isEmpty() || propre.matches("\\d{1,7}(\\.\\d{1,2})?");
+    }
+
+    private static double parseMontant(String s) {
+        String propre = sansEspaces(s).replace("€", "").replace(',', '.');
+        return propre.isEmpty() ? 0 : Double.parseDouble(propre);
+    }
+
+    /** 45000 -> "45 000" */
+    private static String km(int valeur) {
+        return String.format(Locale.FRANCE, "%,d", valeur).replace('\u202F', '\u00A0');
     }
 }

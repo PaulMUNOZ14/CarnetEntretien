@@ -13,8 +13,10 @@ public class HelloApplication extends Application {
         DatabaseManager.initDatabase();
 
         FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("hello-view.fxml"));
-        Scene scene = new Scene(fxmlLoader.load(), 800, 600);
+        Scene scene = new Scene(fxmlLoader.load(), 1100, 750);
         stage.setTitle("Carnet d'Entretien");
+        stage.setMinWidth(1000);
+        stage.setMinHeight(650);
         stage.setScene(scene);
         stage.show();
     }
