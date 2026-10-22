@@ -31,10 +31,10 @@ Ce projet propose un outil pour toute personne souhaitant suivre sérieusement l
 - [x] Tableau de bord avec jauges d'usure (ProgressIndicator + CSS)
 - [x] Alertes visuelles (À prévoir / Urgent)
 - [x] Algorithme de prédiction des échéances (extrapolation du kilométrage)
+- [x] Export des données en SVG
 
 ### En cours / À venir
 
-- [ ] Export des données en SVG, XSLX...
 - [ ] Export en installeur autonome (via `jpackage`)
 
 ## Fiche technique
@@ -103,7 +103,8 @@ CarnetEntretien/
     │   │   ├── controller/                 # Contrôleurs FXML
     │   │   │   └── DashboardController     # Contrôleur du tableau de bord
     │   │   └── service/                    # Logique métier
-    │   │       └── CalculateurEntretien    # Classe qui détermine quand prévoir un entretien
+    │   │       ├── CalculateurEntretien    # Classe qui détermine quand prévoir un entretien
+    │   │       └── ExportService.java      # Module d'export CSV
     │   ├── resources/com/carnetentretien/carnetentretien/
     │   │   ├── style.css                   # Styles globaux
     │   │   └── hello-view.fxml             # Interface principale

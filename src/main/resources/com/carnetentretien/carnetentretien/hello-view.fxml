@@ -73,6 +73,7 @@
             <Region HBox.hgrow="ALWAYS" />
             <Button onAction="#modifierEntretienSelectionne" styleClass="btn, btn-edit" text="✎ Modifier" />
             <Button onAction="#supprimerEntretienSelectionne" styleClass="btn, btn-delete" text="✖ Supprimer" />
+            <Button onAction="#exporterHistorique" styleClass="btn, btn-primary" text="📥 Exporter vers Excel" />
           </HBox>
           <ListView fx:id="listeEntretiensUI" VBox.vgrow="ALWAYS" />
         </VBox>

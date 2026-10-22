@@ -6,6 +6,7 @@ import com.carnetentretien.carnetentretien.db.VehiculeDB;
 import com.carnetentretien.carnetentretien.model.Entretien;
 import com.carnetentretien.carnetentretien.model.Preconisation;
 import com.carnetentretien.carnetentretien.model.Vehicule;
+import com.carnetentretien.carnetentretien.service.ExportService;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
@@ -66,7 +67,7 @@ public class DashboardController {
     private void afficherDetails(Vehicule v) {
         panneauDetails.setDisable(false);
         titreDetails.setText("Historique : " + v.getMarque() + " " + v.getModele());
-        
+
         ObservableList<Entretien> factures = FXCollections.observableArrayList(EntretienDB.getEntretiensPourVehicule(v.getId()));
         listeEntretiensUI.setItems(factures);
 
@@ -372,5 +373,13 @@ public class DashboardController {
 
         dialog.getDialogPane().setContent(vbox);
         dialog.showAndWait();
+    }
+
+    @FXML
+    public void exporterHistorique() {
+        if (vehiculeSelectionne != null) {
+            List<Entretien> factures = EntretienDB.getEntretiensPourVehicule(vehiculeSelectionne.getId());
+            ExportService.exporterHistoriqueCSV(vehiculeSelectionne, factures);
+        }
     }
 }
