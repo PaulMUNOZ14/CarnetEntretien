@@ -41,7 +41,7 @@ Ce projet propose un outil pour toute personne souhaitant suivre sérieusement l
 
 | Composant | Technologie |
 |-----------|-------------|
-| Langage | Java 21+ |
+| Langage | Java 21 |
 | Interface | JavaFX 21 |
 | Build | Maven |
 | Base de données | SQLite (via `sqlite-jdbc`) |
@@ -51,7 +51,7 @@ Ce projet propose un outil pour toute personne souhaitant suivre sérieusement l
 
 ## Prérequis
 
-- **JDK 21 ou supérieur** (testé avec OpenJDK 27)
+- **JDK 21 ou supérieur** (testé avec OpenJDK 21)
 - **Maven** (ou utiliser le `mvnw` inclus)
 - **IntelliJ IDEA** (recommandé) ou tout autre IDE Java
 
