@@ -92,27 +92,28 @@ CarnetEntretien/
 └── src/
     ├── main/
     │   ├── java/com/carnetentretien/carnetentretien/
-    │   │   ├── HelloApplication.java       # Point d'entrée JavaFX
-    │   │   ├── Launcher.java               # Lanceur de l'application
-    │   │   ├── model/                      # Objets métier (Vehicule, Entretien...)
-    │   │   │   ├── Entretien.java          # Objet Entretien
-    │   │   │   ├── Preconisation.java      # Objet Preconisation
-    │   │   │   └── Vehicule.java           # Objet Vehicule
-    │   │   ├── db/                         # Accès base de données (DatabaseManager, VehiculeDB...)
-    │   │   │   ├── DatabaseManager.java    # Gestionnaire de la base de données
-    │   │   │   ├── EntretienDB.java        # Gestionnaire de l'entretien dans la BDD
-    │   │   │   ├── PreconisationDB.java    # Gestionnaire des préconisations dans la BDD
-    │   │   │   └── VehiculeDB.java         # Gestionnaire des vehicules dans la BDD
-    │   │   ├── controller/                 # Contrôleurs FXML
-    │   │   │   └── DashboardController     # Contrôleur du tableau de bord
-    │   │   └── service/                    # Logique métier
-    │   │       ├── CalculateurEntretien    # Classe qui détermine quand prévoir un entretien
-    │   │       └── ExportService.java      # Module d'export CSV
+    │   │   ├── HelloApplication.java               # Point d'entrée JavaFX
+    │   │   ├── Launcher.java                       # Lanceur de l'application
+    │   │   ├── model/                              # Objets métier (Vehicule, Entretien...)
+    │   │   │   ├── Entretien.java                  # Objet Entretien
+    │   │   │   ├── Preconisation.java              # Objet Preconisation
+    │   │   │   └── Vehicule.java                   # Objet Vehicule
+    │   │   ├── db/                                 # Accès base de données (DatabaseManager, VehiculeDB...)
+    │   │   │   ├── DatabaseManager.java            # Gestionnaire de la base de données
+    │   │   │   ├── EntretienDB.java                # Gestionnaire de l'entretien dans la BDD
+    │   │   │   ├── PreconisationDB.java            # Gestionnaire des préconisations dans la BDD
+    │   │   │   └── VehiculeDB.java                 # Gestionnaire des vehicules dans la BDD
+    │   │   ├── controller/                         # Contrôleurs FXML
+    │   │   │   └── DashboardController             # Contrôleur du tableau de bord
+    │   │   └── service/                            # Logique métier
+    │   │       ├── CalculateurEntretien            # Classe qui détermine quand prévoir un entretien
+    │   │       ├── ExportService.java              # Module d'export CSV
+    │   │       └── RecherchePlaqueService.java     # Module d'export CSV
     │   ├── resources/com/carnetentretien/carnetentretien/
-    │   │   ├── style.css                   # Styles globaux
-    │   │   └── hello-view.fxml             # Interface principale
+    │   │   ├── style.css                           # Styles globaux
+    │   │   └── hello-view.fxml                     # Interface principale
     │   └── module-info.java
-    └── test/java/                          # Tests unitaires JUnit
+    └── test/java/                                  # Tests unitaires JUnit
 ```
 
 ## Modèle de données
