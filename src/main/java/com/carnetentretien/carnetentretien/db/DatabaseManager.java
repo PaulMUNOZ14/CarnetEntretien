@@ -2,6 +2,7 @@ package com.carnetentretien.carnetentretien.db;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -22,10 +23,12 @@ public class DatabaseManager {
     public static void initDatabase() {
         String sqlVehicule = "CREATE TABLE IF NOT EXISTS Vehicule (\n"
                 + " id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
+                + " immatriculation TEXT,\n"
                 + " marque TEXT NOT NULL,\n"
                 + " modele TEXT NOT NULL,\n"
                 + " kilometrage_actuel INTEGER NOT NULL,\n"
-                + " kilometrage_annuel_estime INTEGER NOT NULL\n"
+                + " kilometrage_annuel_estime INTEGER NOT NULL,\n"
+                + " image_url TEXT\n"
                 + ");";
 
         String sqlEntretien = "CREATE TABLE IF NOT EXISTS Entretien_Fait (\n"
@@ -50,9 +53,32 @@ public class DatabaseManager {
             stmt.execute(sqlVehicule);
             stmt.execute(sqlEntretien);
             stmt.execute(sqlPreconisation);
+
+            ajouterColonneSiAbsente(conn, "Vehicule", "immatriculation", "TEXT");
+            ajouterColonneSiAbsente(conn, "Vehicule", "image_url", "TEXT");
+
             System.out.println("Base de données initialisée avec succès.");
         } catch (SQLException e) {
             System.out.println("Erreur lors de la création de la table : " + e.getMessage());
+        }
+    }
+
+    private static void ajouterColonneSiAbsente(Connection conn, String table, String colonne, String type) throws SQLException {
+        boolean presente = false;
+        try (Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("PRAGMA table_info(" + table + ")")) {
+            while (rs.next()) {
+                if (colonne.equalsIgnoreCase(rs.getString("name"))) {
+                    presente = true;
+                    break;
+                }
+            }
+        }
+        if (!presente) {
+            try (Statement stmt = conn.createStatement()) {
+                stmt.execute("ALTER TABLE " + table + " ADD COLUMN " + colonne + " " + type);
+                System.out.println("Colonne ajoutée : " + table + "." + colonne);
+            }
         }
     }
 }

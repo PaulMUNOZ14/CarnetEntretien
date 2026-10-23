@@ -32,8 +32,11 @@ Ce projet propose un outil pour toute personne souhaitant suivre sérieusement l
 - [x] Alertes visuelles (À prévoir / Urgent)
 - [x] Algorithme de prédiction des échéances (extrapolation du kilométrage)
 - [x] Export des données en SVG
+- [x] Ajout d'un véhicule avec sa plaque d'immatriculation
+- [x] Affichage de la voiture si saisie par plaque d'immatriculation
 
 ### En cours / À venir
+
 
 - [ ] Export en installeur autonome (via `jpackage`)
 

@@ -8,9 +8,11 @@ import com.carnetentretien.carnetentretien.model.Preconisation;
 import com.carnetentretien.carnetentretien.model.Vehicule;
 import com.carnetentretien.carnetentretien.service.CalculateurEntretien;
 import com.carnetentretien.carnetentretien.service.ExportService;
+import com.carnetentretien.carnetentretien.service.RecherchePlaqueService;
 import javafx.animation.FadeTransition;
 import javafx.animation.PauseTransition;
 import javafx.animation.SequentialTransition;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.geometry.Insets;
@@ -28,6 +30,9 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -66,6 +71,9 @@ public class DashboardController {
     @FXML private FlowPane conteneurVehicules;
     @FXML private Label titreVehicule;
     @FXML private Label sousTitreVehicule;
+    @FXML private ImageView photoVehicule;
+    @FXML private Label iconeVehicule;
+    @FXML private HBox zonePlaque;
     @FXML private HBox bandeauEtat;
     @FXML private Label messageBandeau;
     @FXML private VBox conteneurJauges;
@@ -131,8 +139,7 @@ public class DashboardController {
     }
 
     private Button creerCarteVehicule(Vehicule v) {
-        Label icone = new Label("🚗");
-        icone.getStyleClass().add("carte-icone");
+        StackPane photo = creerVignette(v.getImageUrl(), 260, 130);
 
         Label nom = new Label(v.getMarque() + " " + v.getModele());
         nom.getStyleClass().add("carte-titre");
@@ -145,7 +152,11 @@ public class DashboardController {
 
         Label etat = creerBadge(niveauGlobal(analyser(v)));
 
-        VBox contenu = new VBox(8, icone, nom, compteur, etat);
+        VBox contenu = new VBox(8, photo, nom);
+        if (v.getImmatriculation() != null && !v.getImmatriculation().isBlank()) {
+            contenu.getChildren().add(creerPlaque(v.getImmatriculation()));
+        }
+        contenu.getChildren().addAll(compteur, etat);
         contenu.setAlignment(Pos.CENTER);
 
         Button carte = new Button();
@@ -170,7 +181,13 @@ public class DashboardController {
         Vehicule v = vehiculeSelectionne;
         if (v == null) return;
 
-        titreVehicule.setText("🚗  " + v.getMarque() + " " + v.getModele());
+        titreVehicule.setText(v.getMarque() + " " + v.getModele());
+        chargerImage(photoVehicule, iconeVehicule, v.getImageUrl());
+        zonePlaque.getChildren().clear();
+        if (v.getImmatriculation() != null && !v.getImmatriculation().isBlank()) {
+            zonePlaque.getChildren().add(creerPlaque(v.getImmatriculation()));
+        }
+        montrer(zonePlaque, !zonePlaque.getChildren().isEmpty());
         sousTitreVehicule.setText("Compteur : " + km(v.getKilometrageActuel()) + " km   -   environ " + km(v.getKilometrageAnnuelEstime()) + " km par an");
 
         List<CalculateurEntretien.Bilan> bilans = analyser(v);
@@ -462,12 +479,127 @@ public class DashboardController {
 
     /** Retourne le véhicule saisi, ou null si l'utilisateur a annulé. */
     private Vehicule saisirVehicule(Vehicule existant) {
+        TextField plaque = champ("AB-123-CD");
+        plaque.getStyleClass().add("champ-plaque");
+        plaque.setTextFormatter(new TextFormatter<String>(c -> {
+            c.setText(c.getText().toUpperCase());
+            return c;
+        }));
         TextField marque = champ("Ex : Renault");
         TextField modele = champ("Ex : Clio");
         TextField kmCompteur = champ("Ex : 45000");
         TextField kmAnnuel = champ("Ex : 12000");
 
+        // Photo trouvée via la plaque + plaque à laquelle cette photo correspond
+        String[] imageUrl = { existant != null ? existant.getImageUrl() : null };
+        String[] plaqueDeLaPhoto = { existant != null ? RecherchePlaqueService.normaliser(existant.getImmatriculation()) : "" };
+
+        // ---------- Aperçu : photo + nom du véhicule trouvé ----------
+        ImageView photo = new ImageView();
+        photo.setFitWidth(210);
+        photo.setFitHeight(125);
+        photo.setPreserveRatio(true);
+        photo.setVisible(false);
+        Label repli = new Label("🚗");
+        repli.getStyleClass().add("carte-icone");
+        StackPane cadre = new StackPane(repli, photo);
+        cadre.getStyleClass().add("photo-cadre");
+        cadre.setMinSize(230, 135);
+        cadre.setPrefSize(230, 135);
+        cadre.setMaxSize(230, 135);
+
+        Label apercuTitre = new Label();
+        apercuTitre.getStyleClass().add("apercu-titre");
+        apercuTitre.setWrapText(true);
+        Label apercuDetail = new Label();
+        apercuDetail.getStyleClass().add("apercu-detail");
+        apercuDetail.setWrapText(true);
+        Label apercuStatut = new Label();
+        apercuStatut.setWrapText(true);
+
+        VBox textes = new VBox(6, apercuTitre, apercuDetail, apercuStatut);
+        textes.setAlignment(Pos.CENTER_LEFT);
+        HBox.setHgrow(textes, Priority.ALWAYS);
+        HBox apercu = new HBox(18, cadre, textes);
+        apercu.setAlignment(Pos.CENTER_LEFT);
+        apercu.getStyleClass().add("apercu-vehicule");
+
         if (existant != null) {
+            apercuTitre.setText(existant.getMarque() + " " + existant.getModele());
+            definirStatut(apercuStatut, "Pour changer la photo, modifiez la plaque puis appuyez sur « Rechercher ».", "apercu-attente");
+            chargerImage(photo, repli, existant.getImageUrl());
+        } else {
+            apercuTitre.setText("Votre véhicule");
+            definirStatut(apercuStatut, "Écrivez la plaque puis appuyez sur « Rechercher » : la photo et le nom de votre voiture apparaîtront ici.", "apercu-attente");
+        }
+
+        // ---------- Ligne « plaque + bouton Rechercher » ----------
+        Button btnRecherche = bouton("🔍  Rechercher", "btn-primaire", "btn-moyen");
+        HBox lignePlaque = new HBox(12, plaque, btnRecherche);
+        lignePlaque.setAlignment(Pos.CENTER_LEFT);
+        HBox.setHgrow(plaque, Priority.ALWAYS);
+
+        Runnable lancerRecherche = () -> {
+            String saisie = plaque.getText();
+            if (saisie == null || saisie.isBlank()) {
+                definirStatut(apercuStatut, "⚠  Écrivez d'abord la plaque de votre véhicule (exemple : AB-123-CD).", "apercu-erreur");
+                plaque.requestFocus();
+                return;
+            }
+            if (!RecherchePlaqueService.formatValide(saisie)) {
+                definirStatut(apercuStatut, "⚠  Cette plaque ne ressemble pas à une plaque française. Exemple : AB-123-CD.", "apercu-erreur");
+                return;
+            }
+
+            btnRecherche.setDisable(true);
+            btnRecherche.setText("⏳  Recherche…");
+            definirStatut(apercuStatut, "Recherche en cours, quelques secondes…", "apercu-attente");
+
+            // L'appel réseau se fait HORS du thread de l'interface : la fenêtre ne se fige pas.
+            Task<RecherchePlaqueService.Resultat> tache = new Task<>() {
+                @Override
+                protected RecherchePlaqueService.Resultat call() {
+                    return RecherchePlaqueService.rechercher(saisie);
+                }
+            };
+            tache.setOnSucceeded(ev -> {
+                btnRecherche.setDisable(false);
+                btnRecherche.setText("🔍  Rechercher");
+                RecherchePlaqueService.Resultat r = tache.getValue();
+                if (r.trouve()) {
+                    plaque.setText(RecherchePlaqueService.formater(saisie));
+                    marque.setText(r.marque());
+                    modele.setText(r.modele());
+                    imageUrl[0] = r.imageUrl();
+                    plaqueDeLaPhoto[0] = RecherchePlaqueService.normaliser(saisie);
+
+                    apercuTitre.setText(r.marque() + " " + r.modele());
+                    List<String> details = new ArrayList<>();
+                    if (r.annee() != null) details.add("mise en circulation " + r.annee());
+                    if (r.energie() != null && !r.energie().isBlank()) details.add(r.energie());
+                    if (r.version() != null && !r.version().isBlank()) details.add(r.version());
+                    apercuDetail.setText(String.join("  ·  ", details));
+                    chargerImage(photo, repli, r.imageUrl());
+
+                    definirStatut(apercuStatut, "✔  Véhicule trouvé ! Vérifiez, puis complétez le kilométrage ci-dessous." + (r.imageUrl() == null ? "  (Pas de photo disponible pour ce modèle.)" : ""), "apercu-ok");
+                } else {
+                    definirStatut(apercuStatut, "⚠  " + r.messageErreur() + "  Vous pouvez aussi écrire la marque et le modèle vous-même ci-dessous.", "apercu-erreur");
+                }
+            });
+            tache.setOnFailed(ev -> {
+                btnRecherche.setDisable(false);
+                btnRecherche.setText("🔍  Rechercher");
+                definirStatut(apercuStatut, "⚠  La recherche a échoué. Vérifiez votre connexion Internet, " + "ou écrivez la marque et le modèle vous-même ci-dessous.", "apercu-erreur");
+            });
+            Thread fil = new Thread(tache, "recherche-plaque");
+            fil.setDaemon(true);
+            fil.start();
+        };
+        btnRecherche.setOnAction(e -> lancerRecherche.run());
+        plaque.setOnAction(e -> lancerRecherche.run());   // touche Entrée
+
+        if (existant != null) {
+            plaque.setText(existant.getImmatriculation() != null ? existant.getImmatriculation() : "");
             marque.setText(existant.getMarque());
             modele.setText(existant.getModele());
             kmCompteur.setText(String.valueOf(existant.getKilometrageActuel()));
@@ -478,15 +610,15 @@ public class DashboardController {
 
         boolean ok = demander(
                 existant == null ? "Ajouter un véhicule" : "Modifier le véhicule",
-                "Remplissez les 4 cases, puis appuyez sur « Enregistrer ».",
+                "Commencez par la plaque : nous retrouvons la marque, le modèle et une photo. " + "Pas de plaque sous la main ? Remplissez simplement les cases à la main.",
                 List.of(
-                        groupe("Marque de la voiture", marque, null),
-                        groupe("Modèle", modele, null),
-                        groupe("Kilomètres affichés au compteur", kmCompteur, "Écrivez uniquement des chiffres. Exemple : 45000"),
-                        groupe("Kilomètres parcourus en une année (environ)", kmAnnuel,
-                                "Si vous ne savez pas, gardez 12000 : c'est la moyenne en France.")),
-                "✔  Enregistrer",
+                        groupe("Plaque d'immatriculation", lignePlaque, "Facultatif, mais c'est elle qui permet d'afficher la photo de votre voiture."),
+                        apercu,
+                        deuxColonnes(groupe("Marque", marque, null), groupe("Modèle", modele, null)),
+                        deuxColonnes(groupe("Kilomètres au compteur", kmCompteur, "Chiffres uniquement. Ex : 45000"), groupe("Kilomètres par an (environ)", kmAnnuel, "Au doute, gardez 12000 : c'est la moyenne en France."))), "✔  Enregistrer",
                 () -> {
+                    if (!plaque.getText().isBlank() && !RecherchePlaqueService.formatValide(plaque.getText()))
+                        return "La plaque n'est pas valide (exemple : AB-123-CD). Corrigez-la, ou videz la case si vous ne l'avez pas.";
                     if (marque.getText().isBlank()) return "Veuillez écrire la marque de la voiture (exemple : Renault).";
                     if (modele.getText().isBlank()) return "Veuillez écrire le modèle de la voiture (exemple : Clio).";
                     if (!estEntier(kmCompteur.getText())) return "Le kilométrage du compteur doit être un nombre, par exemple 45000.";
@@ -496,9 +628,98 @@ public class DashboardController {
                 });
 
         if (!ok) return null;
+
+        String plaqueFinale = plaque.getText().isBlank() ? null : RecherchePlaqueService.formater(plaque.getText());
+        // Si la plaque a changé depuis la recherche, la photo ne correspond plus : on ne la garde pas.
+        String photoFinale = RecherchePlaqueService.normaliser(plaque.getText()).equals(plaqueDeLaPhoto[0]) ? imageUrl[0] : null;
+
         return new Vehicule(existant != null ? existant.getId() : 0,
-                marque.getText().trim(), modele.getText().trim(),
-                parseEntier(kmCompteur.getText()), parseEntier(kmAnnuel.getText()));
+                plaqueFinale, marque.getText().trim(), modele.getText().trim(),
+                parseEntier(kmCompteur.getText()), parseEntier(kmAnnuel.getText()), photoFinale);
+    }
+
+    // ---------- Photo, plaque, mise en page ----------
+
+    /** Cadre avec la photo du véhicule ; affiche 🚗 tant que la photo n'est pas chargée (ou s'il n'y en a pas). */
+    private StackPane creerVignette(String url, double largeur, double hauteur) {
+        Label repli = new Label("🚗");
+        repli.getStyleClass().add("carte-icone");
+        ImageView vue = new ImageView();
+        vue.setFitWidth(largeur - 10);
+        vue.setFitHeight(hauteur - 10);
+        vue.setPreserveRatio(true);
+        vue.setVisible(false);
+
+        StackPane cadre = new StackPane(repli, vue);
+        cadre.getStyleClass().add("photo-cadre");
+        cadre.setMinSize(largeur, hauteur);
+        cadre.setPrefSize(largeur, hauteur);
+        cadre.setMaxSize(largeur, hauteur);
+        chargerImage(vue, repli, url);
+        return cadre;
+    }
+
+    /** Charge l'image en arrière-plan ; en cas d'échec (hors ligne, lien mort) on garde l'icône 🚗. */
+    private void chargerImage(ImageView vue, Node repli, String url) {
+        vue.setUserData(url);
+        vue.setImage(null);
+        vue.setVisible(false);
+        repli.setVisible(true);
+        if (url == null || url.isBlank()) return;
+
+        final Image image;
+        try {
+            image = new Image(url, 520, 320, true, true, true);
+        } catch (IllegalArgumentException e) {
+            return;   // lien invalide
+        }
+        Runnable verifier = () -> {
+            if (!url.equals(vue.getUserData())) return;   // une recherche plus récente a pris le relais
+            if (image.isError()) {
+                vue.setVisible(false);
+                repli.setVisible(true);
+            } else if (image.getProgress() >= 1.0) {
+                vue.setImage(image);
+                vue.setVisible(true);
+                repli.setVisible(false);
+            }
+        };
+        image.progressProperty().addListener((o, a, b) -> verifier.run());
+        image.errorProperty().addListener((o, a, b) -> verifier.run());
+        verifier.run();
+    }
+
+    /** Plaque façon française : bande bleue « F » + numéro. */
+    private HBox creerPlaque(String texte) {
+        Label bande = new Label("F");
+        bande.getStyleClass().add("plaque-bande");
+        bande.setMaxHeight(Double.MAX_VALUE);
+        Label numero = new Label(RecherchePlaqueService.formater(texte));
+        numero.getStyleClass().add("plaque-texte");
+        HBox plaque = new HBox(bande, numero);
+        plaque.getStyleClass().add("plaque");
+        plaque.setAlignment(Pos.CENTER_LEFT);
+        plaque.setMaxWidth(Region.USE_PREF_SIZE);
+        return plaque;
+    }
+
+    private void definirStatut(Label label, String texte, String classe) {
+        label.getStyleClass().removeAll("apercu-ok", "apercu-erreur", "apercu-attente");
+        label.getStyleClass().add(classe);
+        label.setText(texte);
+        if (label.getScene() != null && label.getScene().getWindow() != null) {
+            label.getScene().getWindow().sizeToScene();   // la fenêtre s'adapte à la longueur du message
+        }
+    }
+
+    private HBox deuxColonnes(Node gauche, Node droite) {
+        HBox ligne = new HBox(18, gauche, droite);
+        for (Node n : new Node[]{gauche, droite}) {
+            HBox.setHgrow(n, Priority.ALWAYS);
+            ((Region) n).setPrefWidth(10);
+            ((Region) n).setMinWidth(0);
+        }
+        return ligne;
     }
 
     /** Retourne l'entretien saisi, ou null si l'utilisateur a annulé. */
@@ -604,7 +825,7 @@ public class DashboardController {
 
         VBox contenu = new VBox(18);
         contenu.setPadding(new Insets(10, 10, 0, 10));
-        contenu.setPrefWidth(560);
+        contenu.setPrefWidth(640);
         contenu.getChildren().add(intro);
         contenu.getChildren().addAll(champs);
         contenu.getChildren().add(erreur);

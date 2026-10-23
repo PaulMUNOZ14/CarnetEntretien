@@ -13,15 +13,17 @@ import java.util.List;
 public class VehiculeDB {
 
     public static void ajouterVehicule(Vehicule vehicule) {
-        String sql = "INSERT INTO Vehicule(marque, modele, kilometrage_actuel, kilometrage_annuel_estime) VALUES(?,?,?,?)";
+        String sql = "INSERT INTO Vehicule(immatriculation, marque, modele, kilometrage_actuel, kilometrage_annuel_estime, image_url) " + "VALUES(?,?,?,?,?,?)";
 
         try (Connection conn = DatabaseManager.connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setString(1, vehicule.getMarque());
-            pstmt.setString(2, vehicule.getModele());
-            pstmt.setInt(3, vehicule.getKilometrageActuel());
-            pstmt.setInt(4, vehicule.getKilometrageAnnuelEstime());
+            pstmt.setString(1, vehicule.getImmatriculation());
+            pstmt.setString(2, vehicule.getMarque());
+            pstmt.setString(3, vehicule.getModele());
+            pstmt.setInt(4, vehicule.getKilometrageActuel());
+            pstmt.setInt(5, vehicule.getKilometrageAnnuelEstime());
+            pstmt.setString(6, vehicule.getImageUrl());
 
             pstmt.executeUpdate();
             System.out.println("Véhicule ajouté avec succès en base de données !");
@@ -32,16 +34,19 @@ public class VehiculeDB {
     }
 
     public static void modifierVehicule(Vehicule vehicule) {
-        String sql = "UPDATE Vehicule SET marque = ?, modele = ?, kilometrage_actuel = ?, kilometrage_annuel_estime = ? WHERE id = ?";
+        String sql = "UPDATE Vehicule SET immatriculation = ?, marque = ?, modele = ?, "
+                + "kilometrage_actuel = ?, kilometrage_annuel_estime = ?, image_url = ? WHERE id = ?";
 
         try (Connection conn = DatabaseManager.connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-            pstmt.setString(1, vehicule.getMarque());
-            pstmt.setString(2, vehicule.getModele());
-            pstmt.setInt(3, vehicule.getKilometrageActuel());
-            pstmt.setInt(4, vehicule.getKilometrageAnnuelEstime());
-            pstmt.setInt(5, vehicule.getId());
+            pstmt.setString(1, vehicule.getImmatriculation());
+            pstmt.setString(2, vehicule.getMarque());
+            pstmt.setString(3, vehicule.getModele());
+            pstmt.setInt(4, vehicule.getKilometrageActuel());
+            pstmt.setInt(5, vehicule.getKilometrageAnnuelEstime());
+            pstmt.setString(6, vehicule.getImageUrl());
+            pstmt.setInt(7, vehicule.getId());
 
             pstmt.executeUpdate();
             System.out.println("Véhicule mis à jour !");
@@ -81,10 +86,12 @@ public class VehiculeDB {
             while (rs.next()) {
                 Vehicule v = new Vehicule(
                         rs.getInt("id"),
+                        rs.getString("immatriculation"),
                         rs.getString("marque"),
                         rs.getString("modele"),
                         rs.getInt("kilometrage_actuel"),
-                        rs.getInt("kilometrage_annuel_estime")
+                        rs.getInt("kilometrage_annuel_estime"),
+                        rs.getString("image_url")
                 );
                 listeVehicules.add(v);
             }
