@@ -108,7 +108,7 @@ CarnetEntretien/
     │   │   └── service/                            # Logique métier
     │   │       ├── CalculateurEntretien            # Classe qui détermine quand prévoir un entretien
     │   │       ├── ExportService.java              # Module d'export CSV
-    │   │       └── RecherchePlaqueService.java     # Module d'export CSV
+    │   │       └── RecherchePlaqueService.java     # Recherche d'un véhicule par plaque d'immatriculation
     │   ├── resources/com/carnetentretien/carnetentretien/
     │   │   ├── style.css                           # Styles globaux
     │   │   └── hello-view.fxml                     # Interface principale
