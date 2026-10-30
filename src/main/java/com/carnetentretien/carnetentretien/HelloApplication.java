@@ -2,14 +2,24 @@ package com.carnetentretien.carnetentretien;
 
 import com.carnetentretien.carnetentretien.db.DatabaseManager;
 import javafx.application.Application;
+import javafx.application.HostServices;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import java.io.IOException;
 
 public class HelloApplication extends Application {
+
+    private static HostServices services;
+
+    /** Ouvre une adresse web dans le navigateur de l'utilisateur. */
+    public static void ouvrirLien(String url) {
+        if (services != null) services.showDocument(url);
+    }
+
     @Override
     public void start(Stage stage) throws IOException {
+        services = getHostServices();
         DatabaseManager.initDatabase();
 
         FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("hello-view.fxml"));

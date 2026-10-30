@@ -1,5 +1,6 @@
 package com.carnetentretien.carnetentretien.controller;
 
+import com.carnetentretien.carnetentretien.HelloApplication;
 import com.carnetentretien.carnetentretien.db.EntretienDB;
 import com.carnetentretien.carnetentretien.db.PreconisationDB;
 import com.carnetentretien.carnetentretien.db.VehiculeDB;
@@ -7,11 +8,14 @@ import com.carnetentretien.carnetentretien.model.Entretien;
 import com.carnetentretien.carnetentretien.model.Preconisation;
 import com.carnetentretien.carnetentretien.model.Vehicule;
 import com.carnetentretien.carnetentretien.service.CalculateurEntretien;
+import com.carnetentretien.carnetentretien.service.ConfigService;
 import com.carnetentretien.carnetentretien.service.ExportService;
+import com.carnetentretien.carnetentretien.service.ImageService;
 import com.carnetentretien.carnetentretien.service.RecherchePlaqueService;
 import javafx.animation.FadeTransition;
 import javafx.animation.PauseTransition;
 import javafx.animation.SequentialTransition;
+import javafx.application.Platform;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -26,6 +30,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Dialog;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.ProgressBar;
 import javafx.scene.control.ScrollPane;
@@ -39,9 +44,13 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import javafx.stage.FileChooser;
 import javafx.stage.Window;
 import javafx.util.Duration;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.FormatStyle;
@@ -88,6 +97,18 @@ public class DashboardController {
     public void initialize() {
         installerReglesParDefaut();
         afficherAccueil();
+
+        // Première utilisation sans clé personnelle : on explique une seule fois comment en obtenir une.
+        if (!ConfigService.aCleApi() && !ConfigService.aideDejaAffichee()) {
+            ConfigService.marquerAideAffichee();
+            Platform.runLater(this::ouvrirCleApi);
+        }
+    }
+
+    /** Adresse de la photo à afficher : celle choisie par l'utilisateur, sinon celle trouvée via la plaque. */
+    private static String sourceImage(Vehicule v) {
+        String locale = ImageService.adresse(v.getImageLocale());
+        return locale != null ? locale : v.getImageUrl();
     }
 
     /** Au tout premier lancement, on propose des règles courantes pour que l'écran ne soit jamais vide. */
@@ -139,7 +160,7 @@ public class DashboardController {
     }
 
     private Button creerCarteVehicule(Vehicule v) {
-        StackPane photo = creerVignette(v.getImageUrl(), 260, 130);
+        StackPane photo = creerVignette(sourceImage(v), 260, 130);
 
         Label nom = new Label(v.getMarque() + " " + v.getModele());
         nom.getStyleClass().add("carte-titre");
@@ -182,7 +203,7 @@ public class DashboardController {
         if (v == null) return;
 
         titreVehicule.setText(v.getMarque() + " " + v.getModele());
-        chargerImage(photoVehicule, iconeVehicule, v.getImageUrl());
+        chargerImage(photoVehicule, iconeVehicule, sourceImage(v));
         zonePlaque.getChildren().clear();
         if (v.getImmatriculation() != null && !v.getImmatriculation().isBlank()) {
             zonePlaque.getChildren().add(creerPlaque(v.getImmatriculation()));
@@ -325,7 +346,11 @@ public class DashboardController {
         if (vehiculeSelectionne == null) return;
         Vehicule modifie = saisirVehicule(vehiculeSelectionne);
         if (modifie != null) {
+            String ancienneCopie = vehiculeSelectionne.getImageLocale();
             VehiculeDB.modifierVehicule(modifie);
+            if (ancienneCopie != null && !ancienneCopie.equals(modifie.getImageLocale())) {
+                ImageService.supprimer(ancienneCopie);   // photo remplacée ou retirée : on libère la place
+            }
             vehiculeSelectionne = modifie;
             afficherVehicule();
             toast("✔  Modifications enregistrées");
@@ -338,6 +363,7 @@ public class DashboardController {
         boolean oui = confirmer("Supprimer ce véhicule", "Voulez-vous vraiment supprimer « " + vehiculeSelectionne.getMarque() + " " + vehiculeSelectionne.getModele() + " » ?\n\n" + "Tout son historique d'entretien sera aussi effacé. Cette action est définitive.", "Oui, supprimer");
         if (oui) {
             VehiculeDB.supprimerVehicule(vehiculeSelectionne.getId());
+            ImageService.supprimer(vehiculeSelectionne.getImageLocale());
             afficherAccueil();
             toast("✔  Véhicule supprimé");
         }
@@ -477,6 +503,50 @@ public class DashboardController {
         }
     }
 
+    /** Fenêtre d'aide : explique où obtenir la clé du service de plaques et permet de la coller. */
+    @FXML
+    public void ouvrirCleApi() {
+        Label etapes = new Label(
+                "Comment obtenir votre clé :\n\n"
+                        + "1.  Appuyez sur le lien bleu ci-dessous : le site s'ouvre dans votre navigateur.\n"
+                        + "2.  Créez un compte (adresse e-mail et mot de passe).\n"
+                        + "3.  Choisissez une offre. Les tarifs sont affichés sur le site : certaines offres sont payantes.\n"
+                        + "4.  Retrouvez votre clé (on l'appelle aussi « token ») dans votre espace « Mon compte ».\n"
+                        + "5.  Revenez ici, collez-la dans la case ci-dessous, puis appuyez sur « Enregistrer ».");
+        etapes.setWrapText(true);
+
+        Hyperlink lien = new Hyperlink("➜  Ouvrir le site pour obtenir ma clé");
+        lien.setOnAction(e -> HelloApplication.ouvrirLien(ConfigService.LIEN_OBTENIR_CLE));
+        Label adresse = new Label(ConfigService.LIEN_OBTENIR_CLE);
+        adresse.getStyleClass().add("aide-champ");
+        adresse.setWrapText(true);
+        VBox blocLien = new VBox(2, lien, adresse);
+
+        TextField cle = champ("Collez ici votre clé");
+        cle.setText(ConfigService.getCleApi().orElse(""));
+        String etat = ConfigService.aCleApi()
+                ? "Clé enregistrée : " + ConfigService.masquerCle(ConfigService.getCleApi().orElse(""))
+                : "Pas encore de clé personnelle : l'application utilise une clé de démonstration, très limitée.";
+
+        boolean ok = demander(
+                "Ma clé d'accès",
+                "Pour retrouver votre voiture à partir de sa plaque, l'application interroge le service apiplaqueimmatriculation.com. "
+                        + "Ce service demande une clé personnelle. Vous pouvez aussi faire cette étape plus tard avec le bouton « 🔑 Clé API ».",
+                List.of(
+                        etapes,
+                        blocLien,
+                        groupe("Ma clé", cle, etat + "  Videz la case puis enregistrez pour la supprimer. La clé reste uniquement sur cet ordinateur.")),
+                "✔  Enregistrer",
+                () -> cle.getText().isBlank() || cle.getText().trim().matches("\\S+")
+                        ? null
+                        : "La clé ne doit pas contenir d'espace. Copiez-la de nouveau depuis le site.");
+
+        if (ok) {
+            ConfigService.setCleApi(cle.getText());
+            toast(ConfigService.aCleApi() ? "✔  Clé enregistrée" : "Clé supprimée : la clé de démonstration sera utilisée");
+        }
+    }
+
     /** Retourne le véhicule saisi, ou null si l'utilisateur a annulé. */
     private Vehicule saisirVehicule(Vehicule existant) {
         TextField plaque = champ("AB-123-CD");
@@ -493,6 +563,18 @@ public class DashboardController {
         // Photo trouvée via la plaque + plaque à laquelle cette photo correspond
         String[] imageUrl = { existant != null ? existant.getImageUrl() : null };
         String[] plaqueDeLaPhoto = { existant != null ? RecherchePlaqueService.normaliser(existant.getImmatriculation()) : "" };
+
+        // Photo choisie sur l'ordinateur : le fichier n'est copié dans l'application qu'au clic sur « Enregistrer »
+        Path[] photoChoisie = { null };
+        boolean[] photoRetiree = { false };
+        Supplier<String> adressePhoto = () -> {
+            if (photoChoisie[0] != null) return photoChoisie[0].toUri().toString();
+            if (!photoRetiree[0] && existant != null) {
+                String locale = ImageService.adresse(existant.getImageLocale());
+                if (locale != null) return locale;
+            }
+            return imageUrl[0];
+        };
 
         // ---------- Aperçu : photo + nom du véhicule trouvé ----------
         ImageView photo = new ImageView();
@@ -517,7 +599,42 @@ public class DashboardController {
         Label apercuStatut = new Label();
         apercuStatut.setWrapText(true);
 
-        VBox textes = new VBox(6, apercuTitre, apercuDetail, apercuStatut);
+        Button btnPhoto = bouton("📁  Choisir ma propre photo…", "btn-secondaire", "btn-moyen");
+        Button btnRetirerPhoto = bouton("✖  Retirer ma photo", "btn-secondaire", "btn-moyen");
+        Runnable majBoutonRetirer = () -> montrer(btnRetirerPhoto,
+                photoChoisie[0] != null || (!photoRetiree[0] && existant != null && existant.getImageLocale() != null));
+        btnPhoto.setOnAction(e -> {
+            FileChooser choix = new FileChooser();
+            choix.setTitle("Choisir la photo de votre véhicule");
+            choix.getExtensionFilters().add(new FileChooser.ExtensionFilter(
+                    "Images (PNG, JPG, GIF, BMP)", "*.png", "*.jpg", "*.jpeg", "*.gif", "*.bmp"));
+            java.io.File fichier = choix.showOpenDialog(fenetreActive());
+            if (fichier == null) return;
+            try {
+                ImageService.valider(fichier.toPath());
+            } catch (IOException ex) {
+                definirStatut(apercuStatut, "⚠  " + ex.getMessage(), "apercu-erreur");
+                return;
+            }
+            photoChoisie[0] = fichier.toPath();
+            photoRetiree[0] = false;
+            chargerImage(photo, repli, adressePhoto.get());
+            definirStatut(apercuStatut, "✔  Photo choisie. Elle sera copiée dans l'application quand vous appuierez sur « Enregistrer » : "
+                    + "vous pourrez ensuite supprimer le fichier d'origine sans rien perdre.", "apercu-ok");
+            majBoutonRetirer.run();
+        });
+        btnRetirerPhoto.setOnAction(e -> {
+            photoChoisie[0] = null;
+            photoRetiree[0] = true;
+            chargerImage(photo, repli, adressePhoto.get());
+            definirStatut(apercuStatut, "Votre photo sera retirée quand vous appuierez sur « Enregistrer ». "
+                    + (imageUrl[0] != null ? "La photo trouvée avec la plaque sera affichée à la place." : "Une icône 🚗 sera affichée à la place."), "apercu-attente");
+            majBoutonRetirer.run();
+        });
+        FlowPane boutonsPhoto = new FlowPane(10, 8, btnPhoto, btnRetirerPhoto);
+        majBoutonRetirer.run();
+
+        VBox textes = new VBox(6, apercuTitre, apercuDetail, apercuStatut, boutonsPhoto);
         textes.setAlignment(Pos.CENTER_LEFT);
         HBox.setHgrow(textes, Priority.ALWAYS);
         HBox apercu = new HBox(18, cadre, textes);
@@ -526,8 +643,8 @@ public class DashboardController {
 
         if (existant != null) {
             apercuTitre.setText(existant.getMarque() + " " + existant.getModele());
-            definirStatut(apercuStatut, "Pour changer la photo, modifiez la plaque puis appuyez sur « Rechercher ».", "apercu-attente");
-            chargerImage(photo, repli, existant.getImageUrl());
+            definirStatut(apercuStatut, "Pour changer la photo : modifiez la plaque puis appuyez sur « Rechercher », ou choisissez votre propre photo.", "apercu-attente");
+            chargerImage(photo, repli, adressePhoto.get());
         } else {
             apercuTitre.setText("Votre véhicule");
             definirStatut(apercuStatut, "Écrivez la plaque puis appuyez sur « Rechercher » : la photo et le nom de votre voiture apparaîtront ici.", "apercu-attente");
@@ -579,7 +696,7 @@ public class DashboardController {
                     if (r.energie() != null && !r.energie().isBlank()) details.add(r.energie());
                     if (r.version() != null && !r.version().isBlank()) details.add(r.version());
                     apercuDetail.setText(String.join("  ·  ", details));
-                    chargerImage(photo, repli, r.imageUrl());
+                    chargerImage(photo, repli, adressePhoto.get());   // une photo choisie par l'utilisateur reste prioritaire
 
                     definirStatut(apercuStatut, "✔  Véhicule trouvé ! Vérifiez, puis complétez le kilométrage ci-dessous." + (r.imageUrl() == null ? "  (Pas de photo disponible pour ce modèle.)" : ""), "apercu-ok");
                 } else {
@@ -617,6 +734,8 @@ public class DashboardController {
                         deuxColonnes(groupe("Marque", marque, null), groupe("Modèle", modele, null)),
                         deuxColonnes(groupe("Kilomètres au compteur", kmCompteur, "Chiffres uniquement. Ex : 45000"), groupe("Kilomètres par an (environ)", kmAnnuel, "Au doute, gardez 12000 : c'est la moyenne en France."))), "✔  Enregistrer",
                 () -> {
+                    if (photoChoisie[0] != null && !Files.isRegularFile(photoChoisie[0]))
+                        return "La photo choisie n'existe plus à son emplacement d'origine. Choisissez-la de nouveau.";
                     if (!plaque.getText().isBlank() && !RecherchePlaqueService.formatValide(plaque.getText()))
                         return "La plaque n'est pas valide (exemple : AB-123-CD). Corrigez-la, ou videz la case si vous ne l'avez pas.";
                     if (marque.getText().isBlank()) return "Veuillez écrire la marque de la voiture (exemple : Renault).";
@@ -633,9 +752,20 @@ public class DashboardController {
         // Si la plaque a changé depuis la recherche, la photo ne correspond plus : on ne la garde pas.
         String photoFinale = RecherchePlaqueService.normaliser(plaque.getText()).equals(plaqueDeLaPhoto[0]) ? imageUrl[0] : null;
 
+        // Photo personnelle : copiée ICI (et seulement ici) dans le dossier de l'application
+        String imageLocale = existant != null ? existant.getImageLocale() : null;
+        if (photoRetiree[0]) imageLocale = null;
+        if (photoChoisie[0] != null) {
+            try {
+                imageLocale = ImageService.importer(photoChoisie[0]);
+            } catch (IOException ex) {
+                toast("⚠  La photo n'a pas pu être enregistrée : " + ex.getMessage());
+            }
+        }
+
         return new Vehicule(existant != null ? existant.getId() : 0,
                 plaqueFinale, marque.getText().trim(), modele.getText().trim(),
-                parseEntier(kmCompteur.getText()), parseEntier(kmAnnuel.getText()), photoFinale);
+                parseEntier(kmCompteur.getText()), parseEntier(kmAnnuel.getText()), photoFinale, imageLocale);
     }
 
     // ---------- Photo, plaque, mise en page ----------

@@ -1,5 +1,7 @@
 package com.carnetentretien.carnetentretien.db;
 
+import com.carnetentretien.carnetentretien.service.AppPaths;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -7,13 +9,15 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 public class DatabaseManager {
-    // Le chemin vers le fichier de la base de données
-    private static final String URL = "jdbc:sqlite:carnet_entretien.db";
+    // Le fichier de la base de données est dans le dossier de données de l'application (voir AppPaths)
+    private static String url() {
+        return "jdbc:sqlite:" + AppPaths.fichierBaseDeDonnees();
+    }
 
     public static Connection connect() {
         Connection conn = null;
         try {
-            conn = DriverManager.getConnection(URL);
+            conn = DriverManager.getConnection(url());
         } catch (SQLException e) {
             System.out.println("Erreur de connexion à SQLite : " + e.getMessage());
         }
@@ -28,7 +32,8 @@ public class DatabaseManager {
                 + " modele TEXT NOT NULL,\n"
                 + " kilometrage_actuel INTEGER NOT NULL,\n"
                 + " kilometrage_annuel_estime INTEGER NOT NULL,\n"
-                + " image_url TEXT\n"
+                + " image_url TEXT,\n"
+                + " image_locale TEXT\n"
                 + ");";
 
         String sqlEntretien = "CREATE TABLE IF NOT EXISTS Entretien_Fait (\n"
@@ -56,6 +61,7 @@ public class DatabaseManager {
 
             ajouterColonneSiAbsente(conn, "Vehicule", "immatriculation", "TEXT");
             ajouterColonneSiAbsente(conn, "Vehicule", "image_url", "TEXT");
+            ajouterColonneSiAbsente(conn, "Vehicule", "image_locale", "TEXT");
 
             System.out.println("Base de données initialisée avec succès.");
         } catch (SQLException e) {

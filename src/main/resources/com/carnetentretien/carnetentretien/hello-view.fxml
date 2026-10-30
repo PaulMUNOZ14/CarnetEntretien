@@ -55,6 +55,7 @@
     <HBox alignment="CENTER_LEFT" spacing="16.0" styleClass="entete">
       <Button onAction="#retourAccueil" styleClass="btn, btn-secondaire" text="⬅  Retour à mes véhicules" />
       <Region HBox.hgrow="ALWAYS" />
+      <Button onAction="#ouvrirCleApi" styleClass="btn, btn-discret" text="🔑  Clé API" />
       <Button onAction="#ouvrirReglages" styleClass="btn, btn-discret" text="⚙  Réglages" />
     </HBox>
 

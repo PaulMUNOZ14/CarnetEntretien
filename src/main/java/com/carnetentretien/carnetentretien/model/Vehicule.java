@@ -8,9 +8,15 @@ public class Vehicule {
     private int kilometrageActuel;
     private int kilometrageAnnuelEstime;
     private String imageUrl;   // photo du modèle (récupérée via la plaque), peut être null
+    private String imageLocale; // nom du fichier choisi par l'utilisateur, copié dans images/ (null = aucune)
 
     public Vehicule(int id, String immatriculation, String marque, String modele,
                     int kilometrageActuel, int kilometrageAnnuelEstime, String imageUrl) {
+        this(id, immatriculation, marque, modele, kilometrageActuel, kilometrageAnnuelEstime, imageUrl, null);
+    }
+
+    public Vehicule(int id, String immatriculation, String marque, String modele,
+                    int kilometrageActuel, int kilometrageAnnuelEstime, String imageUrl, String imageLocale) {
         this.id = id;
         this.immatriculation = immatriculation;
         this.marque = marque;
@@ -18,6 +24,7 @@ public class Vehicule {
         this.kilometrageActuel = kilometrageActuel;
         this.kilometrageAnnuelEstime = kilometrageAnnuelEstime;
         this.imageUrl = imageUrl;
+        this.imageLocale = imageLocale;
     }
 
     public Vehicule(int id, String immatriculation, String marque, String modele,
@@ -46,6 +53,9 @@ public class Vehicule {
 
     public String getImageUrl() { return imageUrl; }
     public void setImageUrl(String imageUrl) { this.imageUrl = imageUrl; }
+
+    public String getImageLocale() { return imageLocale; }
+    public void setImageLocale(String imageLocale) { this.imageLocale = imageLocale; }
 
     @Override
     public String toString() {

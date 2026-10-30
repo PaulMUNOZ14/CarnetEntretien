@@ -1,6 +1,5 @@
 package com.carnetentretien.carnetentretien.service;
 
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URLEncoder;
@@ -13,7 +12,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -26,7 +24,8 @@ import java.util.regex.Pattern;
  *
  * Clé d'API (dans cet ordre) :
  *   1. variable d'environnement PLAQUE_API_TOKEN
- *   2. fichier config.properties (dossier de lancement) : plaque.api.token=VOTRE_CLE
+ *   2. fichier config.properties (dossier de données, voir AppPaths) : plaque.api.token=VOTRE_CLE
+ *      (écrit par le bouton « 🔑 Clé API » de l'application, voir ConfigService)
  *   3. clé de démonstration de la documentation du service (probablement limitée : à remplacer par votre propre clé)
  */
 public class RecherchePlaqueService {
@@ -90,10 +89,28 @@ public class RecherchePlaqueService {
                     .build();
 
             HttpResponse<String> reponse = CLIENT.send(requete, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
-            int statut = reponse.statusCode();
+            return interpreter(reponse.statusCode(), reponse.body(), demo);
 
+        } catch (java.net.http.HttpTimeoutException e) {
+            return Resultat.echec("Le service met trop de temps à répondre. Vérifiez votre connexion Internet, ou saisissez la marque et le modèle vous-même.");
+        } catch (IOException e) {
+            return Resultat.echec("Impossible de joindre le service. Vérifiez votre connexion Internet, ou saisissez la marque et le modèle vous-même.");
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            return Resultat.echec("La recherche a été interrompue.");
+        } catch (RuntimeException e) {
+            return Resultat.echec("La réponse du service est inattendue. Saisissez la marque et le modèle vous-même.");
+        }
+    }
+
+    /**
+     * Transforme la réponse HTTP du service en {@link Resultat}. Aucun accès réseau : c'est ce qui permet de tester
+     * tous les cas (clé refusée, plaque inconnue, JSON étrange…) sans appeler le vrai service.
+     */
+    static Resultat interpreter(int statut, String corps, boolean demo) {
+        try {
             if (statut == 401 || statut == 403) {
-                return Resultat.echec("La clé d'accès au service de recherche est refusée. Vérifiez la clé dans config.properties.");
+                return Resultat.echec("La clé d'accès au service de recherche est refusée. Vérifiez-la avec le bouton « 🔑 Clé API » en haut de l'écran.");
             }
             if (statut == 429) {
                 return Resultat.echec("Trop de recherches ont été faites. Réessayez dans quelques minutes.");
@@ -102,7 +119,7 @@ public class RecherchePlaqueService {
                 return Resultat.echec("Le service de recherche ne répond pas correctement (code " + statut + "). Réessayez plus tard.");
             }
 
-            Object racine = MiniJson.parse(reponse.body());
+            Object racine = MiniJson.parse(corps);
             if (!(racine instanceof Map<?, ?> map)) {
                 return Resultat.echec("La réponse du service est illisible.");
             }
@@ -134,14 +151,6 @@ public class RecherchePlaqueService {
                     urlImage(texte(d.get("photo_modele"))),
                     urlImage(texte(d.get("logo_marque"))),
                     null);
-
-        } catch (java.net.http.HttpTimeoutException e) {
-            return Resultat.echec("Le service met trop de temps à répondre. Vérifiez votre connexion Internet, ou saisissez la marque et le modèle vous-même.");
-        } catch (IOException e) {
-            return Resultat.echec("Impossible de joindre le service. Vérifiez votre connexion Internet, ou saisissez la marque et le modèle vous-même.");
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            return Resultat.echec("La recherche a été interrompue.");
         } catch (RuntimeException e) {
             return Resultat.echec("La réponse du service est inattendue. Saisissez la marque et le modèle vous-même.");
         }
@@ -150,7 +159,7 @@ public class RecherchePlaqueService {
     private static String messageNonTrouve(String detailApi, boolean demo) {
         String base = "Aucun véhicule trouvé pour cette plaque.";
         if (demo) {
-            base += " (Vous utilisez la clé de démonstration, qui est peut-être limitée. " + "Ajoutez votre propre clé dans config.properties.)";
+            base += " (Vous utilisez la clé de démonstration, qui est peut-être limitée. " + "Ajoutez votre propre clé avec le bouton « 🔑 Clé API » en haut de l'écran.)";
         }
         if (detailApi != null && !detailApi.isBlank()) {
             base += " Détail du service : " + detailApi;
@@ -158,18 +167,16 @@ public class RecherchePlaqueService {
         return base;
     }
 
-    private static String lireToken() {
+    /** Clé utilisée pour les recherches : variable d'environnement, puis config.properties, puis clé de démonstration. */
+    static String lireToken() {
         String env = System.getenv("PLAQUE_API_TOKEN");
         if (env != null && !env.isBlank()) return env.trim();
+        return ConfigService.getCleApi().orElse(TOKEN_DEMO);
+    }
 
-        Properties props = new Properties();
-        try (FileInputStream in = new FileInputStream("config.properties")) {
-            props.load(in);
-            String fichier = props.getProperty("plaque.api.token");
-            if (fichier != null && !fichier.isBlank()) return fichier.trim();
-        } catch (IOException ignore) {
-        }
-        return TOKEN_DEMO;
+    /** True tant que l'utilisateur n'a pas enregistré sa propre clé. */
+    public static boolean utiliseCleDemo() {
+        return TOKEN_DEMO.equals(lireToken());
     }
 
     private static String texte(Object o) {

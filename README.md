@@ -34,6 +34,7 @@ Ce projet propose un outil pour toute personne souhaitant suivre sérieusement l
 - [x] Export des données en SVG
 - [x] Ajout d'un véhicule avec sa plaque d'immatriculation
 - [x] Affichage de la voiture si saisie par plaque d'immatriculation
+- [x] Photo personnelle du véhicule : importée depuis l'ordinateur et copiée dans l'application
 
 ### En cours / À venir
 
@@ -51,6 +52,29 @@ Ce projet propose un outil pour toute personne souhaitant suivre sérieusement l
 | Icônes | Ikonli |
 | UI | ControlsFX |
 | Tests | JUnit 5 |
+
+## Où sont stockées les données ?
+
+Base SQLite, dossier `images/` (photos importées) et `config.properties` (clé API) sont rangés ensemble :
+
+1. dans le dossier indiqué par `-Dcarnet.data.dir=<dossier>` s'il est fourni ;
+2. sinon dans le dossier courant, s'il contient déjà `carnet_entretien.db` ou `config.properties` (développement) ;
+3. sinon dans `<dossier personnel>/CarnetEntretien` (cas d'un exécutable installé).
+
+## Clé API (recherche par plaque)
+
+La recherche par plaque utilise [apiplaqueimmatriculation.com](https://apiplaqueimmatriculation.com/obtenir_une_cle_api/).
+L'utilisateur colle sa clé via le bouton « 🔑 Clé API » (une fenêtre d'explications s'ouvre aussi au premier lancement).
+Sans clé personnelle, l'application utilise la clé de démonstration de la documentation, très limitée.
+Ordre de lecture : variable d'environnement `PLAQUE_API_TOKEN`, puis `plaque.api.token` dans `config.properties`, puis la clé de démonstration.
+
+## Lancer les tests
+
+```
+./mvnw test
+```
+
+Les tests de base de données et de fichiers travaillent dans un dossier temporaire : ils ne touchent pas à vos données.
 
 ## Prérequis
 
@@ -87,33 +111,59 @@ CarnetEntretien/
 ├── pom.xml
 ├── mvnw.cmd
 ├── mvnw
-├── carnet_entretien.db (généré automatiquement au lancement du programme)
-├── .gitingore
+├── .gitignore
+├── .mvn/wrapper/                                       # Maven Wrapper (maven-wrapper.jar, maven-wrapper.properties)
+├── carnet_entretien.db                                 # Base SQLite (générée automatiquement au lancement)
+├── config.properties                                   # Clé API de l'utilisateur (générée via le bouton « Clé API »)
+├── images/                                             # Photos de véhicules importées par l'utilisateur (générées automatiquement)
 └── src/
     ├── main/
-    │   ├── java/com/carnetentretien/carnetentretien/
-    │   │   ├── HelloApplication.java               # Point d'entrée JavaFX
-    │   │   ├── Launcher.java                       # Lanceur de l'application
-    │   │   ├── model/                              # Objets métier (Vehicule, Entretien...)
-    │   │   │   ├── Entretien.java                  # Objet Entretien
-    │   │   │   ├── Preconisation.java              # Objet Preconisation
-    │   │   │   └── Vehicule.java                   # Objet Vehicule
-    │   │   ├── db/                                 # Accès base de données (DatabaseManager, VehiculeDB...)
-    │   │   │   ├── DatabaseManager.java            # Gestionnaire de la base de données
-    │   │   │   ├── EntretienDB.java                # Gestionnaire de l'entretien dans la BDD
-    │   │   │   ├── PreconisationDB.java            # Gestionnaire des préconisations dans la BDD
-    │   │   │   └── VehiculeDB.java                 # Gestionnaire des vehicules dans la BDD
-    │   │   ├── controller/                         # Contrôleurs FXML
-    │   │   │   └── DashboardController             # Contrôleur du tableau de bord
-    │   │   └── service/                            # Logique métier
-    │   │       ├── CalculateurEntretien            # Classe qui détermine quand prévoir un entretien
-    │   │       ├── ExportService.java              # Module d'export CSV
-    │   │       └── RecherchePlaqueService.java     # Recherche d'un véhicule par plaque d'immatriculation
-    │   ├── resources/com/carnetentretien/carnetentretien/
-    │   │   ├── style.css                           # Styles globaux
-    │   │   └── hello-view.fxml                     # Interface principale
-    │   └── module-info.java
-    └── test/java/                                  # Tests unitaires JUnit
+    │   ├── java/
+    │   │   ├── module-info.java                        # Déclaration du module Java
+    │   │   └── com/carnetentretien/carnetentretien/
+    │   │       ├── HelloApplication.java               # Point d'entrée JavaFX
+    │   │       ├── Launcher.java                       # Lanceur de l'application
+    │   │       ├── model/                              # Objets métier
+    │   │       │   ├── Entretien.java                  # Objet Entretien
+    │   │       │   ├── Preconisation.java              # Objet Preconisation
+    │   │       │   └── Vehicule.java                   # Objet Vehicule
+    │   │       ├── db/                                 # Accès base de données
+    │   │       │   ├── DatabaseManager.java            # Connexion, création et migration de la base
+    │   │       │   ├── EntretienDB.java                # Accès aux entretiens
+    │   │       │   ├── PreconisationDB.java            # Accès aux préconisations
+    │   │       │   └── VehiculeDB.java                 # Accès aux véhicules
+    │   │       ├── controller/                         # Contrôleurs FXML
+    │   │       │   └── DashboardController.java        # Contrôleur du tableau de bord
+    │   │       └── service/                            # Logique métier
+    │   │           ├── AppPaths.java                   # Emplacement des données (base, images, config)
+    │   │           ├── CalculateurEntretien.java       # Détermine quand prévoir un entretien
+    │   │           ├── ConfigService.java              # Lecture/écriture de la clé API (config.properties)
+    │   │           ├── CsvHistorique.java              # Écriture du fichier CSV de l'historique
+    │   │           ├── ExportService.java              # Export CSV (fenêtre « Enregistrer sous »)
+    │   │           ├── ImageService.java               # Import/copie des photos de véhicules
+    │   │           └── RecherchePlaqueService.java     # Recherche d'un véhicule par plaque
+    │   └── resources/com/carnetentretien/carnetentretien/
+    │       ├── style.css                               # Styles globaux
+    │       └── hello-view.fxml                         # Interface principale
+    └── test/java/com/carnetentretien/carnetentretien/  # Tests unitaires JUnit 5
+        ├── BaseDonneesTest.java                        # Base des tests : dossier de données temporaire
+        ├── BaseBddTest.java                            # Base des tests : base SQLite vierge
+        ├── model/
+        │   ├── EntretienTest.java                      # Test Entretien
+        │   ├── PreconisationTest.java                  # Test Preconisation
+        │   └── VehiculeTest.java                       # Test Vehicule
+        ├── db/
+        │   ├── DatabaseManagerTest.java                # Test DatabaseManager
+        │   ├── EntretienDBTest.java                    # Test EntretienDB
+        │   ├── PreconisationDBTest.java                # Test PreconisationDB
+        │   └── VehiculeDBTest.java                     # Test VehiculeDB
+        └── service/
+            ├── AppPathsTest.java                       # Test AppPaths
+            ├── CalculateurEntretienTest.java           # Test CalculateurEntretien
+            ├── ConfigServiceTest.java                  # Test ConfigService
+            ├── CsvHistoriqueTest.java                  # Test CsvHistorique
+            ├── ImageServiceTest.java                   # Test ImageService
+            └── RecherchePlaqueServiceTest.java         # Test RecherchePlaqueService
 ```
 
 ## Modèle de données

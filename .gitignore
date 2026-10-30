@@ -5,6 +5,7 @@ target/
 .kotlin
 *.db
 config.properties
+/images/
 
 ### IntelliJ IDEA ###
 .idea/modules.xml

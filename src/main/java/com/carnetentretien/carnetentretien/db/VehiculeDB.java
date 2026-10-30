@@ -13,7 +13,7 @@ import java.util.List;
 public class VehiculeDB {
 
     public static void ajouterVehicule(Vehicule vehicule) {
-        String sql = "INSERT INTO Vehicule(immatriculation, marque, modele, kilometrage_actuel, kilometrage_annuel_estime, image_url) " + "VALUES(?,?,?,?,?,?)";
+        String sql = "INSERT INTO Vehicule(immatriculation, marque, modele, kilometrage_actuel, kilometrage_annuel_estime, image_url, image_locale) " + "VALUES(?,?,?,?,?,?,?)";
 
         try (Connection conn = DatabaseManager.connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -24,6 +24,7 @@ public class VehiculeDB {
             pstmt.setInt(4, vehicule.getKilometrageActuel());
             pstmt.setInt(5, vehicule.getKilometrageAnnuelEstime());
             pstmt.setString(6, vehicule.getImageUrl());
+            pstmt.setString(7, vehicule.getImageLocale());
 
             pstmt.executeUpdate();
             System.out.println("Véhicule ajouté avec succès en base de données !");
@@ -35,7 +36,7 @@ public class VehiculeDB {
 
     public static void modifierVehicule(Vehicule vehicule) {
         String sql = "UPDATE Vehicule SET immatriculation = ?, marque = ?, modele = ?, "
-                + "kilometrage_actuel = ?, kilometrage_annuel_estime = ?, image_url = ? WHERE id = ?";
+                + "kilometrage_actuel = ?, kilometrage_annuel_estime = ?, image_url = ?, image_locale = ? WHERE id = ?";
 
         try (Connection conn = DatabaseManager.connect();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -46,7 +47,8 @@ public class VehiculeDB {
             pstmt.setInt(4, vehicule.getKilometrageActuel());
             pstmt.setInt(5, vehicule.getKilometrageAnnuelEstime());
             pstmt.setString(6, vehicule.getImageUrl());
-            pstmt.setInt(7, vehicule.getId());
+            pstmt.setString(7, vehicule.getImageLocale());
+            pstmt.setInt(8, vehicule.getId());
 
             pstmt.executeUpdate();
             System.out.println("Véhicule mis à jour !");
@@ -91,7 +93,8 @@ public class VehiculeDB {
                         rs.getString("modele"),
                         rs.getInt("kilometrage_actuel"),
                         rs.getInt("kilometrage_annuel_estime"),
-                        rs.getString("image_url")
+                        rs.getString("image_url"),
+                        rs.getString("image_locale")
                 );
                 listeVehicules.add(v);
             }
