@@ -39,12 +39,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.layout.FlowPane;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.Region;
-import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
+import javafx.scene.layout.*;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
 import javafx.util.Duration;
@@ -907,14 +902,19 @@ public class DashboardController {
     }
 
     private Region deuxColonnes(Node gauche, Node droite) {
-        if (largeurDialogue(720) < 520) return new VBox(12, gauche, droite);
-        HBox ligne = new HBox(18, gauche, droite);
-        for (Node n : new Node[]{gauche, droite}) {
-            HBox.setHgrow(n, Priority.ALWAYS);
-            ((Region) n).setPrefWidth(10);
-            ((Region) n).setMinWidth(0);
+        if (largeurDialogue(720) < 520) return new VBox(10, gauche, droite);
+
+        GridPane grille = new GridPane();
+        grille.setHgap(18);
+        for (int i = 0; i < 2; i++) {
+            ColumnConstraints colonne = new ColumnConstraints();
+            colonne.setPercentWidth(50);
+            colonne.setHgrow(Priority.ALWAYS);
+            grille.getColumnConstraints().add(colonne);
         }
-        return ligne;
+        grille.add(gauche, 0, 0);
+        grille.add(droite, 1, 0);
+        return grille;
     }
 
     /** @param existant entretien à modifier, ou {@code null} @return l'entretien saisi, ou {@code null} si annulé */
@@ -1025,7 +1025,7 @@ public class DashboardController {
         erreur.getStyleClass().add("message-erreur");
         montrer(erreur, false);
 
-        VBox contenu = new VBox(petitEcran() ? 10 : 18);
+        VBox contenu = new VBox(petitEcran() ? 8 : 12);
         contenu.setPadding(new Insets(6, 10, 0, 10));
         contenu.setPrefWidth(largeurDialogue(720));
         montrer(intro, !petitEcran());

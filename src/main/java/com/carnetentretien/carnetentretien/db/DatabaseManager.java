@@ -2,6 +2,8 @@ package com.carnetentretien.carnetentretien.db;
 
 import com.carnetentretien.carnetentretien.service.AppPaths;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -20,14 +22,16 @@ public class DatabaseManager {
 
     /**
      * Ouvre une connexion vers la base.
+     * Crée au besoin le dossier de données.
      *
      * @return la connexion, ou {@code null} si elle a échoué (l'erreur est affichée dans la console)
      */
     public static Connection connect() {
         Connection conn = null;
         try {
+            Files.createDirectories(AppPaths.fichierBaseDeDonnees().getParent());
             conn = DriverManager.getConnection(url());
-        } catch (SQLException e) {
+        } catch (IOException | SQLException e) {
             System.out.println("Erreur de connexion à SQLite : " + e.getMessage());
         }
         return conn;

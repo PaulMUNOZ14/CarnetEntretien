@@ -96,4 +96,14 @@ class DatabaseManagerTest extends BaseBddTest {
         assertNull(vehicules.get(0).getImageUrl());
         assertNull(vehicules.get(0).getImageLocale());
     }
+
+    @Test
+    void leDossierDeDonneesManquantEstCreeAuPremierLancement() throws Exception {
+        Files.delete(AppPaths.fichierBaseDeDonnees());   // supprime la base créée par le test de base
+        Files.delete(dossier);                            // le dossier n'existe plus (premier lancement)
+
+        DatabaseManager.initDatabase();
+
+        assertTrue(Files.isRegularFile(AppPaths.fichierBaseDeDonnees()));
+    }
 }

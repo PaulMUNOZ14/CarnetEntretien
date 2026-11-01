@@ -35,11 +35,11 @@ Ce projet propose un outil pour toute personne souhaitant suivre sérieusement l
 - [x] Ajout d'un véhicule avec sa plaque d'immatriculation
 - [x] Affichage de la voiture si saisie par plaque d'immatriculation
 - [x] Photo personnelle du véhicule : importée depuis l'ordinateur et copiée dans l'application
+- [x] Export en installeur autonome (via `jpackage`)
 
 ### En cours / À venir
 
-
-- [ ] Export en installeur autonome (via `jpackage`)
+- [ ] Retirer Herobrine
 
 ## Fiche technique
 
