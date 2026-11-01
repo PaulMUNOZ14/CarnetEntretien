@@ -266,3 +266,41 @@
 .apercu-ok     { -fx-font-size: 17px; -fx-font-weight: bold; -fx-text-fill: #14633a; }
 .apercu-erreur { -fx-font-size: 17px; -fx-font-weight: bold; -fx-text-fill: #a02116; }
 .apercu-attente{ -fx-font-size: 17px; -fx-text-fill: #52606d; }
+
+.contenu-page { -fx-padding: 28 40 30 40; }
+
+/* ===== Mode compact : fenêtre étroite ===== */
+.root.compact, .dialog-pane.compact { -fx-font-size: 14px; }
+
+.compact .contenu-page { -fx-padding: 14 14 18 14; }
+.compact .entete { -fx-padding: 10 14; }
+.compact .barre-actions { -fx-padding: 10 14; }
+
+.compact .titre-page    { -fx-font-size: 22px; }
+.compact .titre-section { -fx-font-size: 19px; }
+.compact .texte-doux    { -fx-font-size: 14px; }
+
+.compact .btn       { -fx-min-height: 44; -fx-font-size: 15px; -fx-padding: 8 16; }
+.compact .btn-grand { -fx-min-height: 50; -fx-font-size: 17px; -fx-padding: 10 22; }
+.compact .btn-moyen { -fx-min-height: 44; -fx-font-size: 15px; }
+.compact .btn-petit { -fx-min-height: 38; -fx-font-size: 14px; -fx-padding: 4 10; }
+
+.compact .bandeau { -fx-padding: 12 16; }
+.compact .bandeau .label { -fx-font-size: 17px; }
+
+.compact .carte-jauge { -fx-padding: 12 14; }
+.compact .jauge-titre { -fx-font-size: 17px; }
+.compact .jauge-prevision { -fx-font-size: 15px; }
+.compact .jauge-historique { -fx-font-size: 13px; }
+
+.compact .historique-titre, .compact .historique-prix { -fx-font-size: 16px; }
+.compact .historique-detail { -fx-font-size: 13px; }
+.compact .ligne-historique { -fx-padding: 10 12; }
+
+.compact .question-champ { -fx-font-size: 16px; }
+.compact .text-field, .compact .combo-box, .compact .date-picker {
+    -fx-pref-height: 44; -fx-min-height: 44; -fx-font-size: 16px;
+}
+.compact .champ-plaque { -fx-font-size: 20px; }
+.compact .apercu-titre { -fx-font-size: 19px; }
+.compact .toast { -fx-font-size: 16px; -fx-padding: 12 22; }

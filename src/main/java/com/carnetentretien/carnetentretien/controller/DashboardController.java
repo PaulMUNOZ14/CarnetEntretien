@@ -16,6 +16,7 @@ import javafx.animation.FadeTransition;
 import javafx.animation.PauseTransition;
 import javafx.animation.SequentialTransition;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -59,6 +60,8 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.function.Supplier;
+import javafx.geometry.Rectangle2D;
+import javafx.stage.Screen;
 
 public class DashboardController {
 
@@ -93,8 +96,14 @@ public class DashboardController {
     private Vehicule vehiculeSelectionne = null;
     private SequentialTransition animationToast;
 
+    private static final double SEUIL_COMPACT = 820;
+    private boolean compact = false;
+
     @FXML
     public void initialize() {
+        racine.widthProperty().addListener((o, a, b) -> adapterTaille(b.doubleValue()));
+        adapterTaille(racine.getPrefWidth());
+
         installerReglesParDefaut();
         afficherAccueil();
 
@@ -103,6 +112,20 @@ public class DashboardController {
             ConfigService.marquerAideAffichee();
             Platform.runLater(this::ouvrirCleApi);
         }
+    }
+
+    private void adapterTaille(double largeur) {
+        compact = largeur < SEUIL_COMPACT;
+        if (compact) {
+            if (!racine.getStyleClass().contains("compact")) racine.getStyleClass().add("compact");
+        } else {
+            racine.getStyleClass().remove("compact");
+        }
+    }
+
+    /** Largeur d'une fenêtre de saisie, réduite si l'écran est petit. */
+    private double largeurDialogue(double voulue) {
+        return Math.clamp(zoneEcran().getWidth() * 0.92, 280, voulue);
     }
 
     /** Adresse de la photo à afficher : celle choisie par l'utilisateur, sinon celle trouvée via la plaque. */
@@ -435,7 +458,7 @@ public class DashboardController {
 
         ScrollPane defilement = new ScrollPane(liste);
         defilement.setFitToWidth(true);
-        defilement.setPrefHeight(340);
+        defilement.setPrefHeight(Math.min(340, Math.max(160, fenetreActive().getHeight() - 320)));
         defilement.getStyleClass().add("zone-defilement");
 
         Button ajouter = bouton("➕  Ajouter un entretien à surveiller", "btn-succes");
@@ -448,7 +471,7 @@ public class DashboardController {
         });
 
         VBox contenu = new VBox(16, intro, defilement, ajouter);
-        contenu.setPrefWidth(660);
+        contenu.setPrefWidth(largeurDialogue(660));
         contenu.setPadding(new Insets(10, 10, 0, 10));
         dialog.getDialogPane().setContent(contenu);
 
@@ -578,17 +601,19 @@ public class DashboardController {
 
         // ---------- Aperçu : photo + nom du véhicule trouvé ----------
         ImageView photo = new ImageView();
-        photo.setFitWidth(210);
-        photo.setFitHeight(125);
+        boolean etroit = largeurDialogue(720) < 520;
+        double lc = etroit ? 150 : 200, hc = etroit ? 90 : 120;
+        photo.setFitWidth(lc - 20);
+        photo.setFitHeight(hc - 10);
         photo.setPreserveRatio(true);
         photo.setVisible(false);
         Label repli = new Label("🚗");
         repli.getStyleClass().add("carte-icone");
         StackPane cadre = new StackPane(repli, photo);
         cadre.getStyleClass().add("photo-cadre");
-        cadre.setMinSize(230, 135);
-        cadre.setPrefSize(230, 135);
-        cadre.setMaxSize(230, 135);
+        cadre.setMinSize(lc, hc);
+        cadre.setPrefSize(lc, hc);
+        cadre.setMaxSize(lc, hc);
 
         Label apercuTitre = new Label();
         apercuTitre.getStyleClass().add("apercu-titre");
@@ -637,8 +662,16 @@ public class DashboardController {
         VBox textes = new VBox(6, apercuTitre, apercuDetail, apercuStatut, boutonsPhoto);
         textes.setAlignment(Pos.CENTER_LEFT);
         HBox.setHgrow(textes, Priority.ALWAYS);
-        HBox apercu = new HBox(18, cadre, textes);
-        apercu.setAlignment(Pos.CENTER_LEFT);
+        Region apercu;
+        if (etroit) {
+            VBox v = new VBox(12, cadre, textes);
+            v.setAlignment(Pos.CENTER_LEFT);
+            apercu = v;
+        } else {
+            HBox h = new HBox(18, cadre, textes);
+            h.setAlignment(Pos.CENTER_LEFT);
+            apercu = h;
+        }
         apercu.getStyleClass().add("apercu-vehicule");
 
         if (existant != null) {
@@ -838,11 +871,13 @@ public class DashboardController {
         label.getStyleClass().add(classe);
         label.setText(texte);
         if (label.getScene() != null && label.getScene().getWindow() != null) {
-            label.getScene().getWindow().sizeToScene();   // la fenêtre s'adapte à la longueur du message
+            label.getScene().getWindow().sizeToScene();
+            ajusterFenetre(label.getScene().getWindow());
         }
     }
 
-    private HBox deuxColonnes(Node gauche, Node droite) {
+    private Region deuxColonnes(Node gauche, Node droite) {
+        if (largeurDialogue(720) < 520) return new VBox(12, gauche, droite);
         HBox ligne = new HBox(18, gauche, droite);
         for (Node n : new Node[]{gauche, droite}) {
             HBox.setHgrow(n, Priority.ALWAYS);
@@ -953,13 +988,24 @@ public class DashboardController {
         erreur.getStyleClass().add("message-erreur");
         montrer(erreur, false);
 
-        VBox contenu = new VBox(18);
-        contenu.setPadding(new Insets(10, 10, 0, 10));
-        contenu.setPrefWidth(640);
+        VBox contenu = new VBox(petitEcran() ? 10 : 18);
+        contenu.setPadding(new Insets(6, 10, 0, 10));
+        contenu.setPrefWidth(largeurDialogue(720));
+        montrer(intro, !petitEcran());
         contenu.getChildren().add(intro);
         contenu.getChildren().addAll(champs);
         contenu.getChildren().add(erreur);
-        dialog.getDialogPane().setContent(contenu);
+
+        ScrollPane defil = new ScrollPane(contenu);
+        defil.setFitToWidth(true);
+        defil.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        defil.getStyleClass().add("zone-defilement");
+        defil.setMinHeight(0);
+        defil.prefViewportHeightProperty().bind(Bindings.min(contenu.heightProperty(), hauteurMaxDialogue()));
+        defil.setMaxHeight(hauteurMaxDialogue());
+        dialog.getDialogPane().setContent(defil);
+
+        dialog.setOnShown(e -> ajusterFenetre(dialog.getDialogPane().getScene().getWindow()));
 
         Button boutonOk = (Button) dialog.getDialogPane().lookupButton(ok);
         boutonOk.getStyleClass().addAll("btn", "btn-succes");
@@ -972,6 +1018,7 @@ public class DashboardController {
                 montrer(erreur, true);
                 ev.consume();               // la fenêtre reste ouverte
                 dialog.getDialogPane().getScene().getWindow().sizeToScene();
+                ajusterFenetre(dialog.getDialogPane().getScene().getWindow());
             }
         });
 
@@ -985,7 +1032,7 @@ public class DashboardController {
 
         Alert alerte = new Alert(Alert.AlertType.WARNING, question, oui, non);
         preparer(alerte, titre);
-        alerte.getDialogPane().setMinWidth(540);
+        alerte.getDialogPane().setMinWidth(largeurDialogue(540));
 
         Button boutonOui = (Button) alerte.getDialogPane().lookupButton(oui);
         Button boutonNon = (Button) alerte.getDialogPane().lookupButton(non);
@@ -1002,6 +1049,9 @@ public class DashboardController {
         dialog.setHeaderText(null);
         dialog.setGraphic(null);
         dialog.getDialogPane().getStylesheets().add(getClass().getResource(FEUILLE_STYLE).toExternalForm());
+        if (compact || petitEcran()) {
+            dialog.getDialogPane().getStyleClass().add("compact");
+        }
         dialog.initOwner(fenetreActive());
     }
 
@@ -1139,5 +1189,31 @@ public class DashboardController {
     /** 45000 -> "45 000" */
     private static String km(int valeur) {
         return String.format(Locale.FRANCE, "%,d", valeur).replace('\u202F', '\u00A0');
+    }
+
+    private double hauteurMaxDialogue() {
+        return Math.max(160, zoneEcran().getHeight() - 230);
+    }
+
+    /** Zone utilisable (hors barre des tâches) de l'écran où se trouve la fenêtre. */
+    private Rectangle2D zoneEcran() {
+        Window w = fenetreActive();
+        return Screen.getScreensForRectangle(w.getX(), w.getY(), Math.max(1, w.getWidth()), Math.max(1, w.getHeight()))
+                .stream().findFirst().orElse(Screen.getPrimary()).getVisualBounds();
+    }
+
+    private boolean petitEcran() {
+        Rectangle2D z = zoneEcran();
+        return z.getWidth() < 1300 || z.getHeight() < 800;
+    }
+
+    private void ajusterFenetre(Window w) {
+        Rectangle2D z = zoneEcran();
+        double maxH = z.getHeight() - 20;
+        double maxL = z.getWidth() - 20;
+        if (w.getHeight() > maxH) w.setHeight(maxH);
+        if (w.getWidth() > maxL) w.setWidth(maxL);
+        w.setX(z.getMinX() + (z.getWidth() - w.getWidth()) / 2);
+        w.setY(z.getMinY() + Math.max(0, (z.getHeight() - w.getHeight()) / 2));
     }
 }

@@ -12,7 +12,7 @@
 <?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
-<StackPane fx:id="racine" minHeight="650.0" minWidth="1000.0" prefHeight="750.0" prefWidth="1100.0" styleClass="root" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.carnetentretien.carnetentretien.controller.DashboardController">
+<StackPane fx:id="racine" minHeight="480.0" minWidth="360.0" prefHeight="750.0" prefWidth="1100.0" styleClass="root" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.carnetentretien.carnetentretien.controller.DashboardController">
 
   <stylesheets>
     <URL value="@style.css" />
@@ -52,12 +52,12 @@
   <!-- ===================== ÉCRAN 2 : UN VÉHICULE ===================== -->
   <VBox fx:id="vueVehicule" managed="false" visible="false">
 
-    <HBox alignment="CENTER_LEFT" spacing="16.0" styleClass="entete">
+    <FlowPane alignment="CENTER_LEFT" hgap="12.0" vgap="10.0" styleClass="entete">
       <Button onAction="#retourAccueil" styleClass="btn, btn-secondaire" text="⬅  Retour à mes véhicules" />
       <Region HBox.hgrow="ALWAYS" />
       <Button onAction="#ouvrirCleApi" styleClass="btn, btn-discret" text="🔑  Clé API" />
       <Button onAction="#ouvrirReglages" styleClass="btn, btn-discret" text="⚙  Réglages" />
-    </HBox>
+    </FlowPane>
 
     <ScrollPane fitToWidth="true" styleClass="zone-defilement" VBox.vgrow="ALWAYS">
       <VBox spacing="22.0">
@@ -65,23 +65,23 @@
           <Insets bottom="30.0" left="40.0" right="40.0" top="26.0" />
         </padding>
 
-        <HBox alignment="CENTER_LEFT" spacing="26.0">
+        <FlowPane alignment="CENTER_LEFT" hgap="26.0" vgap="12.0">
           <StackPane prefHeight="170.0" prefWidth="280.0" minHeight="170.0" minWidth="280.0" styleClass="photo-cadre">
             <Label fx:id="iconeVehicule" styleClass="carte-icone" text="🚗" />
             <ImageView fx:id="photoVehicule" fitHeight="160.0" fitWidth="270.0" pickOnBounds="true" preserveRatio="true" visible="false" />
           </StackPane>
-          <VBox alignment="CENTER_LEFT" spacing="10.0" HBox.hgrow="ALWAYS">
+          <VBox alignment="CENTER_LEFT" prefWidth="320.0" spacing="10.0" HBox.hgrow="ALWAYS">
             <Label fx:id="titreVehicule" styleClass="titre-page" wrapText="true" />
             <HBox fx:id="zonePlaque" alignment="CENTER_LEFT" />
             <Label fx:id="sousTitreVehicule" styleClass="texte-doux" wrapText="true" />
           </VBox>
-        </HBox>
+        </FlowPane>
 
-        <HBox spacing="12.0">
+        <FlowPane hgap="12.0" vgap="12.0">
           <Button onAction="#mettreAJourKilometrage" styleClass="btn, btn-primaire, btn-moyen" text="📍  Mettre à jour le kilométrage" />
           <Button onAction="#modifierVehicule" styleClass="btn, btn-modif, btn-moyen" text="✏  Modifier" />
           <Button onAction="#supprimerVehicule" styleClass="btn, btn-danger, btn-moyen" text="🗑  Supprimer" />
-        </HBox>
+        </FlowPane>
 
         <HBox fx:id="bandeauEtat" alignment="CENTER_LEFT" styleClass="bandeau">
           <Label fx:id="messageBandeau" maxWidth="Infinity" wrapText="true" HBox.hgrow="ALWAYS" />
@@ -102,10 +102,10 @@
       </VBox>
     </ScrollPane>
 
-    <HBox alignment="CENTER" spacing="16.0" styleClass="barre-actions">
+    <FlowPane alignment="CENTER" hgap="16.0" vgap="16.0" styleClass="barre-actions">
       <Button onAction="#ajouterEntretien" styleClass="btn, btn-succes, btn-grand" text="✔  J'ai fait un entretien" />
       <Button onAction="#exporterHistorique" styleClass="btn, btn-secondaire, btn-grand" text="📥  Exporter en CSV" />
-    </HBox>
+    </FlowPane>
   </VBox>
 
   <!-- Message de confirmation (apparaît quelques secondes puis disparaît) -->
