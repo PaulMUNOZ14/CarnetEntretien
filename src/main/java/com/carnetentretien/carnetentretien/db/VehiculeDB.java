@@ -10,8 +10,13 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Accès à la table {@code Vehicule}. Toutes les méthodes sont statiques ; en cas d'erreur SQL,
+ * le message est affiché dans la console et la méthode ne lève pas d'exception.
+ */
 public class VehiculeDB {
 
+    /** Enregistre un nouveau véhicule (son id est généré par la base ; celui de l'objet est ignoré). */
     public static void ajouterVehicule(Vehicule vehicule) {
         String sql = "INSERT INTO Vehicule(immatriculation, marque, modele, kilometrage_actuel, kilometrage_annuel_estime, image_url, image_locale) " + "VALUES(?,?,?,?,?,?,?)";
 
@@ -34,6 +39,7 @@ public class VehiculeDB {
         }
     }
 
+    /** Met à jour tous les champs du véhicule dont l'id est celui de l'objet. */
     public static void modifierVehicule(Vehicule vehicule) {
         String sql = "UPDATE Vehicule SET immatriculation = ?, marque = ?, modele = ?, "
                 + "kilometrage_actuel = ?, kilometrage_annuel_estime = ?, image_url = ?, image_locale = ? WHERE id = ?";
@@ -57,6 +63,10 @@ public class VehiculeDB {
         }
     }
 
+    /**
+     * Supprime un véhicule <b>et tout son historique d'entretien</b>.
+     * Le fichier de la photo personnelle n'est pas touché : voir {@code ImageService#supprimer}.
+     */
     public static void supprimerVehicule(int id) {
         String sqlEntretiens = "DELETE FROM Entretien_Fait WHERE vehicule_id = ?";
         String sqlVehicule = "DELETE FROM Vehicule WHERE id = ?";
@@ -77,6 +87,7 @@ public class VehiculeDB {
         }
     }
 
+    /** @return tous les véhicules (liste vide s'il n'y en a pas ou en cas d'erreur) */
     public static List<Vehicule> getTousLesVehicules() {
         List<Vehicule> listeVehicules = new ArrayList<>();
         String sql = "SELECT * FROM Vehicule";

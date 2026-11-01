@@ -9,12 +9,21 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Calcule, pour un véhicule, l'état de chaque entretien surveillé et sa date d'échéance estimée.
+ * Classe sans état : aucun accès à la base ni au réseau.
+ */
 public class CalculateurEntretien {
 
+    /** Résultat de l'analyse d'un entretien surveillé. */
     public static class Bilan {
+        /** Nom de l'entretien (celui de la règle). */
         public String piece;
+        /** Usure en % : le plus grand de « km parcourus / intervalle » et « mois écoulés / intervalle ». 100 = échéance atteinte. */
         public double pourcentage;
+        /** Libellé d'état avec pictogramme : OK, À PRÉVOIR (≥ 80 %), URGENT (≥ 100 %) ou Action Requise (aucun historique). */
         public String statut;
+        /** Texte sur deux lignes : la date prévue (ou de dépassement) et sa cause, puis le dernier entretien connu. */
         public String details;
 
         public Bilan(String piece, double pourcentage, String statut, String details) {
@@ -22,6 +31,19 @@ public class CalculateurEntretien {
         }
     }
 
+    /**
+     * Analyse chaque règle pour un véhicule, dans l'ordre des règles.
+     * <p>
+     * Pour chaque règle, on retient le dernier entretien du même type (casse ignorée). L'usure est le maximum entre
+     * l'usure kilométrique et l'usure en temps. La date d'échéance est la plus proche entre la date estimée
+     * d'atteinte de la limite kilométrique (d'après le kilométrage annuel, 10 000 km/an si celui-ci est ≤ 0)
+     * et la date limite en mois. Sans historique pour une règle, le bilan est à 0 % avec « Action Requise ».
+     *
+     * @param vehicule        véhicule analysé (kilométrage actuel et annuel estimé)
+     * @param historique      entretiens déjà réalisés pour ce véhicule
+     * @param preconisations  règles de suivi
+     * @return un {@link Bilan} par règle ; liste vide s'il n'y a aucune règle
+     */
     public static List<Bilan> analyserEntretien(Vehicule vehicule, List<Entretien> historique, List<Preconisation> preconisations) {
         List<Bilan> resultats = new ArrayList<>();
 

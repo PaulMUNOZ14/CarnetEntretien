@@ -8,12 +8,21 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
+/**
+ * Gestion de la connexion SQLite et du schéma de la base : création des tables
+ * et migration des anciennes bases. Le fichier se trouve dans le dossier défini par {@link AppPaths}.
+ */
 public class DatabaseManager {
     // Le fichier de la base de données est dans le dossier de données de l'application (voir AppPaths)
     private static String url() {
         return "jdbc:sqlite:" + AppPaths.fichierBaseDeDonnees();
     }
 
+    /**
+     * Ouvre une connexion vers la base.
+     *
+     * @return la connexion, ou {@code null} si elle a échoué (l'erreur est affichée dans la console)
+     */
     public static Connection connect() {
         Connection conn = null;
         try {
@@ -24,6 +33,11 @@ public class DatabaseManager {
         return conn;
     }
 
+    /**
+     * Crée les tables {@code Vehicule}, {@code Entretien_Fait} et {@code Preconisation} si elles n'existent pas,
+     * et ajoute les colonnes récentes ({@code immatriculation}, {@code image_url}, {@code image_locale})
+     * aux bases créées par une version précédente. Peut être appelée plusieurs fois sans perte de données.
+     */
     public static void initDatabase() {
         String sqlVehicule = "CREATE TABLE IF NOT EXISTS Vehicule (\n"
                 + " id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
@@ -69,6 +83,10 @@ public class DatabaseManager {
         }
     }
 
+    /**
+     * Ajoute une colonne à une table seulement si elle n'y est pas déjà (SQLite n'a pas de
+     * {@code ADD COLUMN IF NOT EXISTS}). Les noms viennent du code, jamais de l'utilisateur.
+     */
     private static void ajouterColonneSiAbsente(Connection conn, String table, String colonne, String type) throws SQLException {
         boolean presente = false;
         try (Statement stmt = conn.createStatement();

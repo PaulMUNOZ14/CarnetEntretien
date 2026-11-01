@@ -10,8 +10,10 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Accès à la table {@code Preconisation} : les règles de suivi, communes à tous les véhicules. */
 public class PreconisationDB {
 
+    /** Enregistre une nouvelle règle. */
     public static void ajouterPreconisation(Preconisation preconisation) {
         String sql = "INSERT INTO Preconisation(type_operation, intervalle_km, intervalle_mois) VALUES(?,?,?)";
 
@@ -30,6 +32,7 @@ public class PreconisationDB {
         }
     }
 
+    /** @return toutes les règles (liste vide si aucune) */
     public static List<Preconisation> getToutesLesPreconisations() {
         List<Preconisation> liste = new ArrayList<>();
         String sql = "SELECT * FROM Preconisation";
@@ -53,6 +56,7 @@ public class PreconisationDB {
         return liste;
     }
 
+    /** Supprime une règle ; sans effet si l'id n'existe pas. */
     public static void supprimerPreconisation(int id) {
         String sql = "DELETE FROM Preconisation WHERE id = ?";
         try (Connection conn = DatabaseManager.connect();
@@ -64,6 +68,7 @@ public class PreconisationDB {
         }
     }
 
+    /** Met à jour la règle dont l'id est celui de l'objet. */
     public static void modifierPreconisation(Preconisation preconisation) {
         String sql = "UPDATE Preconisation SET type_operation = ?, intervalle_km = ?, intervalle_mois = ? WHERE id = ?";
         try (Connection conn = DatabaseManager.connect();

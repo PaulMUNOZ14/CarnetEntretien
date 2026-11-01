@@ -16,7 +16,10 @@ import java.util.UUID;
  */
 public final class ImageService {
 
+    /** Taille maximale d'une photo importée : 10 Mo. */
     public static final long TAILLE_MAX_OCTETS = 10L * 1024 * 1024;
+
+    /** Extensions d'image acceptées, en minuscules. */
     public static final Set<String> EXTENSIONS_ACCEPTEES = Set.of("png", "jpg", "jpeg", "gif", "bmp");
 
     private ImageService() {
@@ -93,6 +96,7 @@ public final class ImageService {
         return (chemin.startsWith(dossier) && !chemin.equals(dossier)) ? chemin : null;
     }
 
+    /** @return l'extension en minuscules sans le point, ou une chaîne vide s'il n'y en a pas */
     private static String extension(String nomFichier) {
         int point = nomFichier.lastIndexOf('.');
         return point < 0 ? "" : nomFichier.substring(point + 1).toLowerCase(Locale.ROOT);

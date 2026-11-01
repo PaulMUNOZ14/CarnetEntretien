@@ -48,7 +48,6 @@ import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Window;
 import javafx.util.Duration;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -63,6 +62,13 @@ import java.util.function.Supplier;
 import javafx.geometry.Rectangle2D;
 import javafx.stage.Screen;
 
+/**
+ * Contrôleur de l'interface principale ({@code hello-view.fxml}) : écran d'accueil (liste des véhicules)
+ * et écran d'un véhicule (jauges d'usure, historique, totaux). Il construit aussi les fenêtres de saisie
+ * (véhicule, entretien, règle, clé API) et adapte la mise en page aux petites fenêtres (mode « compact »).
+ * <p>
+ * Les méthodes annotées {@code @FXML} sont appelées par les boutons du fichier FXML.
+ */
 public class DashboardController {
 
     private static final String FEUILLE_STYLE = "/com/carnetentretien/carnetentretien/style.css";
@@ -93,12 +99,20 @@ public class DashboardController {
     @FXML private Label totalDepense;
     @FXML private Label toast;
 
+    /** Véhicule actuellement ouvert ; {@code null} sur l'écran d'accueil. */
     private Vehicule vehiculeSelectionne = null;
     private SequentialTransition animationToast;
 
+    /** Largeur de fenêtre (px) en dessous de laquelle le mode compact est activé. */
     private static final double SEUIL_COMPACT = 820;
+
+    /** {@code true} quand la fenêtre est étroite : polices et marges réduites (classe CSS {@code compact}). */
     private boolean compact = false;
 
+    /**
+     * Appelée par JavaFX après le chargement du FXML : installe les règles par défaut au premier lancement,
+     * affiche l'accueil et, si l'utilisateur n'a pas de clé API, ouvre une seule fois la fenêtre d'aide.
+     */
     @FXML
     public void initialize() {
         racine.widthProperty().addListener((o, a, b) -> adapterTaille(b.doubleValue()));
@@ -114,6 +128,7 @@ public class DashboardController {
         }
     }
 
+    /** Active ou désactive le mode compact selon la largeur de la fenêtre. */
     private void adapterTaille(double largeur) {
         compact = largeur < SEUIL_COMPACT;
         if (compact) {
@@ -128,13 +143,13 @@ public class DashboardController {
         return Math.clamp(zoneEcran().getWidth() * 0.92, 280, voulue);
     }
 
-    /** Adresse de la photo à afficher : celle choisie par l'utilisateur, sinon celle trouvée via la plaque. */
+    /** @return l'adresse de la photo à afficher : celle choisie par l'utilisateur, sinon celle trouvée via la plaque, sinon {@code null} */
     private static String sourceImage(Vehicule v) {
         String locale = ImageService.adresse(v.getImageLocale());
         return locale != null ? locale : v.getImageUrl();
     }
 
-    /** Au tout premier lancement, on propose des règles courantes pour que l'écran ne soit jamais vide. */
+    /** Au tout premier lancement (aucune règle en base), ajoute des règles courantes pour que l'écran ne soit jamais vide. */
     private void installerReglesParDefaut() {
         if (!PreconisationDB.getToutesLesPreconisations().isEmpty()) return;
 
@@ -160,6 +175,7 @@ public class DashboardController {
         chargerVehicules();
     }
 
+    /** Retour à la liste des véhicules (bouton « Retour »). */
     @FXML
     public void retourAccueil() {
         afficherAccueil();
@@ -211,6 +227,7 @@ public class DashboardController {
         return carte;
     }
 
+    /** Ouvre la saisie d'un nouveau véhicule et l'enregistre si l'utilisateur valide. */
     @FXML
     public void ajouterVehicule() {
         Vehicule nouveau = saisirVehicule(null);
@@ -364,6 +381,7 @@ public class DashboardController {
         return ligne;
     }
 
+    /** Ouvre la saisie pour modifier le véhicule affiché ; supprime l'ancienne copie de photo si elle a été remplacée ou retirée. */
     @FXML
     public void modifierVehicule() {
         if (vehiculeSelectionne == null) return;
@@ -380,6 +398,7 @@ public class DashboardController {
         }
     }
 
+    /** Supprime le véhicule affiché après confirmation, avec son historique et sa photo personnelle. */
     @FXML
     public void supprimerVehicule() {
         if (vehiculeSelectionne == null) return;
@@ -392,6 +411,7 @@ public class DashboardController {
         }
     }
 
+    /** Met à jour le kilométrage du compteur (refuse une valeur inférieure à l'actuelle). */
     @FXML
     public void mettreAJourKilometrage() {
         if (vehiculeSelectionne == null) return;
@@ -416,6 +436,7 @@ public class DashboardController {
         }
     }
 
+    /** Enregistre un entretien réalisé pour le véhicule affiché. */
     @FXML
     public void ajouterEntretien() {
         if (vehiculeSelectionne == null) return;
@@ -427,6 +448,7 @@ public class DashboardController {
         }
     }
 
+    /** Exporte l'historique du véhicule affiché en CSV (ne fait rien si l'historique est vide). */
     @FXML
     public void exporterHistorique() {
         if (vehiculeSelectionne == null) return;
@@ -439,6 +461,7 @@ public class DashboardController {
         toast("✔  Export terminé");
     }
 
+    /** Fenêtre de gestion des règles de suivi (ajout, modification, suppression). Rafraîchit l'écran à la fermeture. */
     @FXML
     public void ouvrirReglages() {
         Dialog<ButtonType> dialog = new Dialog<>();
@@ -526,7 +549,7 @@ public class DashboardController {
         }
     }
 
-    /** Fenêtre d'aide : explique où obtenir la clé du service de plaques et permet de la coller. */
+    /** Fenêtre d'aide expliquant comment obtenir la clé du service de plaques, avec saisie de la clé. Une case vide supprime la clé. */
     @FXML
     public void ouvrirCleApi() {
         Label etapes = new Label(
@@ -570,7 +593,14 @@ public class DashboardController {
         }
     }
 
-    /** Retourne le véhicule saisi, ou null si l'utilisateur a annulé. */
+    /**
+     * Fenêtre de saisie d'un véhicule : recherche par plaque (hors thread JavaFX), aperçu, choix d'une photo personnelle.
+     * La photo personnelle n'est copiée dans l'application qu'au clic sur « Enregistrer ».
+     * Si la plaque a changé depuis la recherche, la photo trouvée est abandonnée.
+     *
+     * @param existant véhicule à modifier, ou {@code null} pour une création
+     * @return le véhicule saisi, ou {@code null} si l'utilisateur a annulé
+     */
     private Vehicule saisirVehicule(Vehicule existant) {
         TextField plaque = champ("AB-123-CD");
         plaque.getStyleClass().add("champ-plaque");
@@ -822,7 +852,7 @@ public class DashboardController {
         return cadre;
     }
 
-    /** Charge l'image en arrière-plan ; en cas d'échec (hors ligne, lien mort) on garde l'icône 🚗. */
+    /** Charge une image en arrière-plan ; tant qu'elle n'est pas prête (ou en cas d'échec) l'icône 🚗 reste affichée. Une recherche plus récente sur la même vue annule la précédente. */
     private void chargerImage(ImageView vue, Node repli, String url) {
         vue.setUserData(url);
         vue.setImage(null);
@@ -887,7 +917,7 @@ public class DashboardController {
         return ligne;
     }
 
-    /** Retourne l'entretien saisi, ou null si l'utilisateur a annulé. */
+    /** @param existant entretien à modifier, ou {@code null} @return l'entretien saisi, ou {@code null} si annulé */
     private Entretien saisirEntretien(Entretien existant) {
         ComboBox<String> type = new ComboBox<>();
         type.setEditable(true);
@@ -933,7 +963,7 @@ public class DashboardController {
                 parseEntier(kmField.getText()), parseMontant(coutField.getText()));
     }
 
-    /** Retourne la règle saisie, ou null si l'utilisateur a annulé. */
+    /** @param existante règle à modifier, ou {@code null} @return la règle saisie, ou {@code null} si annulé */
     private Preconisation saisirRegle(Preconisation existante) {
         TextField nom = champ("Ex : Vidange");
         TextField kmField = champ("Ex : 15000");
@@ -967,8 +997,15 @@ public class DashboardController {
     }
 
     /**
-     * Affiche une fenêtre de saisie. Elle reste ouverte tant que la validation renvoie un message d'erreur,
-     * lequel est affiché en rouge dans la fenêtre. Retourne true si l'utilisateur a validé.
+     * Affiche une fenêtre de saisie défilante. Elle reste ouverte tant que {@code validation} renvoie un message d'erreur
+     * (affiché en rouge dans la fenêtre) et elle est ramenée dans l'écran si elle est trop grande.
+     *
+     * @param titre      titre de la fenêtre
+     * @param consigne   phrase d'explication (masquée sur petit écran)
+     * @param champs     contenu du formulaire
+     * @param texteOk    libellé du bouton de validation
+     * @param validation renvoie {@code null} si les données sont valides, sinon le message à afficher
+     * @return {@code true} si l'utilisateur a validé
      */
     private boolean demander(String titre, String consigne, List<Node> champs, String texteOk, Supplier<String> validation) {
         Dialog<ButtonType> dialog = new Dialog<>();
@@ -1025,7 +1062,7 @@ public class DashboardController {
         return dialog.showAndWait().filter(r -> r == ok).isPresent();
     }
 
-    /** Fenêtre « Êtes-vous sûr ? ». Le bouton par défaut est « Non » pour éviter les erreurs. */
+    /** Fenêtre « Êtes-vous sûr ? » dont le bouton par défaut est « Non » pour éviter les suppressions par erreur. @return {@code true} si l'utilisateur a confirmé */
     private boolean confirmer(String titre, String question, String texteOui) {
         ButtonType oui = new ButtonType(texteOui, ButtonBar.ButtonData.OK_DONE);
         ButtonType non = new ButtonType("Non, je garde", ButtonBar.ButtonData.CANCEL_CLOSE);
@@ -1103,7 +1140,7 @@ public class DashboardController {
         return badge;
     }
 
-    /** Petit message qui apparaît en bas de l'écran puis disparaît tout seul. */
+    /** Affiche un court message en bas de l'écran qui disparaît seul après quelques secondes. */
     private void toast(String message) {
         if (animationToast != null) animationToast.stop();
         toast.setText(message);
@@ -1118,12 +1155,13 @@ public class DashboardController {
         animationToast.play();
     }
 
+    /** Affiche ou masque un composant <b>et</b> libère sa place dans la mise en page. */
     private void montrer(Node n, boolean visible) {
         n.setVisible(visible);
         n.setManaged(visible);
     }
 
-    /** Analyse un véhicule ; les entretiens les plus urgents sont placés en premier. */
+    /** Analyse un véhicule avec ses règles ; les entretiens les plus usés sont placés en premier. */
     private List<CalculateurEntretien.Bilan> analyser(Vehicule v) {
         List<Entretien> historique = EntretienDB.getEntretiensPourVehicule(v.getId());
         List<Preconisation> regles = PreconisationDB.getToutesLesPreconisations();
@@ -1133,6 +1171,7 @@ public class DashboardController {
         return bilans;
     }
 
+    /** @return le niveau d'état ({@code OK}, {@code PREVOIR}, {@code URGENT}, {@code INCONNU}) correspondant à un pourcentage d'usure */
     private int niveauDe(double pourcentage) {
         if (pourcentage >= 100) return URGENT;
         if (pourcentage >= 80) return PREVOIR;
@@ -1140,6 +1179,7 @@ public class DashboardController {
         return INCONNU;
     }
 
+    /** @return le pire niveau parmi les bilans, ou {@code AUCUNE_REGLE} si la liste est vide */
     private int niveauGlobal(List<CalculateurEntretien.Bilan> bilans) {
         if (bilans.isEmpty()) return AUCUNE_REGLE;
         boolean urgent = false, prevoir = false, ok = false;

@@ -11,8 +11,10 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Accès à la table {@code Entretien_Fait} (historique des entretiens). Même gestion d'erreurs que {@link VehiculeDB}. */
 public class EntretienDB {
 
+    /** Enregistre un entretien pour le véhicule {@code entretien.getVehiculeId()}. */
     public static void ajouterEntretien(Entretien entretien) {
         String sql = "INSERT INTO Entretien_Fait(vehicule_id, type_operation, date_realisation, kilometrage_realisation, cout) VALUES(?,?,?,?,?)";
 
@@ -33,6 +35,7 @@ public class EntretienDB {
         }
     }
 
+    /** @return les entretiens d'un véhicule, sans ordre garanti (liste vide si aucun) */
     public static List<Entretien> getEntretiensPourVehicule(int vehiculeId) {
         List<Entretien> liste = new ArrayList<>();
         String sql = "SELECT * FROM Entretien_Fait WHERE vehicule_id = ?";
@@ -60,6 +63,7 @@ public class EntretienDB {
         return liste;
     }
 
+    /** Met à jour l'entretien dont l'id est celui de l'objet (le véhicule associé ne change pas). */
     public static void modifierEntretien(Entretien entretien) {
         String sql = "UPDATE Entretien_Fait SET type_operation = ?, date_realisation = ?, kilometrage_realisation = ?, cout = ? WHERE id = ?";
 
@@ -79,6 +83,7 @@ public class EntretienDB {
         }
     }
 
+    /** Supprime un entretien ; sans effet si l'id n'existe pas. */
     public static void supprimerEntretien(int id) {
         String sql = "DELETE FROM Entretien_Fait WHERE id = ?";
 

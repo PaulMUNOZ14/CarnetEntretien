@@ -17,14 +17,17 @@ import java.util.Properties;
  */
 public final class ConfigService {
 
+    /** Adresse du site du service de recherche par plaque. */
     public static final String SITE_API = "https://apiplaqueimmatriculation.com";
+
+    /** Page du site où l'utilisateur obtient sa clé personnelle. */
     public static final String LIEN_OBTENIR_CLE = SITE_API + "/obtenir_une_cle_api/";
 
+    /** Nom de la propriété contenant la clé API*/
     static final String CLE_API = "plaque.api.token";
-    static final String AIDE_AFFICHEE = "aide.cle.affichee";
 
-    private ConfigService() {
-    }
+    /** Propriété qui retient que la fenêtre d'explication de la clé a déjà été montrée au premier lancement. */
+    static final String AIDE_AFFICHEE = "aide.cle.affichee";
 
     /** @return la clé enregistrée dans config.properties, ou vide s'il n'y en a pas */
     public static Optional<String> getCleApi() {
@@ -32,6 +35,7 @@ public final class ConfigService {
         return (valeur == null || valeur.isBlank()) ? Optional.empty() : Optional.of(valeur.trim());
     }
 
+    /** @return {@code true} si une clé personnelle est enregistrée */
     public static boolean aCleApi() {
         return getCleApi().isPresent();
     }
@@ -47,10 +51,12 @@ public final class ConfigService {
         sauvegarder(p);
     }
 
+    /** @return {@code true} si la fenêtre d'aide de la clé a déjà été affichée (jamais réaffichée automatiquement) */
     public static boolean aideDejaAffichee() {
         return Boolean.parseBoolean(charger().getProperty(AIDE_AFFICHEE, "false"));
     }
 
+    /** Mémorise que la fenêtre d'aide a été affichée, sans toucher à la clé. */
     public static void marquerAideAffichee() {
         Properties p = charger();
         p.setProperty(AIDE_AFFICHEE, "true");
@@ -69,6 +75,7 @@ public final class ConfigService {
         return "•".repeat(propre.length() - 4) + propre.substring(propre.length() - 4);
     }
 
+    /** Lit {@code config.properties} ; un fichier absent ou illisible donne des propriétés vides. */
     private static Properties charger() {
         Properties p = new Properties();
         Path fichier = AppPaths.fichierConfiguration();
@@ -82,6 +89,7 @@ public final class ConfigService {
         return p;
     }
 
+    /** Écrit {@code config.properties} (en créant le dossier au besoin), en lecture/écriture pour l'utilisateur seul quand le système le permet. */
     private static void sauvegarder(Properties p) {
         Path fichier = AppPaths.fichierConfiguration();
         try {

@@ -41,6 +41,19 @@ public class RecherchePlaqueService {
             .followRedirects(HttpClient.Redirect.NORMAL)
             .build();
 
+    /**
+     * Résultat d'une recherche par plaque.
+     *
+     * @param trouve        {@code true} si le véhicule a été identifié (marque et modèle présents)
+     * @param marque        marque mise en forme (ex. « Renault ») ; {@code null} en cas d'échec
+     * @param modele        modèle mis en forme (ex. « Megane III Coupe »)
+     * @param version       version/motorisation telle que fournie par le service, éventuellement vide
+     * @param annee         année de première mise en circulation, ou {@code null} si illisible
+     * @param energie       carburant, vide s'il n'est pas connu
+     * @param imageUrl      adresse https de la photo du modèle, ou {@code null}
+     * @param logoUrl       adresse https du logo de la marque, ou {@code null}
+     * @param messageErreur message affichable tel quel à l'utilisateur ; {@code null} si {@code trouve}
+     */
     public record Resultat(boolean trouve, String marque, String modele, String version,
                            String annee, String energie, String imageUrl, String logoUrl,
                            String messageErreur) {
@@ -49,15 +62,18 @@ public class RecherchePlaqueService {
         }
     }
 
+    /** @return la plaque en majuscules, sans espace, tiret ni autre séparateur ({@code ""} si {@code null}) */
     public static String normaliser(String plaque) {
         return plaque == null ? "" : plaque.toUpperCase().replaceAll("[^A-Z0-9]", "");
     }
 
+    /** @return {@code true} si la plaque est au format SIV (AB-123-CD) ou FNI ancien (1234 AB 56) */
     public static boolean formatValide(String plaque) {
         String p = normaliser(plaque);
         return PLAQUE_SIV.matcher(p).matches() || PLAQUE_FNI.matcher(p).matches();
     }
 
+    /** @return la plaque avec ses tirets si elle est au format SIV ; sinon l'ancienne plaque en majuscules, telle quelle */
     public static String formater(String plaque) {
         String p = normaliser(plaque);
         if (PLAQUE_SIV.matcher(p).matches()) {
@@ -66,6 +82,10 @@ public class RecherchePlaqueService {
         return plaque == null ? "" : plaque.trim().toUpperCase();
     }
 
+    /**
+     * Interroge le service pour une plaque. <b>Appel réseau bloquant (jusqu'à ~10 s) :</b> ne jamais
+     * l'appeler depuis le thread JavaFX. Ne lève jamais d'exception : toute erreur devient un {@link Resultat} d'échec.
+     */
     public static Resultat rechercher(String plaque) {
         String p = normaliser(plaque);
         if (!formatValide(p)) {
@@ -156,6 +176,7 @@ public class RecherchePlaqueService {
         }
     }
 
+    /** Construit le message d'échec « Aucun véhicule trouvé », avec le détail du service et un rappel sur la clé de démonstration. */
     private static String messageNonTrouve(String detailApi, boolean demo) {
         String base = "Aucun véhicule trouvé pour cette plaque.";
         if (demo) {
@@ -167,14 +188,14 @@ public class RecherchePlaqueService {
         return base;
     }
 
-    /** Clé utilisée pour les recherches : variable d'environnement, puis config.properties, puis clé de démonstration. */
+    /** @return la clé utilisée : variable d'environnement, sinon {@code config.properties}, sinon clé de démonstration */
     static String lireToken() {
         String env = System.getenv("PLAQUE_API_TOKEN");
         if (env != null && !env.isBlank()) return env.trim();
         return ConfigService.getCleApi().orElse(TOKEN_DEMO);
     }
 
-    /** True tant que l'utilisateur n'a pas enregistré sa propre clé. */
+    /** @return {@code true} tant que l'utilisateur n'a pas enregistré sa propre clé */
     public static boolean utiliseCleDemo() {
         return TOKEN_DEMO.equals(lireToken());
     }
@@ -202,6 +223,7 @@ public class RecherchePlaqueService {
         return e.matches("\\d+") ? "" : e;
     }
 
+    /** Met en forme un nom brut : « MEGANE III » → « Megane III ». Garde en majuscules les sigles connus, les mots avec chiffres et (pour un modèle) les chiffres romains. */
     private static String mettreEnForme(String brut, boolean marque) {
         if (brut == null || brut.isBlank()) return "";
         StringBuilder sb = new StringBuilder();
@@ -221,6 +243,7 @@ public class RecherchePlaqueService {
         return sb.toString();
     }
 
+    /** Lecteur JSON minimal (objets, tableaux, chaînes, nombres, booléens, null), suffisant pour la réponse du service. Lève {@link IllegalStateException} si le JSON est invalide ou tronqué. */
     private static final class MiniJson {
         private final String s;
         private int i = 0;
