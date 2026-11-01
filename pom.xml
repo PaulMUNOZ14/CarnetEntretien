@@ -78,6 +78,9 @@
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-surefire-plugin</artifactId>
         <version>3.5.2</version>
+        <configuration>
+          <argLine>--enable-native-access=ALL-UNNAMED</argLine>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>org.openjfx</groupId>
@@ -95,6 +98,10 @@
               <noManPages>true</noManPages>
               <stripDebug>true</stripDebug>
               <noHeaderFiles>true</noHeaderFiles>
+              <options>
+                <option>--enable-native-access=javafx.graphics</option>
+                <option>--enable-native-access=ALL-UNNAMED</option>
+              </options>
             </configuration>
           </execution>
         </executions>
