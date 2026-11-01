@@ -14,23 +14,24 @@
     <junit.version>5.12.1</junit.version>
     <maven.compiler.source>21</maven.compiler.source>
     <maven.compiler.target>21</maven.compiler.target>
+    <javafx.version>25.0.1</javafx.version>
   </properties>
 
   <dependencies>
     <dependency>
       <groupId>org.openjfx</groupId>
       <artifactId>javafx-controls</artifactId>
-      <version>21.0.6</version>
+      <version>${javafx.version}</version>
     </dependency>
     <dependency>
       <groupId>org.openjfx</groupId>
       <artifactId>javafx-fxml</artifactId>
-      <version>21.0.6</version>
+      <version>${javafx.version}</version>
     </dependency>
       <dependency>
         <groupId>org.openjfx</groupId>
         <artifactId>javafx-swing</artifactId>
-        <version>21.0.6</version>
+        <version>${javafx.version}</version>
       </dependency>
 <dependency>
       <groupId>org.controlsfx</groupId>
