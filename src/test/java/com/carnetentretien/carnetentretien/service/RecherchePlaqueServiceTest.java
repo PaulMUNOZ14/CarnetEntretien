@@ -13,7 +13,7 @@ class RecherchePlaqueServiceTest extends BaseDonneesTest {
     private static final String REPONSE_OK = """
             {"api-version":"1.0","message":"OK","code_erreur":200,
              "data":{"erreur":"","immat":"AB123CD","pays":"FR","marque":"RENAULT","modele":"MEGANE III COUPE",
-                     "version":"1.5 DCI 110","energieNGC":"DIESEL","date1erCir_fr":"12/03/2012",
+                     "version":"1.5 DCI 110","energieNGC":"Diesel","date1erCir_fr":"12/03/2012",
                      "photo_modele":"//cdn.example.com/photo.jpg","logo_marque":"https://cdn.example.com/logo.png"}}
             """;
 
@@ -79,7 +79,7 @@ class RecherchePlaqueServiceTest extends BaseDonneesTest {
         assertEquals("Megane III Coupe", r.modele());   // chiffres romains conservés en majuscules
         assertEquals("1.5 DCI 110", r.version());
         assertEquals("2012", r.annee());
-        assertEquals("DIESEL", r.energie());
+        assertEquals("Diesel", r.energie());
         assertNull(r.messageErreur());
     }
 
@@ -134,7 +134,7 @@ class RecherchePlaqueServiceTest extends BaseDonneesTest {
 
     @Test
     void uneEnergieNumeriqueEstIgnoree() {
-        String json = REPONSE_OK.replace("\"energieNGC\":\"DIESEL\"", "\"energieNGC\":\"3\"");
+        String json = REPONSE_OK.replace("\"energieNGC\":\"Diesel\"", "\"energieNGC\":\"3\"");
 
         assertEquals("", RecherchePlaqueService.interpreter(200, json, false).energie());
     }
