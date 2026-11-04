@@ -2,7 +2,7 @@
 
 Application de bureau pour gérer l'entretien de vos véhicules
 
-### Site web : https://paulmunoz14.github.io/Portfolio/
+### Site web : https://paulmunoz14.github.io/CarnetEntretien/
 
 ## Description
 
