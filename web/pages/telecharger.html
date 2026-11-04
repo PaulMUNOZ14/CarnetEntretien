@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Télécharger - Carnet Entretien</title>
+  <meta name="description" content="Télécharger et installer Carnet Entretien sous Windows, ou le lancer depuis le code source.">
+  <meta name="color-scheme" content="light dark">
+  <link rel="stylesheet" href="../css/style.mini.css">
+  <script src="../js/script.mini.js" defer></script>
+</head>
+
+<body>
+  <a class="lien-evitement" href="#contenu">Aller au contenu</a>
+
+  <header class="entete">
+    <div class="conteneur">
+      <a class="logo" href="../index.html">Carnet Entretien</a>
+      <button class="burger" aria-label="Ouvrir le menu" aria-controls="nav" aria-expanded="false">Menu</button>
+      <nav class="nav" id="nav" aria-label="Navigation principale">
+        <a href="../index.html">Accueil</a>
+        <a href="fonctionnalites.html">Fonctionnalités</a>
+        <a href="feuille-de-route.html">Feuille de route</a>
+        <a href="telecharger.html" class="btn btn-succes btn-petit" aria-current="page">Télécharger</a>
+        <button type="button" class="theme" data-theme-toggle>Mode sombre</button>
+      </nav>
+    </div>
+  </header>
+
+  <main id="contenu">
+    <div class="conteneur page-titre">
+      <h1>Télécharger</h1>
+      <p>Carnet Entretien 1.0 pour Windows.</p>
+    </div>
+
+    <section class="section-haut">
+      <div class="conteneur deux-col">
+        <article class="carte">
+          <h2>Installeur Windows</h2>
+          <p class="espace-bas">Installation en quelques clics, avec raccourci et entrée dans le menu Démarrer. Aucun Java à installer séparément.</p> <br>
+          <div class="boutons-telechargement">
+            <a class="btn btn-succes btn-grand" href="https://github.com/PaulMUNOZ14/CarnetEntretien/releases/download/stable/Carnet.Entretien-1.0.0.exe">Télécharger la V1.0.0</a>
+            <h3>ou</h3>
+            <a class="btn btn-succes btn-grand" href="https://github.com/PaulMUNOZ14/CarnetEntretien/releases">Voir les versions</a>
+          </div>
+        </article>
+
+        <div>
+          <h2>Installation</h2>
+          <ol class="etapes">
+            <li>
+              <div>
+                <h3>Téléchargez l'installeur</h3>
+                <p>Fichier « Carnet Entretien » (.exe).</p>
+              </div>
+            </li>
+            <li>
+              <div>
+                <h3>Lancez-le</h3>
+                <p>Windows peut afficher un avertissement car l'application n'est pas encore signée : choisissez « Informations complémentaires » puis « Exécuter quand même ».</p>
+              </div>
+            </li>
+            <li>
+              <div>
+                <h3>Ouvrez l'application</h3>
+                <p>Au premier lancement, une fenêtre explique comment obtenir une clé pour la recherche par plaque (facultatif).</p>
+              </div>
+            </li>
+          </ol>
+        </div>
+      </div>
+    </section>
+
+    <section class="section-claire">
+      <div class="conteneur conteneur-820">
+        <h2>Pour les développeurs : lancer depuis le code source</h2>
+        <p>Prérequis : JDK 21 ou supérieur. Maven n'est pas nécessaire, le <code>mvnw</code> inclus suffit.</p>
+        <pre><code>git clone https://github.com/PaulMUNOZ14/CarnetEntretien.git
+cd CarnetEntretien
+./mvnw javafx:run</code></pre>
+        <p>Pour lancer les tests (ils travaillent dans un dossier temporaire et ne touchent pas à vos données) :</p>
+        <pre><code>./mvnw test</code></pre>
+        <p>Pour fabriquer l'installeur Windows vous-même, utilisez le script <code>creer-installeur.ps1</code> à la racine du projet (JDK 21+ avec <code>jpackage</code> requis).</p>
+      </div>
+    </section>
+
+    <section>
+      <div class="conteneur conteneur-760">
+        <h2>Licence</h2>
+        <p class="avertissement">Copyright © 2026 PaulMUNOZ14. Tous droits réservés. Aucune autorisation n'est accordée pour utiliser, copier, modifier ou distribuer ce logiciel sans l'accord écrit préalable de l'auteur.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="pied">
+    <div class="conteneur">
+      <div>
+        <strong>Carnet Entretien</strong><br>
+        Un projet de <a href="https://github.com/PaulMUNOZ14">PaulMUNOZ14</a><br>
+        © 2026 - Tous droits réservés
+      </div>
+      <ul>
+        <li><a href="fonctionnalites.html">Fonctionnalités</a></li>
+        <li><a href="feuille-de-route.html">Feuille de route</a></li>
+        <li><a href="telecharger.html">Télécharger</a></li>
+        <li><a href="mentions-legales.html">Mentions légales</a></li>
+        <li><a href="confidentialite.html">Confidentialité</a></li>
+        <li><a href="https://github.com/PaulMUNOZ14/CarnetEntretien">Code sur GitHub</a></li>
+      </ul>
+    </div>
+  </footer>
+</body>
+
+</html>

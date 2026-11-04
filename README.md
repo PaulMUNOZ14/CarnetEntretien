@@ -1,6 +1,9 @@
 ﻿# Carnet Entretien
 
 Application de bureau pour gérer l'entretien de vos véhicules
+
+### Site web : https://paulmunoz14.github.io/Portfolio/
+
 ## Description
 
 **Carnet Entretien** est une application JavaFX qui permet de :
@@ -39,6 +42,22 @@ Ce projet propose un outil pour toute personne souhaitant suivre sérieusement l
 
 ### En cours / À venir
 
+- [ ] Calendrier des entretiens
+- [ ] Suivi du contrôle technique
+- [ ] Historique kilométrique
+- [ ] Gestion des factures PDF
+- [ ] Suivi du carburant
+- [ ] Statistiques financières
+- [ ] Graphiques de consommation
+- [ ] Comparaison entre véhicules
+- [ ] Notifications Windows
+- [ ] Sauvegardes automatiques
+- [ ] Import/export JSON
+- [ ] Journal d'activité
+- [ ] API REST
+- [ ] Application mobile complémentaire
+- [ ] Synchronisation entre appareils
+- [ ] Comptes utilisateurs
 - [ ] Retirer Herobrine
 
 ## Fiche technique
@@ -116,6 +135,23 @@ CarnetEntretien/
 ├── carnet_entretien.db                                 # Base SQLite (générée automatiquement au lancement)
 ├── config.properties                                   # Clé API de l'utilisateur (générée via le bouton « Clé API »)
 ├── images/                                             # Photos de véhicules importées par l'utilisateur (générées automatiquement)
+│
+├── web/                                                # Site web de présentation
+│   ├── index.html                                      # Page d'accueil
+│   ├── assets/                                         # Ressources du site
+│   ├── css/                                            # Fichiers CSS du site
+│   │   ├── style.css
+│   │   └── style.mini.css                              # Fichier css minifié
+│   ├── js/
+│   │   ├── script.js
+│   │   └── script.mini.js                              # Fichier js minifié
+│   └── pages/
+│       ├── confidentialite.html
+│       ├── feuille-de-route.html
+│       ├── fonctionnalites.html
+│       ├── mentions-legales.html
+│       └── telecharger.html
+│
 └── src/
     ├── main/
     │   ├── java/

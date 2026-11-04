@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fonctionnalités - Carnet Entretien</title>
+  <meta name="description" content="Toutes les fonctionnalités de Carnet Entretien : suivi multi-véhicules, jauges d'usure, recherche par plaque, historique, export CSV.">
+  <meta name="color-scheme" content="light dark">
+  <link rel="stylesheet" href="../css/style.mini.css">
+  <script src="../js/script.mini.js" defer></script>
+</head>
+
+<body>
+  <a class="lien-evitement" href="#contenu">Aller au contenu</a>
+
+  <header class="entete">
+    <div class="conteneur">
+      <a class="logo" href="../index.html">Carnet Entretien</a>
+      <button class="burger" aria-label="Ouvrir le menu" aria-controls="nav" aria-expanded="false">Menu</button>
+      <nav class="nav" id="nav" aria-label="Navigation principale">
+        <a href="../index.html">Accueil</a>
+        <a href="fonctionnalites.html" aria-current="page">Fonctionnalités</a>
+        <a href="feuille-de-route.html">Feuille de route</a>
+        <a href="telecharger.html" class="btn btn-succes btn-petit">Télécharger</a>
+        <button type="button" class="theme" data-theme-toggle>Mode sombre</button>
+      </nav>
+    </div>
+  </header>
+
+  <main id="contenu">
+    <div class="conteneur page-titre">
+      <h1>Fonctionnalités</h1>
+      <p>Ce que Carnet Entretien sait faire dans sa version 1.0.</p>
+    </div>
+
+    <section class="section-haut">
+      <div class="conteneur grille">
+        <article class="carte">
+          <h3>Gestion des véhicules</h3>
+          <ul class="liste-fonctions">
+            <li>Plusieurs véhicules (marque, modèle, kilométrage)</li>
+            <li>Modification et suppression</li>
+            <li>Mise à jour rapide du compteur</li>
+            <li>Photo personnelle importée depuis votre ordinateur</li>
+          </ul>
+        </article>
+        <article class="carte">
+          <h3>Recherche par plaque</h3>
+          <ul class="liste-fonctions">
+            <li>Plaques SIV (AB-123-CD) et anciennes plaques</li>
+            <li>Marque, modèle, année, énergie et photo retrouvés</li>
+            <li>Plaque affichée façon française</li>
+            <li>Saisie manuelle possible si le service est indisponible</li>
+          </ul>
+        </article>
+        <article class="carte">
+          <h3>Tableau de bord</h3>
+          <ul class="liste-fonctions">
+            <li>Jauges d'usure par entretien</li>
+            <li>Alertes « À prévoir » et « Urgent »</li>
+            <li>Les entretiens les plus urgents en premier</li>
+            <li>Bandeau de synthèse</li>
+          </ul>
+        </article>
+        <article class="carte">
+          <h3>Règles de suivi</h3>
+          <ul class="liste-fonctions">
+            <li>Règles par défaut : vidange, filtres, freins, pneus, courroie</li>
+            <li>Intervalle en km <em>ou</em> en mois : le premier atteint déclenche l'alerte</li>
+            <li>Ajout, modification, suppression libres</li>
+          </ul>
+        </article>
+        <article class="carte">
+          <h3>Historique et dépenses</h3>
+          <ul class="liste-fonctions">
+            <li>Date, kilométrage et coût de chaque entretien</li>
+            <li>Total dépensé calculé automatiquement</li>
+            <li>Export CSV compatible Excel</li>
+          </ul>
+        </article>
+        <article class="carte">
+          <h3>Données et installation</h3>
+          <ul class="liste-fonctions">
+            <li>Base SQLite locale, sans serveur</li>
+            <li>Données rangées dans votre dossier personnel</li>
+            <li>Installeur Windows autonome</li>
+            <li>Interface adaptée aux petites fenêtres</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section class="section-claire">
+      <div class="conteneur">
+        <div class="titre-section">
+          <h2>Sous le capot</h2>
+          <p>Pour les curieux et les contributeurs.</p>
+        </div>
+        <table class="tableau">
+          <thead>
+            <tr>
+              <th>Composant</th>
+              <th>Technologie</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Langage</td>
+              <td>Java 21</td>
+            </tr>
+            <tr>
+              <td>Interface</td>
+              <td>JavaFX</td>
+            </tr>
+            <tr>
+              <td>Build</td>
+              <td>Maven</td>
+            </tr>
+            <tr>
+              <td>Base de données</td>
+              <td>SQLite (<code>sqlite-jdbc</code>)</td>
+            </tr>
+            <tr>
+              <td>Bibliothèques UI</td>
+              <td>ControlsFX, Ikonli</td>
+            </tr>
+            <tr>
+              <td>Tests</td>
+              <td>JUnit 5</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section>
+      <div class="conteneur">
+        <div class="titre-section">
+          <h2>Où sont mes données ?</h2>
+          <p>Base de données, photos importées et réglages sont rangés ensemble, dans cet ordre de priorité :</p>
+        </div>
+        <ol class="etapes etapes-centre">
+          <li>
+            <!-- &lt; et &gt; sont utilisés pour représenter "<" et ">" sans créer de balise (pour que ce soit affiché)  -->
+            <div>Le dossier indiqué par <code>-Dcarnet.data.dir=&lt;dossier&gt;</code> s'il est fourni.</div>
+          </li>
+          <li>
+            <div>Sinon le dossier courant, s'il contient déjà <code>carnet_entretien.db</code> ou <code>config.properties</code> (développement).</div>
+          </li>
+          <li>
+            <!-- &lt; et &gt; sont utilisés pour représenter "<" et ">" sans créer de balise (pour que ce soit affiché)  -->
+            <div>Sinon <code>&lt;dossier personnel&gt;/CarnetEntretien</code> (cas d'une application installée).</div>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="section-claire">
+      <div class="conteneur conteneur-760">
+        <h2>À propos de la clé API</h2>
+        <p>La recherche par plaque s'appuie sur le service <a
+            href="https://apiplaqueimmatriculation.com/obtenir_une_cle_api/">apiplaqueimmatriculation.com</a>. Une
+          fenêtre d'aide s'ouvre au premier lancement pour expliquer comment obtenir sa clé et la coller dans
+          l'application.</p>
+        <p class="avertissement">Sans clé personnelle, l'application utilise une clé de démonstration très limitée.
+          Certaines offres du service sont payantes : les tarifs sont affichés sur son site. Vous pouvez toujours saisir
+          marque et modèle à la main.</p>
+      </div>
+    </section>
+  </main>
+
+  <footer class="pied">
+    <div class="conteneur">
+      <div>
+        <strong>Carnet Entretien</strong><br>
+        Un projet de <a href="https://github.com/PaulMUNOZ14">PaulMUNOZ14</a><br>
+        © 2026 - Tous droits réservés
+      </div>
+      <ul>
+        <li><a href="fonctionnalites.html">Fonctionnalités</a></li>
+        <li><a href="feuille-de-route.html">Feuille de route</a></li>
+        <li><a href="telecharger.html">Télécharger</a></li>
+        <li><a href="mentions-legales.html">Mentions légales</a></li>
+        <li><a href="confidentialite.html">Confidentialité</a></li>
+        <li><a href="https://github.com/PaulMUNOZ14/CarnetEntretien">Code sur GitHub</a></li>
+      </ul>
+    </div>
+  </footer>
+</body>
+
+</html>

@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Carnet Entretien - Suivez l'entretien de vos véhicules</title>
+    <meta name="description" content="Carnet Entretien est une application de bureau pour suivre l'entretien de vos véhicules : échéances, historique, dépenses. Vos données restent sur votre ordinateur.">
+    <meta property="og:title" content="Carnet Entretien">
+    <meta property="og:description" content="Ne ratez plus jamais une vidange. Application de bureau simple, locale et sans serveur.">
+    <meta property="og:type" content="website">
+    <meta name="color-scheme" content="light dark">
+    <link rel="stylesheet" href="css/style.css">
+    <script src="js/script.mini.js" defer></script>
+</head>
+
+<body>
+    <a class="lien-evitement" href="#contenu">Aller au contenu</a>
+
+    <header class="entete">
+        <div class="conteneur">
+            <a class="logo" href="index.html">Carnet Entretien</a>
+            <button class="burger" aria-label="Ouvrir le menu" aria-controls="nav" aria-expanded="false">Menu</button>
+            <nav class="nav" id="nav" aria-label="Navigation principale">
+                <a href="index.html" aria-current="page">Accueil</a>
+                <a href="pages/fonctionnalites.html">Fonctionnalités</a>
+                <a href="pages/feuille-de-route.html">Feuille de route</a>
+                <a href="pages/telecharger.html" class="btn btn-succes btn-petit">Télécharger</a>
+                <button type="button" class="theme" data-theme-toggle>Mode sombre</button>
+            </nav>
+        </div>
+    </header>
+
+    <main id="contenu">
+        <div class="heros">
+            <div class="conteneur">
+                <p class="pastille">Version 1.0 disponible</p>
+                <h1>Ne ratez plus jamais une vidange.</h1>
+                <p class="chapeau">Carnet Entretien suit l'entretien de vos véhicules, prévoit les prochaines échéances
+                    et garde l'historique de vos dépenses. Simple à utiliser, et vos données restent sur votre
+                    ordinateur.</p>
+                <div class="actions">
+                    <a class="btn btn-succes btn-grand" href="pages/telecharger.html">Télécharger</a>
+                    <a class="btn btn-contour btn-grand" href="pages/fonctionnalites.html">Voir les fonctionnalités</a>
+                </div>
+                <p class="note">Application Windows · Aucune inscription · Aucun serveur</p>
+            </div>
+        </div>
+
+        <section>
+            <div class="conteneur">
+                <div class="titre-section">
+                    <h2>Pensé pour être compris en quelques secondes</h2>
+                    <p>De grands boutons, des couleurs claires, des phrases simples : pas besoin d'être à l'aise avec l'informatique.</p>
+                </div>
+                <div class="grille">
+                    <article class="carte">
+                        <h3>Des alertes claires</h3>
+                        <p>Vert, orange, rouge : vous voyez d'un coup d'œil ce qui est à jour, à prévoir ou urgent.</p>
+                    </article>
+                    <article class="carte">
+                        <h3>Des échéances prévues</h3>
+                        <p>L'application estime la date de la prochaine vidange d'après votre usage annuel, pas seulement le compteur.</p>
+                    </article>
+                    <article class="carte">
+                        <h3>Recherche par plaque</h3>
+                        <p>Saisissez AB-123-CD : la marque, le modèle et une photo sont retrouvés automatiquement.</p>
+                    </article>
+                    <article class="carte">
+                        <h3>Vos dépenses</h3>
+                        <p>Chaque entretien garde sa date, son kilométrage et son coût. Le total dépensé s'affiche toutseul.</p>
+                    </article>
+                    <article class="carte">
+                        <h3>Vos données chez vous</h3>
+                        <p>Tout est stocké dans une base SQLite locale. Rien n'est envoyé sur un serveur.</p>
+                    </article>
+                    <article class="carte">
+                        <h3>Export CSV</h3>
+                        <p>Exportez l'historique d'un véhicule vers Excel ou LibreOffice en un clic.</p>
+                    </article>
+                </div>
+            </div>
+        </section>
+
+        <section class="section-claire">
+            <div class="conteneur deux-col">
+                <div>
+                    <h2>Comment l'application décide ?</h2>
+                    <p>Pour chaque entretien surveillé, elle compare ce qui s'est écoulé depuis le dernier passage à l'atelier à l'intervalle conseillé. Le plus avancé des deux (kilomètres ou mois) l'emporte.</p>
+                    <ul class="seuils">
+                        <li><span class="badge ok">OK</span> moins de 80 % de l'intervalle</li>
+                        <li><span class="badge prevoir">À prévoir</span> entre 80 % et 100 %</li>
+                        <li><span class="badge urgent">Urgent</span> 100 % ou plus</li>
+                    </ul>
+                    <p>Les intervalles sont modifiables : adaptez-les à votre carnet constructeur.</p>
+                </div>
+
+                <div class="carte">
+                    <h3>Essayez le calcul</h3>
+                    <form id="simulateur">
+                        <div class="champs">
+                            <label>Compteur actuel (km)<input name="kmActuel" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="7" autocomplete="off" value="57000"></label>
+                            <label>Compteur au dernier entretien (km)<input name="kmDernier" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="7" autocomplete="off" value="40000"></label>
+                            <label>Intervalle conseillé (km)<input name="intervKm" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="7" autocomplete="off" value="20000"></label>
+                            <label>Mois depuis le dernier entretien<input name="mois" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="7" autocomplete="off" value="6"></label>
+                            <label>Intervalle conseillé (mois)<input name="intervMois" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="7" autocomplete="off" value="12"></label>
+                        </div>
+                        <div id="simu-resultat" class="bandeau" role="status" aria-live="polite"></div>
+                    </form>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <div class="conteneur deux-col">
+                <div>
+                    <h2>Prêt en trois étapes</h2>
+                    <ol class="etapes">
+                        <li>
+                            <div>
+                                <h3>Ajoutez votre véhicule</h3>
+                                <p>Avec sa plaque, ou en remplissant marque et modèle à la main.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div>
+                                <h3>Notez ce qui a déjà été fait</h3>
+                                <p>Vidange, pneus, freins… avec la date et le kilométrage.</p>
+                            </div>
+                        </li>
+                        <li>
+                            <div>
+                                <h3>Laissez l'application vous prévenir</h3>
+                                <p>Mettez à jour le compteur de temps en temps : les jauges font le reste.</p>
+                            </div>
+                        </li>
+                    </ol>
+                </div>
+                <div class="carte-bleu">
+                    <h2>Essayez Carnet Entretien</h2>
+                    <p>Installation en quelques clics, sans compte.</p>
+                    <a class="btn btn-succes btn-grand" href="pages/telecharger.html">Télécharger</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer class="pied">
+        <div class="conteneur">
+            <div>
+                <strong>Carnet Entretien</strong><br>
+                Un projet de <a href="https://github.com/PaulMUNOZ14">PaulMUNOZ14</a><br>
+                © 2026 - Tous droits réservés
+            </div>
+            <ul>
+                <li><a href="pages/fonctionnalites.html">Fonctionnalités</a></li>
+                <li><a href="pages/feuille-de-route.html">Feuille de route</a></li>
+                <li><a href="pages/telecharger.html">Télécharger</a></li>
+                <li><a href="pages/mentions-legales.html">Mentions légales</a></li>
+                <li><a href="pages/confidentialite.html">Confidentialité</a></li>
+                <li><a href="https://github.com/PaulMUNOZ14/CarnetEntretien">Code sur GitHub</a></li>
+            </ul>
+        </div>
+    </footer>
+</body>
+
+</html>
