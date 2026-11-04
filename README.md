@@ -39,6 +39,22 @@ Ce projet propose un outil pour toute personne souhaitant suivre sérieusement l
 
 ### En cours / À venir
 
+- [ ] Calendrier des entretiens
+- [ ] Suivi du contrôle technique
+- [ ] Historique kilométrique
+- [ ] Gestion des factures PDF
+- [ ] Suivi du carburant
+- [ ] Statistiques financières
+- [ ] Graphiques de consommation
+- [ ] Comparaison entre véhicules
+- [ ] Notifications Windows
+- [ ] Sauvegardes automatiques
+- [ ] Import/export JSON
+- [ ] Journal d'activité
+- [ ] API REST
+- [ ] Application mobile complémentaire
+- [ ] Synchronisation entre appareils
+- [ ] Comptes utilisateurs
 - [ ] Retirer Herobrine
 
 ## Fiche technique
