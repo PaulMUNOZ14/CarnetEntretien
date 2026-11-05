@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1932" height="1932" viewBox="0 0 1932 1932">
+  <rect width="1932" height="1932" fill="#2BB1FF"/>
+  <path d="M243,1210 L243,1048 C243,1020 258,995 285,990 C320,985 335,975 380,940 C420,905 440,885 470,865 C530,828 640,803 725,803 L835,803 C870,803 905,825 935,850 L1062,980 Q1066,985 1075,987 L1255,1018 C1310,1030 1355,1075 1362,1140 L1362,1210 C1362,1255 1330,1287 1280,1287 L318,1287 C275,1287 243,1255 243,1210 Z" fill="#FFFFFF"/>
+  <path d="M458,925 C470,915 500,890 540,872 C600,850 690,842 760,842 L828,842 C858,842 885,857 900,872 L1007,983 L520,983 C490,983 468,965 456,940 C452,932 453,928 458,925 Z" fill="#2BB1FF"/>
+  <circle cx="478" cy="1267" r="162" fill="#2BB1FF"/>
+  <circle cx="478" cy="1267" r="126" fill="#FFFFFF"/>
+  <circle cx="478" cy="1267" r="89" fill="#2BB1FF"/>
+  <circle cx="1117" cy="1267" r="162" fill="#2BB1FF"/>
+  <circle cx="1117" cy="1267" r="126" fill="#FFFFFF"/>
+  <circle cx="1117" cy="1267" r="89" fill="#2BB1FF"/>
+  <path d="M1232,778 L1357,918 L1640,585" fill="none" stroke="#FFFFFF" stroke-width="96" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

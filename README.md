@@ -1,6 +1,8 @@
-﻿# Carnet Entretien
-
-Application de bureau pour gérer l'entretien de vos véhicules
+﻿<p align="center">
+  <img src="web/assets/logo.svg" alt="Logo Carnet Entretien" width="128">
+  <h1 align="center">Carnet Entretien</h1>
+  <p align="center">Application de bureau pour gérer l'entretien de vos véhicules</p>
+</p>
 
 ### Site web : https://paulmunoz14.github.io/CarnetEntretien/
 

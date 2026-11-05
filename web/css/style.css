@@ -624,6 +624,20 @@ pre code {
   color: inherit;
 }
 
+.logo {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 800;
+  font-size: 1.15rem;
+  color: var(--encre);
+  text-decoration: none;
+}
+
+.logo img {
+  border-radius: 8px;
+}
+
 /* ---------- Boutons de téléchargement ---------- */
 .boutons-telechargement {
   display: flex;

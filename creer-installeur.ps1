@@ -15,8 +15,8 @@ jpackage `
     --runtime-image "$env:JAVA_HOME" `
   --java-options "--enable-native-access=ALL-UNNAMED" `
   --dest target/dist `
+  --icon installer/icone.ico `
   --win-menu --win-shortcut --win-dir-chooser --win-per-user-install
 if ($LASTEXITCODE -ne 0) { throw "jpackage a échoué (code $LASTEXITCODE)" }
 Write-Host "Installeur créé dans target\dist" -ForegroundColor Green
-  # --icon installer/icone.ico (ajouter quand il y aura une icone)
   

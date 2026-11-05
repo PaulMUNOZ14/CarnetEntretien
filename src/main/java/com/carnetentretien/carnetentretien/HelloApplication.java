@@ -5,10 +5,12 @@ import javafx.application.Application;
 import javafx.application.HostServices;
 import javafx.fxml.FXMLLoader;
 import javafx.geometry.Rectangle2D;
+import javafx.scene.image.Image;
 import javafx.scene.Scene;
 import javafx.stage.Screen;
 import javafx.stage.Stage;
 import java.io.IOException;
+import java.util.Objects;
 
 /**
  * Point d'entrée JavaFX de « Carnet Entretien » : initialise la base de données,
@@ -49,6 +51,7 @@ public class HelloApplication extends Application {
         FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("hello-view.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), largeur, hauteur);
         stage.setTitle("Carnet d'Entretien");
+        stage.getIcons().add(new Image(Objects.requireNonNull(HelloApplication.class.getResourceAsStream("icone.png"))));
         stage.setMinWidth(Math.min(360, ecran.getWidth()));
         stage.setMinHeight(Math.min(480, ecran.getHeight()));
         stage.setScene(scene);
