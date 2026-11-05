@@ -138,9 +138,15 @@ CarnetEntretien/
 ├── config.properties                                   # Clé API de l'utilisateur (générée via le bouton « Clé API »)
 ├── images/                                             # Photos de véhicules importées par l'utilisateur (générées automatiquement)
 │
+├── .github/workflows/ 
+│   └── deploy-pages.yml                                # deployements du site web
+│
 ├── web/                                                # Site web de présentation
 │   ├── index.html                                      # Page d'accueil
 │   ├── assets/                                         # Ressources du site
+│   │   ├── apple-touch-icon.png                        # icone apple-touch
+│   │   ├── favicon.ico                                 # favicon
+│   │   └── logo.svg                                    # logo vectoriel   
 │   ├── css/                                            # Fichiers CSS du site
 │   │   ├── style.css
 │   │   └── style.mini.css                              # Fichier css minifié
