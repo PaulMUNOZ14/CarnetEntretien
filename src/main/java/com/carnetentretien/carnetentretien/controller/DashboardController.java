@@ -149,12 +149,14 @@ public class DashboardController {
         if (!PreconisationDB.getToutesLesPreconisations().isEmpty()) return;
 
         Object[][] defauts = {
-                {"Vidange", 15000, 12},
+                {"Vidange", 10000, 12},
+                {"Vidange boite de vitesse", 80000, 60},
                 {"Filtre à air", 30000, 24},
                 {"Filtre d'habitacle", 15000, 12},
                 {"Plaquettes de frein", 40000, 48},
                 {"Liquide de frein", 60000, 24},
-                {"Pneus", 40000, 48},
+                {"Pneus avant", 40000, 48},
+                {"Pneus arrière", 40000, 48},
                 {"Courroie de distribution", 120000, 72}
         };
         for (Object[] d : defauts) {
@@ -966,7 +968,7 @@ public class DashboardController {
     /** @param existante règle à modifier, ou {@code null} @return la règle saisie, ou {@code null} si annulé */
     private Preconisation saisirRegle(Preconisation existante) {
         TextField nom = champ("Ex : Vidange");
-        TextField kmField = champ("Ex : 15000");
+        TextField kmField = champ("Ex : 10000");
         TextField mois = champ("Ex : 12");
         if (existante != null) {
             nom.setText(existante.getTypeOperation());
