@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.net.URL?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Hyperlink?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.VBox?>
+
+<!-- Fenêtre d'aide et de saisie de la clé API. Contrôleur : DialogueCleApiController. -->
+<VBox spacing="12.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.carnetentretien.carnetentretien.controller.dialogue.DialogueCleApiController">
+  <stylesheets>
+    <URL value="@../style.css" />
+  </stylesheets>
+  <padding>
+    <Insets bottom="4.0" left="10.0" right="10.0" top="6.0" />
+  </padding>
+
+  <Label styleClass="texte-doux, intro-dialogue" text="Pour retrouver votre voiture à partir de sa plaque, l'application interroge le service apiplaqueimmatriculation.com. Ce service demande une clé personnelle. Vous pouvez aussi faire cette étape plus tard avec le bouton « 🔑 Clé API »." wrapText="true" />
+
+  <Label text="Comment obtenir votre clé :&#10;&#10;1.  Appuyez sur le lien bleu ci-dessous : le site s'ouvre dans votre navigateur.&#10;2.  Créez un compte (adresse e-mail et mot de passe).&#10;3.  Choisissez une offre. Les tarifs sont affichés sur le site : certaines offres sont payantes.&#10;4.  Retrouvez votre clé (on l'appelle aussi « token ») dans votre espace « Mon compte ».&#10;5.  Revenez ici, collez-la dans la case ci-dessous, puis appuyez sur « Enregistrer »." wrapText="true" />
+
+  <VBox spacing="2.0">
+    <Hyperlink onAction="#ouvrirSite" text="➜  Ouvrir le site pour obtenir ma clé" />
+    <Label fx:id="adresse" styleClass="aide-champ" wrapText="true" />
+  </VBox>
+
+  <VBox spacing="6.0">
+    <Label styleClass="question-champ" text="Ma clé" />
+    <TextField fx:id="cle" maxWidth="Infinity" promptText="Collez ici votre clé" />
+    <Label fx:id="etat" styleClass="aide-champ" wrapText="true" />
+  </VBox>
+</VBox>

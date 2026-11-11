@@ -177,7 +177,23 @@ CarnetEntretien/
     │   │       │   ├── PreconisationDB.java            # Accès aux préconisations
     │   │       │   └── VehiculeDB.java                 # Accès aux véhicules
     │   │       ├── controller/                         # Contrôleurs FXML
-    │   │       │   └── DashboardController.java        # Contrôleur du tableau de bord
+    │   │       │   ├── DashboardController.java        # Fenêtre principale : navigation, toast, taille
+    │   │       │   ├── DashboardContext.java           # Services communs fournis aux vues
+    │   │       │   ├── ui/                             # Outils partagés par les contrôleurs
+    │   │       │   │   ├── Composants.java             # Vignettes, plaques, boutons, chargement d'images
+    │   │       │   │   ├── DialogueSupport.java        # Habillage et validation des fenêtres de saisie
+    │   │       │   │   ├── EntretienUi.java            # Niveaux d'usure et badges colorés
+    │   │       │   │   └── Formats.java                # Nombres, montants et dates
+    │   │       │   ├── vue/                            # Contrôleurs des écrans
+    │   │       │   │   ├── AccueilController.java      # Écran d'accueil (liste des véhicules)
+    │   │       │   │   └── VehiculeController.java     # Écran d'un véhicule (jauges, historique)
+    │   │       │   └── dialogue/                       # Contrôleurs des fenêtres de saisie
+    │   │       │       ├── DialogueCleApiController.java
+    │   │       │       ├── DialogueEntretienController.java
+    │   │       │       ├── DialogueKilometrageController.java
+    │   │       │       ├── DialogueRegleController.java
+    │   │       │       ├── DialogueReglagesController.java
+    │   │       │       └── DialogueVehiculeController.java
     │   │       └── service/                            # Logique métier
     │   │           ├── AppPaths.java                   # Emplacement des données (base, images, config)
     │   │           ├── CalculateurEntretien.java       # Détermine quand prévoir un entretien
@@ -188,7 +204,17 @@ CarnetEntretien/
     │   │           └── RecherchePlaqueService.java     # Recherche d'un véhicule par plaque
     │   └── resources/com/carnetentretien/carnetentretien/
     │       ├── style.css                               # Styles globaux
-    │       └── hello-view.fxml                         # Interface principale
+    │       ├── dashboard.fxml                          # Fenêtre principale (assemble les vues)
+    │       ├── vues/                                   # Écrans modifiables dans SceneBuilder
+    │       │   ├── accueil.fxml                        # Écran d'accueil
+    │       │   └── vehicule.fxml                       # Écran d'un véhicule
+    │       └── dialogues/                              # Fenêtres de saisie modifiables dans SceneBuilder
+    │           ├── cle-api.fxml                        # Clé d'accès au service de plaques
+    │           ├── entretien.fxml                      # Ajout/modification d'un entretien
+    │           ├── kilometrage.fxml                    # Mise à jour du compteur
+    │           ├── regle.fxml                          # Ajout/modification d'une règle de suivi
+    │           ├── reglages.fxml                       # Liste des règles de suivi
+    │           └── vehicule.fxml                       # Ajout/modification d'un véhicule
     └── test/java/com/carnetentretien/carnetentretien/  # Tests unitaires JUnit 5
         ├── BaseDonneesTest.java                        # Base des tests : dossier de données temporaire
         ├── BaseBddTest.java                            # Base des tests : base SQLite vierge

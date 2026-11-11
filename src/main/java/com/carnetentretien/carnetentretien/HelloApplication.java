@@ -14,7 +14,7 @@ import java.util.Objects;
 
 /**
  * Point d'entrée JavaFX de « Carnet Entretien » : initialise la base de données,
- * charge l'interface principale ({@code hello-view.fxml}) et dimensionne la fenêtre
+ * charge l'interface principale ({@code dashboard.fxml}) et dimensionne la fenêtre
  * selon la taille de l'écran.
  */
 public class HelloApplication extends Application {
@@ -48,7 +48,7 @@ public class HelloApplication extends Application {
         double largeur = Math.min(1100, ecran.getWidth() * 0.95);
         double hauteur = Math.min(750, ecran.getHeight() * 0.92);
 
-        FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("hello-view.fxml"));
+        FXMLLoader fxmlLoader = new FXMLLoader(HelloApplication.class.getResource("dashboard.fxml"));
         Scene scene = new Scene(fxmlLoader.load(), largeur, hauteur);
         stage.setTitle("Carnet d'Entretien");
         stage.getIcons().add(new Image(Objects.requireNonNull(HelloApplication.class.getResourceAsStream("icone.png"))));

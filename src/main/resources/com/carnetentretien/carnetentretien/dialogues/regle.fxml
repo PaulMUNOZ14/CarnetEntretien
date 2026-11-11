@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.net.URL?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.VBox?>
+
+<!-- Formulaire d'une règle de suivi. Contrôleur : DialogueRegleController. -->
+<VBox spacing="12.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.carnetentretien.carnetentretien.controller.dialogue.DialogueRegleController">
+  <stylesheets>
+    <URL value="@../style.css" />
+  </stylesheets>
+  <padding>
+    <Insets bottom="4.0" left="10.0" right="10.0" top="6.0" />
+  </padding>
+
+  <Label styleClass="texte-doux, intro-dialogue" text="Ces informations se trouvent dans le carnet d'entretien fourni avec la voiture." wrapText="true" />
+
+  <VBox spacing="6.0">
+    <Label styleClass="question-champ" text="Nom de l'entretien" />
+    <TextField fx:id="nom" maxWidth="Infinity" promptText="Ex : Vidange" />
+  </VBox>
+
+  <VBox spacing="6.0">
+    <Label styleClass="question-champ" text="À renouveler tous les combien de kilomètres ?" />
+    <TextField fx:id="kmField" maxWidth="Infinity" promptText="Ex : 10000" />
+    <Label styleClass="aide-champ" text="Exemple : 15000" wrapText="true" />
+  </VBox>
+
+  <VBox spacing="6.0">
+    <Label styleClass="question-champ" text="… ou tous les combien de mois ?" />
+    <TextField fx:id="mois" maxWidth="Infinity" promptText="Ex : 12" />
+    <Label styleClass="aide-champ" text="Exemple : 12 (le premier des deux arrivé déclenche l'alerte)" wrapText="true" />
+  </VBox>
+</VBox>

@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.net.URL?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.layout.StackPane?>
+
+<!--
+  Fenêtre principale : assemble les deux écrans (accueil et véhicule) et le message de confirmation.
+  Chaque écran vit dans son propre fichier FXML pour pouvoir être modifié séparément dans SceneBuilder.
+-->
+<StackPane fx:id="racine" minHeight="480.0" minWidth="360.0" prefHeight="750.0" prefWidth="1100.0" styleClass="root" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.carnetentretien.carnetentretien.controller.DashboardController">
+
+  <stylesheets>
+    <URL value="@style.css" />
+  </stylesheets>
+
+  <!-- ÉCRAN 1 : liste des véhicules (voir vues/accueil.fxml) -->
+  <fx:include fx:id="accueil" source="vues/accueil.fxml" />
+
+  <!-- ÉCRAN 2 : un véhicule (voir vues/vehicule.fxml) -->
+  <fx:include fx:id="vehicule" source="vues/vehicule.fxml" />
+
+  <!-- Message de confirmation (apparaît quelques secondes puis disparaît) -->
+  <Label fx:id="toast" mouseTransparent="true" styleClass="toast" visible="false" StackPane.alignment="BOTTOM_CENTER">
+    <StackPane.margin>
+      <Insets bottom="120.0" />
+    </StackPane.margin>
+  </Label>
+
+</StackPane>

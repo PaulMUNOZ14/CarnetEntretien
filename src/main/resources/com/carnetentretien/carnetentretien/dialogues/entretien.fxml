@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.net.URL?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.VBox?>
+
+<!-- Formulaire « J'ai fait un entretien ». Contrôleur : DialogueEntretienController. -->
+<VBox spacing="12.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.carnetentretien.carnetentretien.controller.dialogue.DialogueEntretienController">
+  <stylesheets>
+    <URL value="@../style.css" />
+  </stylesheets>
+  <padding>
+    <Insets bottom="4.0" left="10.0" right="10.0" top="6.0" />
+  </padding>
+
+  <Label styleClass="texte-doux, intro-dialogue" text="Répondez aux 4 questions, puis appuyez sur « Enregistrer »." wrapText="true" />
+
+  <VBox spacing="6.0">
+    <Label styleClass="question-champ" text="Qu'est-ce qui a été fait ?" />
+    <ComboBox fx:id="type" editable="true" maxWidth="Infinity" promptText="Choisissez dans la liste" />
+    <Label styleClass="aide-champ" text="Cliquez sur la flèche pour voir la liste, ou écrivez vous-même." wrapText="true" />
+  </VBox>
+
+  <VBox spacing="6.0">
+    <Label styleClass="question-champ" text="À quelle date ?" />
+    <DatePicker fx:id="date" maxWidth="Infinity" />
+    <Label styleClass="aide-champ" text="Aujourd'hui est déjà choisi. Cliquez sur le calendrier pour changer." wrapText="true" />
+  </VBox>
+
+  <VBox spacing="6.0">
+    <Label styleClass="question-champ" text="Combien de kilomètres au compteur ce jour-là ?" />
+    <TextField fx:id="kmField" maxWidth="Infinity" promptText="Ex : 45000" />
+  </VBox>
+
+  <VBox spacing="6.0">
+    <Label styleClass="question-champ" text="Combien cela a-t-il coûté ? (en euros)" />
+    <TextField fx:id="coutField" maxWidth="Infinity" promptText="Ex : 89,90" />
+    <Label styleClass="aide-champ" text="Si vous ne savez plus, laissez vide." wrapText="true" />
+  </VBox>
+</VBox>

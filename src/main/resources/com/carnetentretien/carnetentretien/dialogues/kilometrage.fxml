@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.net.URL?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.VBox?>
+
+<!-- Formulaire de mise à jour du kilométrage. Contrôleur : DialogueKilometrageController. -->
+<VBox spacing="12.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.carnetentretien.carnetentretien.controller.dialogue.DialogueKilometrageController">
+  <stylesheets>
+    <URL value="@../style.css" />
+  </stylesheets>
+  <padding>
+    <Insets bottom="4.0" left="10.0" right="10.0" top="6.0" />
+  </padding>
+
+  <Label styleClass="texte-doux, intro-dialogue" text="Regardez le compteur de votre voiture et écrivez le nombre affiché." wrapText="true" />
+
+  <VBox spacing="6.0">
+    <Label styleClass="question-champ" text="Que indique votre compteur aujourd'hui ?" />
+    <TextField fx:id="champ" maxWidth="Infinity" promptText="Ex : 45000" />
+    <Label styleClass="aide-champ" text="Écrivez uniquement des chiffres, sans le « km »." wrapText="true" />
+  </VBox>
+</VBox>
