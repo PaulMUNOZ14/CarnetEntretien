@@ -83,7 +83,7 @@ public final class ConfigService {
             try (Reader in = Files.newBufferedReader(fichier, StandardCharsets.UTF_8)) {
                 p.load(in);
             } catch (IOException e) {
-                System.out.println("Erreur de lecture de la configuration : " + e.getMessage());
+                System.err.println("Erreur de lecture de la configuration : " + e.getMessage());
             }
         }
         return p;
@@ -103,7 +103,7 @@ public final class ConfigService {
                 // Windows : pas de permissions POSIX
             }
         } catch (IOException e) {
-            System.out.println("Erreur d'écriture de la configuration : " + e.getMessage());
+            System.err.println("Erreur d'écriture de la configuration : " + e.getMessage());
         }
     }
 }

@@ -76,7 +76,7 @@ public final class ImageService {
         try {
             return Files.deleteIfExists(chemin);
         } catch (IOException e) {
-            System.out.println("Impossible de supprimer l'image : " + e.getMessage());
+            System.err.println("Impossible de supprimer l'image : " + e.getMessage());
             return false;
         }
     }

@@ -28,10 +28,9 @@ public class EntretienDB {
             pstmt.setDouble(5, entretien.getCout());
 
             pstmt.executeUpdate();
-            System.out.println("Entretien ajouté avec succès !");
 
         } catch (SQLException e) {
-            System.out.println("Erreur lors de l'ajout de l'entretien : " + e.getMessage());
+            System.err.println("Erreur lors de l'ajout de l'entretien : " + e.getMessage());
         }
     }
 
@@ -58,7 +57,7 @@ public class EntretienDB {
                 liste.add(e);
             }
         } catch (SQLException e) {
-            System.out.println("Erreur de récupération : " + e.getMessage());
+            System.err.println("Erreur de récupération : " + e.getMessage());
         }
         return liste;
     }
@@ -77,9 +76,8 @@ public class EntretienDB {
             pstmt.setInt(5, entretien.getId());
 
             pstmt.executeUpdate();
-            System.out.println("Entretien mis à jour !");
         } catch (SQLException e) {
-            System.out.println("Erreur de modification de l'entretien : " + e.getMessage());
+            System.err.println("Erreur de modification de l'entretien : " + e.getMessage());
         }
     }
 
@@ -92,9 +90,8 @@ public class EntretienDB {
 
             pstmt.setInt(1, id);
             pstmt.executeUpdate();
-            System.out.println("Entretien supprimé !");
         } catch (SQLException e) {
-            System.out.println("Erreur de suppression de l'entretien : " + e.getMessage());
+            System.err.println("Erreur de suppression de l'entretien : " + e.getMessage());
         }
     }
 }

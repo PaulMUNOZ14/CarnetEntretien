@@ -31,10 +31,9 @@ public class EntretienPlanifieDB {
             pstmt.setString(4, entretien.getNote());
 
             pstmt.executeUpdate();
-            System.out.println("Entretien planifié ajouté !");
 
         } catch (SQLException e) {
-            System.out.println("Erreur lors de l'ajout de l'entretien planifié : " + e.getMessage());
+            System.err.println("Erreur lors de l'ajout de l'entretien planifié : " + e.getMessage());
         }
     }
 
@@ -53,7 +52,7 @@ public class EntretienPlanifieDB {
                 liste.add(lire(rs));
             }
         } catch (SQLException e) {
-            System.out.println("Erreur de récupération des entretiens planifiés : " + e.getMessage());
+            System.err.println("Erreur de récupération des entretiens planifiés : " + e.getMessage());
         }
         return liste;
     }
@@ -71,7 +70,7 @@ public class EntretienPlanifieDB {
                 liste.add(lire(rs));
             }
         } catch (SQLException e) {
-            System.out.println("Erreur de récupération des entretiens planifiés : " + e.getMessage());
+            System.err.println("Erreur de récupération des entretiens planifiés : " + e.getMessage());
         }
         return liste;
     }
@@ -90,9 +89,8 @@ public class EntretienPlanifieDB {
             pstmt.setInt(5, entretien.getId());
 
             pstmt.executeUpdate();
-            System.out.println("Entretien planifié mis à jour !");
         } catch (SQLException e) {
-            System.out.println("Erreur de modification de l'entretien planifié : " + e.getMessage());
+            System.err.println("Erreur de modification de l'entretien planifié : " + e.getMessage());
         }
     }
 
@@ -105,9 +103,8 @@ public class EntretienPlanifieDB {
 
             pstmt.setInt(1, id);
             pstmt.executeUpdate();
-            System.out.println("Entretien planifié supprimé !");
         } catch (SQLException e) {
-            System.out.println("Erreur de suppression de l'entretien planifié : " + e.getMessage());
+            System.err.println("Erreur de suppression de l'entretien planifié : " + e.getMessage());
         }
     }
 
@@ -121,7 +118,7 @@ public class EntretienPlanifieDB {
             pstmt.setInt(1, vehiculeId);
             pstmt.executeUpdate();
         } catch (SQLException e) {
-            System.out.println("Erreur de suppression des entretiens planifiés : " + e.getMessage());
+            System.err.println("Erreur de suppression des entretiens planifiés : " + e.getMessage());
         }
     }
 

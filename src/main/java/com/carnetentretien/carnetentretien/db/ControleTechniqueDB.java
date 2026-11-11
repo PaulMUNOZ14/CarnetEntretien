@@ -32,10 +32,9 @@ public class ControleTechniqueDB {
             pstmt.setString(5, controle.getNote());
 
             pstmt.executeUpdate();
-            System.out.println("Contrôle technique ajouté !");
 
         } catch (SQLException e) {
-            System.out.println("Erreur lors de l'ajout du contrôle technique : " + e.getMessage());
+            System.err.println("Erreur lors de l'ajout du contrôle technique : " + e.getMessage());
         }
     }
 
@@ -54,7 +53,7 @@ public class ControleTechniqueDB {
                 liste.add(lire(rs));
             }
         } catch (SQLException e) {
-            System.out.println("Erreur de récupération des contrôles techniques : " + e.getMessage());
+            System.err.println("Erreur de récupération des contrôles techniques : " + e.getMessage());
         }
         return liste;
     }
@@ -72,7 +71,7 @@ public class ControleTechniqueDB {
                 liste.add(lire(rs));
             }
         } catch (SQLException e) {
-            System.out.println("Erreur de récupération des contrôles techniques : " + e.getMessage());
+            System.err.println("Erreur de récupération des contrôles techniques : " + e.getMessage());
         }
         return liste;
     }
@@ -93,9 +92,8 @@ public class ControleTechniqueDB {
             pstmt.setInt(6, controle.getId());
 
             pstmt.executeUpdate();
-            System.out.println("Contrôle technique mis à jour !");
         } catch (SQLException e) {
-            System.out.println("Erreur de modification du contrôle technique : " + e.getMessage());
+            System.err.println("Erreur de modification du contrôle technique : " + e.getMessage());
         }
     }
 
@@ -108,9 +106,8 @@ public class ControleTechniqueDB {
 
             pstmt.setInt(1, id);
             pstmt.executeUpdate();
-            System.out.println("Contrôle technique supprimé !");
         } catch (SQLException e) {
-            System.out.println("Erreur de suppression du contrôle technique : " + e.getMessage());
+            System.err.println("Erreur de suppression du contrôle technique : " + e.getMessage());
         }
     }
 
@@ -124,7 +121,7 @@ public class ControleTechniqueDB {
             pstmt.setInt(1, vehiculeId);
             pstmt.executeUpdate();
         } catch (SQLException e) {
-            System.out.println("Erreur de suppression des contrôles techniques : " + e.getMessage());
+            System.err.println("Erreur de suppression des contrôles techniques : " + e.getMessage());
         }
     }
 

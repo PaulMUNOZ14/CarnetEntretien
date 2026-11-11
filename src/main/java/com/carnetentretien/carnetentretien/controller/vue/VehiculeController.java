@@ -446,16 +446,12 @@ public class VehiculeController {
         });
     }
 
-    /** Exporte l'historique du véhicule affiché en CSV (ne fait rien si l'historique est vide). */
+    /** Exporte le carnet du véhicule affiché en CSV (entretiens, planifications, contrôles techniques et échéances). */
     @FXML
     public void exporterHistorique() {
         if (vehicule == null) return;
-        List<Entretien> factures = EntretienDB.getEntretiensPourVehicule(vehicule.getId());
-        if (factures.isEmpty()) {
-            dashboard.toast("Rien à enregistrer : l'historique est vide");
-            return;
+        if (ExportService.exporterHistoriqueCSV(vehicule)) {
+            dashboard.toast("✔  Export terminé");
         }
-        ExportService.exporterHistoriqueCSV(vehicule, factures);
-        dashboard.toast("✔  Export terminé");
     }
 }

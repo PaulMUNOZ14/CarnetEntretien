@@ -32,7 +32,7 @@ public class DatabaseManager {
             Files.createDirectories(AppPaths.fichierBaseDeDonnees().getParent());
             conn = DriverManager.getConnection(url());
         } catch (IOException | SQLException e) {
-            System.out.println("Erreur de connexion à SQLite : " + e.getMessage());
+            System.err.println("Erreur de connexion à SQLite : " + e.getMessage());
         }
         return conn;
     }
@@ -102,10 +102,8 @@ public class DatabaseManager {
             ajouterColonneSiAbsente(conn, "Vehicule", "immatriculation", "TEXT");
             ajouterColonneSiAbsente(conn, "Vehicule", "image_url", "TEXT");
             ajouterColonneSiAbsente(conn, "Vehicule", "image_locale", "TEXT");
-
-            System.out.println("Base de données initialisée avec succès.");
         } catch (SQLException e) {
-            System.out.println("Erreur lors de la création de la table : " + e.getMessage());
+            System.err.println("Erreur lors de la création de la table : " + e.getMessage());
         }
     }
 
@@ -127,7 +125,6 @@ public class DatabaseManager {
         if (!presente) {
             try (Statement stmt = conn.createStatement()) {
                 stmt.execute("ALTER TABLE " + table + " ADD COLUMN " + colonne + " " + type);
-                System.out.println("Colonne ajoutée : " + table + "." + colonne);
             }
         }
     }

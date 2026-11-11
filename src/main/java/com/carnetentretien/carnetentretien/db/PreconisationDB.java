@@ -25,10 +25,9 @@ public class PreconisationDB {
             pstmt.setInt(3, preconisation.getIntervalleMois());
 
             pstmt.executeUpdate();
-            System.out.println("Préconisation ajoutée !");
 
         } catch (SQLException e) {
-            System.out.println("Erreur (ajout préconisation) : " + e.getMessage());
+            System.err.println("Erreur (ajout préconisation) : " + e.getMessage());
         }
     }
 
@@ -51,7 +50,7 @@ public class PreconisationDB {
                 liste.add(p);
             }
         } catch (SQLException e) {
-            System.out.println("Erreur (récupération préconisations) : " + e.getMessage());
+            System.err.println("Erreur (récupération préconisations) : " + e.getMessage());
         }
         return liste;
     }
@@ -64,7 +63,7 @@ public class PreconisationDB {
             pstmt.setInt(1, id);
             pstmt.executeUpdate();
         } catch (SQLException e) {
-            System.out.println("Erreur (suppression préconisation) : " + e.getMessage());
+            System.err.println("Erreur (suppression préconisation) : " + e.getMessage());
         }
     }
 
@@ -80,9 +79,8 @@ public class PreconisationDB {
             pstmt.setInt(4, preconisation.getId());
 
             pstmt.executeUpdate();
-            System.out.println("Préconisation modifiée !");
         } catch (SQLException e) {
-            System.out.println("Erreur (modification préconisation) : " + e.getMessage());
+            System.err.println("Erreur (modification préconisation) : " + e.getMessage());
         }
     }
 }

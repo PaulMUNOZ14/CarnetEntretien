@@ -32,10 +32,9 @@ public class VehiculeDB {
             pstmt.setString(7, vehicule.getImageLocale());
 
             pstmt.executeUpdate();
-            System.out.println("Véhicule ajouté avec succès en base de données !");
 
         } catch (SQLException e) {
-            System.out.println("Erreur lors de l'ajout du véhicule : " + e.getMessage());
+            System.err.println("Erreur lors de l'ajout du véhicule : " + e.getMessage());
         }
     }
 
@@ -57,9 +56,8 @@ public class VehiculeDB {
             pstmt.setInt(8, vehicule.getId());
 
             pstmt.executeUpdate();
-            System.out.println("Véhicule mis à jour !");
         } catch (SQLException e) {
-            System.out.println("Erreur de modification : " + e.getMessage());
+            System.err.println("Erreur de modification : " + e.getMessage());
         }
     }
 
@@ -91,10 +89,8 @@ public class VehiculeDB {
 
             pstmtVehicule.setInt(1, id);
             pstmtVehicule.executeUpdate();
-
-            System.out.println("Véhicule et historique supprimés !");
         } catch (SQLException e) {
-            System.out.println("Erreur de suppression : " + e.getMessage());
+            System.err.println("Erreur de suppression : " + e.getMessage());
         }
     }
 
@@ -121,7 +117,7 @@ public class VehiculeDB {
                 listeVehicules.add(v);
             }
         } catch (SQLException e) {
-            System.out.println("Erreur lors de la récupération des véhicules : " + e.getMessage());
+            System.err.println("Erreur lors de la récupération des véhicules : " + e.getMessage());
         }
         return listeVehicules;
     }
