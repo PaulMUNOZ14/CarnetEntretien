@@ -1,14 +1,17 @@
 package com.carnetentretien.carnetentretien.service;
 
+import com.carnetentretien.carnetentretien.db.ControleTechniqueDB;
 import com.carnetentretien.carnetentretien.db.EntretienDB;
 import com.carnetentretien.carnetentretien.db.EntretienPlanifieDB;
 import com.carnetentretien.carnetentretien.db.PreconisationDB;
 import com.carnetentretien.carnetentretien.db.VehiculeDB;
+import com.carnetentretien.carnetentretien.model.ControleTechnique;
 import com.carnetentretien.carnetentretien.model.Entretien;
 import com.carnetentretien.carnetentretien.model.EntretienPlanifie;
 import com.carnetentretien.carnetentretien.model.Preconisation;
 import com.carnetentretien.carnetentretien.model.Vehicule;
 
+import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -19,10 +22,12 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Rassemble les événements du calendrier : historique, planifications et échéances calculées.
+ * Rassemble les événements du calendrier : historique, planifications, contrôles techniques
+ * et échéances calculées.
  * <p>
  * Une échéance calculée est masquée lorsqu'un entretien du même type est déjà planifié pour le
- * véhicule : la planification remplace alors la prévision.
+ * véhicule : la planification remplace alors la prévision. Les contrôles techniques gardent
+ * leur propre échéance, car elle correspond à une obligation légale distincte.
  */
 public final class CalendrierService {
 
@@ -41,11 +46,23 @@ public final class CalendrierService {
 
         Map<Integer, List<Entretien>> historiques = new HashMap<>();
         Map<Integer, List<EntretienPlanifie>> planifies = new HashMap<>();
+        Map<Integer, List<ControleTechnique>> controles = new HashMap<>();
         for (Vehicule v : vehicules) {
             historiques.put(v.getId(), EntretienDB.getEntretiensPourVehicule(v.getId()));
             planifies.put(v.getId(), EntretienPlanifieDB.getEntretiensPlanifiesPourVehicule(v.getId()));
+            controles.put(v.getId(), ControleTechniqueDB.getControlesPourVehicule(v.getId()));
         }
-        return assembler(vehicules, regles, historiques, planifies);
+        return assembler(vehicules, regles, historiques, planifies, controles);
+    }
+
+    /**
+     * Construit les événements à partir de données déjà chargées, sans contrôle technique.
+     * Utilisée par les tests et par les appelants qui n'ont pas besoin de cette partie.
+     */
+    public static List<EvenementCalendrier> assembler(List<Vehicule> vehicules, List<Preconisation> regles,
+                                                      Map<Integer, List<Entretien>> historiques,
+                                                      Map<Integer, List<EntretienPlanifie>> planifies) {
+        return assembler(vehicules, regles, historiques, planifies, Map.of());
     }
 
     /**
@@ -56,16 +73,19 @@ public final class CalendrierService {
      * @param regles      règles de suivi communes
      * @param historiques entretiens réalisés, par identifiant de véhicule
      * @param planifies   entretiens planifiés, par identifiant de véhicule
+     * @param controles   contrôles techniques réalisés, par identifiant de véhicule
      * @return les événements triés par date, puis par type et par véhicule
      */
     public static List<EvenementCalendrier> assembler(List<Vehicule> vehicules, List<Preconisation> regles,
                                                       Map<Integer, List<Entretien>> historiques,
-                                                      Map<Integer, List<EntretienPlanifie>> planifies) {
+                                                      Map<Integer, List<EntretienPlanifie>> planifies,
+                                                      Map<Integer, List<ControleTechnique>> controles) {
         List<EvenementCalendrier> evenements = new ArrayList<>();
 
         for (Vehicule v : vehicules) {
             List<Entretien> historique = historiques.getOrDefault(v.getId(), List.of());
             List<EntretienPlanifie> planifie = planifies.getOrDefault(v.getId(), List.of());
+            List<ControleTechnique> controle = controles.getOrDefault(v.getId(), List.of());
 
             Set<String> operationsPlanifiees = new HashSet<>();
             for (EntretienPlanifie p : planifie) {
@@ -80,6 +100,14 @@ public final class CalendrierService {
                     evenements.add(EvenementCalendrier.echeance(v, bilan));
                 }
             }
+
+            for (ControleTechnique c : controle) {
+                evenements.add(EvenementCalendrier.controleFait(v, c));
+            }
+            ControleTechniqueService.Suivi suivi = ControleTechniqueService.analyser(controle);
+            if (suivi.getEtat() != ControleTechniqueService.Etat.AUCUN) {
+                evenements.add(EvenementCalendrier.controle(v, suivi.getDernier(), suivi.isProche()));
+            }
         }
 
         evenements.sort(Comparator.comparing(EvenementCalendrier::getDate)
@@ -89,7 +117,11 @@ public final class CalendrierService {
         return evenements;
     }
 
+    /** Compare deux noms d'opération sans tenir compte de la casse, des espaces ni des accents. */
     private static String cle(String operation) {
-        return operation == null ? "" : operation.trim().toLowerCase(Locale.FRANCE);
+        if (operation == null) return "";
+        String sansAccents = Normalizer.normalize(operation, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "");
+        return sansAccents.trim().toLowerCase(Locale.FRANCE).replaceAll("\\s+", " ");
     }
 }

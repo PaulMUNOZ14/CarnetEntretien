@@ -14,6 +14,7 @@
 - Estimer automatiquement le kilométrage actuel en fonction de votre usage annuel
 - Anticiper les échéances d'entretien (vidange, courroie de distribution, filtres, etc.)
 - Planifier les entretiens à venir et les retrouver dans un calendrier mensuel
+- Suivre le contrôle technique : résultat, date de la prochaine visite et alerte à 2 mois
 - Stocker les données localement dans une base SQLite (aucun serveur requis)
 - Archiver les factures et suivre les dépenses d'entretien
 
@@ -44,10 +45,10 @@ Ce projet propose un outil pour toute personne souhaitant suivre sérieusement l
 - [x] Export en installeur autonome (via `jpackage`)
 - [x] Calendrier des entretiens : grille mensuelle, échéances calculées, historique et planifications
 - [x] Planification d'un entretien (date, véhicule, remarque) et marquage « Fait »
+- [x] Suivi du contrôle technique : historique, échéance (2 ans ou contre-visite) et alerte à 2 mois
 
 ### En cours / À venir
 
-- [ ] Suivi du contrôle technique
 - [ ] Historique kilométrique
 - [ ] Gestion des factures PDF
 - [ ] Suivi du carburant
@@ -170,11 +171,13 @@ CarnetEntretien/
     │   │       ├── HelloApplication.java               # Point d'entrée JavaFX
     │   │       ├── Launcher.java                       # Lanceur de l'application
     │   │       ├── model/                              # Objets métier
+    │   │       │   ├── ControleTechnique.java          # Objet ControleTechnique (avec le résultat)
     │   │       │   ├── Entretien.java                  # Objet Entretien
     │   │       │   ├── EntretienPlanifie.java          # Objet Entretien planifié
     │   │       │   ├── Preconisation.java              # Objet Preconisation
     │   │       │   └── Vehicule.java                   # Objet Vehicule
     │   │       ├── db/                                 # Accès base de données
+    │   │       │   ├── ControleTechniqueDB.java        # Accès aux contrôles techniques
     │   │       │   ├── DatabaseManager.java            # Connexion, création et migration de la base
     │   │       │   ├── EntretienDB.java                # Accès aux entretiens
     │   │       │   ├── EntretienPlanifieDB.java        # Accès aux entretiens planifiés
@@ -191,9 +194,10 @@ CarnetEntretien/
     │   │       │   ├── vue/                            # Contrôleurs des écrans
     │   │       │   │   ├── AccueilController.java      # Écran d'accueil (liste des véhicules)
     │   │       │   │   ├── CalendrierController.java   # Calendrier mensuel (grille, liste, actions)
-    │   │       │   │   └── VehiculeController.java     # Écran d'un véhicule (jauges, historique)
+    │   │       │   │   └── VehiculeController.java     # Écran d'un véhicule (jauges, contrôle technique, historique)
     │   │       │   └── dialogue/                       # Contrôleurs des fenêtres de saisie
     │   │       │       ├── DialogueCleApiController.java
+    │   │       │       ├── DialogueControleTechniqueController.java
     │   │       │       ├── DialogueEntretienController.java
     │   │       │       ├── DialogueKilometrageController.java
     │   │       │       ├── DialoguePlanificationController.java
@@ -205,6 +209,7 @@ CarnetEntretien/
     │   │           ├── CalculateurEntretien.java       # Détermine quand prévoir un entretien
     │   │           ├── CalendrierService.java          # Rassemble historique, planifications et échéances
     │   │           ├── ConfigService.java              # Lecture/écriture de la clé API (config.properties)
+    │   │           ├── ControleTechniqueService.java   # État du prochain contrôle technique
     │   │           ├── CsvHistorique.java              # Écriture du fichier CSV de l'historique
     │   │           ├── EvenementCalendrier.java        # Événement affiché dans le calendrier
     │   │           ├── ExportService.java              # Export CSV (fenêtre « Enregistrer sous »)
@@ -219,6 +224,7 @@ CarnetEntretien/
     │       │   └── vehicule.fxml                       # Écran d'un véhicule
     │       └── dialogues/                              # Fenêtres de saisie modifiables dans SceneBuilder
     │           ├── cle-api.fxml                        # Clé d'accès au service de plaques
+    │           ├── controle-technique.fxml             # Enregistrement d'un contrôle technique
     │           ├── entretien.fxml                      # Ajout/modification d'un entretien
     │           ├── kilometrage.fxml                    # Mise à jour du compteur
     │           ├── planification.fxml                  # Planification d'un entretien
@@ -233,6 +239,7 @@ CarnetEntretien/
         │   ├── PreconisationTest.java                  # Test Preconisation
         │   └── VehiculeTest.java                       # Test Vehicule
         ├── db/
+        │   ├── ControleTechniqueDBTest.java            # Test ControleTechniqueDB
         │   ├── DatabaseManagerTest.java                # Test DatabaseManager
         │   ├── EntretienDBTest.java                    # Test EntretienDB
         │   ├── EntretienPlanifieDBTest.java            # Test EntretienPlanifieDB
@@ -243,6 +250,7 @@ CarnetEntretien/
             ├── CalculateurEntretienTest.java           # Test CalculateurEntretien
             ├── CalendrierServiceTest.java              # Test CalendrierService
             ├── ConfigServiceTest.java                  # Test ConfigService
+            ├── ControleTechniqueServiceTest.java       # Test ControleTechniqueService
             ├── CsvHistoriqueTest.java                  # Test CsvHistorique
             ├── ImageServiceTest.java                   # Test ImageService
             └── RecherchePlaqueServiceTest.java         # Test RecherchePlaqueService
@@ -280,6 +288,27 @@ CarnetEntretien/
 | `intervalle_km` | INTEGER | Intervalle en kilomètres |
 | `intervalle_mois` | INTEGER | Intervalle en mois|
 
+### Table `Entretien_Planifie`
+
+| Colonne | Type | Description |
+|---------|------|-------------|
+| `id` | INTEGER PK | Identifiant unique |
+| `vehicule_id` | INTEGER | Identifiant du véhicule |
+| `type_operation` | TEXT | Type d'opération prévue |
+| `date_prevue` | DATE | Date à laquelle l'entretien est prévu |
+| `note` | TEXT | Remarque libre (facultative) |
+
+### Table `ControleTechnique`
+
+| Colonne | Type | Description |
+|---------|------|-------------|
+| `id` | INTEGER PK | Identifiant unique |
+| `vehicule_id` | INTEGER | Identifiant du véhicule |
+| `date_realisation` | DATE | Date du contrôle |
+| `resultat` | TEXT | `FAVORABLE` ou `DEFAVORABLE` |
+| `date_prochaine` | DATE | Date de la prochaine visite (2 ans ou 2 mois) |
+| `note` | TEXT | Remarque libre (facultative) |
+
 ## Principe de la prédiction
 
 Le moteur extrapole le kilométrage du jour à partir du dernier relevé :
@@ -293,6 +322,17 @@ Chaque pièce d'entretien est ensuite comparée à sa prochaine échéance :
 - **< 80%** de la limite → OK
 - **80% – 100%** → À prévoir
 - **> 100%** → Urgent
+
+## Contrôle technique
+
+Le suivi du contrôle technique s'appuie sur un historique complet (table `ControleTechnique`) :
+
+- **Favorable** → prochaine visite proposée **2 ans** après le contrôle ;
+- **Défavorable** → contre-visite proposée **2 mois** après le contrôle ;
+- la date proposée reste modifiable (le rapport officiel fait foi) ;
+- le prochain contrôle est signalé **2 mois** avant son échéance (badge « À prévoir », bandeau et
+  événements dans le calendrier), puis « En retard » une fois la date dépassée ;
+- la suppression d'un véhicule efface aussi ses contrôles techniques.
 
 ## Contribution
 

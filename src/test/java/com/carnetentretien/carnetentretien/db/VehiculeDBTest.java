@@ -1,6 +1,7 @@
 package com.carnetentretien.carnetentretien.db;
 
 import com.carnetentretien.carnetentretien.BaseBddTest;
+import com.carnetentretien.carnetentretien.model.ControleTechnique;
 import com.carnetentretien.carnetentretien.model.Entretien;
 import com.carnetentretien.carnetentretien.model.EntretienPlanifie;
 import com.carnetentretien.carnetentretien.model.Vehicule;
@@ -103,7 +104,7 @@ class VehiculeDBTest extends BaseBddTest {
     }
 
     @Test
-    void supprimerRetireLeVehiculeSonHistoriqueEtSesPlanificationsSansToucherLesAutres() {
+    void supprimerRetireLeVehiculeEtToutesSesDonneesSansToucherLesAutres() {
         Vehicule a = simple("A", "1", 100, 200);
         Vehicule b = simple("B", "2", 300, 400);
         EntretienDB.ajouterEntretien(new Entretien(0, a.getId(), "Vidange", LocalDate.of(2026, 1, 10), 90, 50));
@@ -112,6 +113,10 @@ class VehiculeDBTest extends BaseBddTest {
                 new EntretienPlanifie(0, a.getId(), "Vidange", LocalDate.now().plusDays(10)));
         EntretienPlanifieDB.ajouterEntretienPlanifie(
                 new EntretienPlanifie(0, b.getId(), "Freins", LocalDate.now().plusDays(20)));
+        ControleTechniqueDB.ajouterControleTechnique(new ControleTechnique(0, a.getId(),
+                LocalDate.of(2026, 3, 1), ControleTechnique.Resultat.FAVORABLE, LocalDate.of(2028, 3, 1)));
+        ControleTechniqueDB.ajouterControleTechnique(new ControleTechnique(0, b.getId(),
+                LocalDate.of(2025, 6, 1), ControleTechnique.Resultat.DEFAVORABLE, LocalDate.of(2025, 8, 1)));
 
         VehiculeDB.supprimerVehicule(a.getId());
 
@@ -122,6 +127,8 @@ class VehiculeDBTest extends BaseBddTest {
         assertEquals(1, EntretienDB.getEntretiensPourVehicule(b.getId()).size());
         assertTrue(EntretienPlanifieDB.getEntretiensPlanifiesPourVehicule(a.getId()).isEmpty());
         assertEquals(1, EntretienPlanifieDB.getEntretiensPlanifiesPourVehicule(b.getId()).size());
+        assertTrue(ControleTechniqueDB.getControlesPourVehicule(a.getId()).isEmpty());
+        assertEquals(1, ControleTechniqueDB.getControlesPourVehicule(b.getId()).size());
     }
 
     @Test

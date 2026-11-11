@@ -1,15 +1,18 @@
 package com.carnetentretien.carnetentretien.controller.vue;
 
 import com.carnetentretien.carnetentretien.controller.DashboardContext;
+import com.carnetentretien.carnetentretien.controller.dialogue.DialogueControleTechniqueController;
 import com.carnetentretien.carnetentretien.controller.dialogue.DialogueEntretienController;
 import com.carnetentretien.carnetentretien.controller.dialogue.DialoguePlanificationController;
 import com.carnetentretien.carnetentretien.controller.ui.Composants;
 import com.carnetentretien.carnetentretien.controller.ui.DialogueSupport;
 import com.carnetentretien.carnetentretien.controller.ui.EntretienUi;
 import com.carnetentretien.carnetentretien.controller.ui.Formats;
+import com.carnetentretien.carnetentretien.db.ControleTechniqueDB;
 import com.carnetentretien.carnetentretien.db.EntretienDB;
 import com.carnetentretien.carnetentretien.db.EntretienPlanifieDB;
 import com.carnetentretien.carnetentretien.db.VehiculeDB;
+import com.carnetentretien.carnetentretien.model.ControleTechnique;
 import com.carnetentretien.carnetentretien.model.Entretien;
 import com.carnetentretien.carnetentretien.model.EntretienPlanifie;
 import com.carnetentretien.carnetentretien.model.Vehicule;
@@ -234,7 +237,8 @@ public class CalendrierController {
         conteneurListe.getChildren().clear();
 
         List<EvenementCalendrier> enRetard = evenements.stream()
-                .filter(e -> e.getType() == EvenementCalendrier.Type.ECHEANCE && e.isEnRetard())
+                .filter(e -> (e.getType() == EvenementCalendrier.Type.ECHEANCE
+                        || e.getType() == EvenementCalendrier.Type.CONTROLE) && e.isEnRetard())
                 .toList();
         Set<EvenementCalendrier> dejaAffiches = new HashSet<>(enRetard);
 
@@ -254,9 +258,9 @@ public class CalendrierController {
 
         if (duMois.isEmpty()) {
             Label vide = new Label(enRetard.isEmpty()
-                    ? "Aucun entretien ce mois-ci. Utilisez « ◀ » et « ▶ » pour changer de mois, "
+                    ? "Aucun événement ce mois-ci. Utilisez « ◀ » et « ▶ » pour changer de mois, "
                       + "ou planifiez un entretien avec le bouton ci-dessous."
-                    : "Aucun autre entretien ce mois-ci.");
+                    : "Aucun autre événement ce mois-ci.");
             vide.getStyleClass().add("historique-vide");
             vide.setWrapText(true);
             vide.setMaxWidth(Double.MAX_VALUE);
@@ -331,19 +335,34 @@ public class CalendrierController {
                 voir.setOnAction(e -> dashboard.ouvrirVehicule(evenement.getVehicule()));
                 ligne.getChildren().add(voir);
             }
+            case CONTROLE -> {
+                Button enregistrer = Composants.bouton("🔍  Enregistrer", "btn-succes", "btn-petit");
+                enregistrer.setOnAction(e -> enregistrerControle(evenement));
+
+                Button voir = Composants.bouton("👁  Voir", "btn-discret", "btn-petit");
+                voir.setOnAction(e -> dashboard.ouvrirVehicule(evenement.getVehicule()));
+
+                ligne.getChildren().addAll(enregistrer, voir);
+            }
+            case CONTROLE_FAIT -> {
+                Button voir = Composants.bouton("👁  Voir", "btn-discret", "btn-petit");
+                voir.setOnAction(e -> dashboard.ouvrirVehicule(evenement.getVehicule()));
+                ligne.getChildren().add(voir);
+            }
         }
         return ligne;
     }
 
     private void dessinerBandeau() {
         long retard = evenements.stream()
-                .filter(e -> e.getType() == EvenementCalendrier.Type.ECHEANCE && e.isEnRetard())
+                .filter(e -> (e.getType() == EvenementCalendrier.Type.ECHEANCE
+                        || e.getType() == EvenementCalendrier.Type.CONTROLE) && e.isEnRetard())
                 .count();
         Composants.montrer(bandeauRetard, retard > 0);
         if (retard > 0) {
             messageRetard.setText(retard > 1
-                    ? "⚠  " + retard + " entretiens sont en retard. Ils restent affichés ci-dessous."
-                    : "⚠  Un entretien est en retard. Il reste affiché ci-dessous.");
+                    ? "⚠  " + retard + " échéances sont en retard. Elles restent affichées ci-dessous."
+                    : "⚠  Une échéance est en retard. Elle reste affichée ci-dessous.");
         }
     }
 
@@ -402,6 +421,16 @@ public class CalendrierController {
         });
     }
 
+    /** Enregistre un contrôle technique réalisé pour le véhicule de l'événement. */
+    private void enregistrerControle(EvenementCalendrier evenement) {
+        DialogueControleTechniqueController.ouvrir(dashboard, evenement.getVehicule(), null)
+                .ifPresent(controle -> {
+                    ControleTechniqueDB.ajouterControleTechnique(controle);
+                    rafraichir();
+                    dashboard.toast("✔  Contrôle technique enregistré");
+                });
+    }
+
     private void actionner(EvenementCalendrier evenement) {
         if (evenement.getType() == EvenementCalendrier.Type.PLANIFIE) {
             modifierPlanification(evenement);
@@ -415,16 +444,19 @@ public class CalendrierController {
     private String classeEvenement(EvenementCalendrier evenement) {
         return switch (evenement.getType()) {
             case ECHEANCE -> "evenement-echeance-" + EntretienUi.suffixe(EntretienUi.niveauDe(evenement.getPourcentage()));
+            case CONTROLE -> "evenement-echeance-"
+                    + (evenement.isEnRetard() ? "urgent" : evenement.isProche() ? "prevoir" : "ok");
             case PLANIFIE -> "evenement-planifie";
-            case REALISE -> "evenement-realise";
+            case REALISE, CONTROLE_FAIT -> "evenement-realise";
         };
     }
 
     private String icone(EvenementCalendrier evenement) {
         return switch (evenement.getType()) {
             case ECHEANCE -> "⏰";
+            case CONTROLE -> "🔍";
             case PLANIFIE -> "📌";
-            case REALISE -> "✔";
+            case REALISE, CONTROLE_FAIT -> "✔";
         };
     }
 
@@ -455,6 +487,23 @@ public class CalendrierController {
             case ECHEANCE -> libelle(evenement.getVehicule()) + " · "
                     + (evenement.isEnRetard() ? "En retard" : "Échéance estimée")
                     + " · usure " + Math.round(evenement.getPourcentage()) + " %";
+            case CONTROLE -> {
+                ControleTechnique controle = evenement.getControle();
+                String etat = evenement.isEnRetard() ? "En retard"
+                        : evenement.isProche() ? "À prévoir" : "À jour";
+                yield libelle(evenement.getVehicule()) + " · " + etat
+                        + " · dernier contrôle le " + controle.getDateRealisation().format(Formats.DATE_LONGUE)
+                        + " (" + controle.getResultat().getLibelle() + ")";
+            }
+            case CONTROLE_FAIT -> {
+                ControleTechnique controle = evenement.getControle();
+                String texte = libelle(evenement.getVehicule()) + " · " + controle.getResultat().getLibelle()
+                        + " · prochain contrôle le " + controle.getDateProchaine().format(Formats.DATE_LONGUE);
+                if (controle.getNote() != null && !controle.getNote().isBlank()) {
+                    texte += " · " + controle.getNote();
+                }
+                yield texte;
+            }
         };
     }
 

@@ -2,6 +2,7 @@ package com.carnetentretien.carnetentretien.controller.vue;
 
 import com.carnetentretien.carnetentretien.controller.DashboardContext;
 import com.carnetentretien.carnetentretien.controller.dialogue.DialogueCleApiController;
+import com.carnetentretien.carnetentretien.controller.dialogue.DialogueControleTechniqueController;
 import com.carnetentretien.carnetentretien.controller.dialogue.DialogueEntretienController;
 import com.carnetentretien.carnetentretien.controller.dialogue.DialogueKilometrageController;
 import com.carnetentretien.carnetentretien.controller.dialogue.DialogueReglagesController;
@@ -10,11 +11,14 @@ import com.carnetentretien.carnetentretien.controller.ui.Composants;
 import com.carnetentretien.carnetentretien.controller.ui.DialogueSupport;
 import com.carnetentretien.carnetentretien.controller.ui.EntretienUi;
 import com.carnetentretien.carnetentretien.controller.ui.Formats;
+import com.carnetentretien.carnetentretien.db.ControleTechniqueDB;
 import com.carnetentretien.carnetentretien.db.EntretienDB;
 import com.carnetentretien.carnetentretien.db.VehiculeDB;
+import com.carnetentretien.carnetentretien.model.ControleTechnique;
 import com.carnetentretien.carnetentretien.model.Entretien;
 import com.carnetentretien.carnetentretien.model.Vehicule;
 import com.carnetentretien.carnetentretien.service.CalculateurEntretien;
+import com.carnetentretien.carnetentretien.service.ControleTechniqueService;
 import com.carnetentretien.carnetentretien.service.ExportService;
 import com.carnetentretien.carnetentretien.service.ImageService;
 import javafx.fxml.FXML;
@@ -47,6 +51,7 @@ public class VehiculeController {
     @FXML private HBox bandeauEtat;
     @FXML private Label messageBandeau;
     @FXML private VBox conteneurJauges;
+    @FXML private VBox conteneurControleTechnique;
     @FXML private VBox conteneurHistorique;
     @FXML private Label totalDepense;
 
@@ -90,6 +95,7 @@ public class VehiculeController {
             }
         }
 
+        afficherControleTechnique(v);
         afficherHistorique(v);
     }
 
@@ -142,6 +148,146 @@ public class VehiculeController {
         }
         carte.getStyleClass().addAll("carte-jauge", "jauge-" + EntretienUi.suffixe(niveau));
         return carte;
+    }
+
+    // ---------- Contrôle technique ----------
+
+    /** Affiche la carte du prochain contrôle et l'historique des contrôles techniques. */
+    private void afficherControleTechnique(Vehicule v) {
+        List<ControleTechnique> controles = ControleTechniqueDB.getControlesPourVehicule(v.getId());
+        ControleTechniqueService.Suivi suivi = ControleTechniqueService.analyser(controles);
+        conteneurControleTechnique.getChildren().clear();
+
+        if (controles.isEmpty()) {
+            Label vide = new Label("Aucun contrôle technique enregistré.\n"
+                    + "Appuyez sur « ➕ Enregistrer un contrôle » pour garder la date et le résultat de chaque passage.");
+            vide.getStyleClass().add("historique-vide");
+            vide.setWrapText(true);
+            vide.setMaxWidth(Double.MAX_VALUE);
+            conteneurControleTechnique.getChildren().add(vide);
+            return;
+        }
+
+        conteneurControleTechnique.getChildren().add(creerCarteControle(suivi));
+
+        Label titreHistorique = new Label(controles.size() > 1
+                ? "Historique des contrôles" : "Détail du contrôle");
+        titreHistorique.getStyleClass().add("sous-titre-section");
+        conteneurControleTechnique.getChildren().add(titreHistorique);
+
+        for (ControleTechnique c : controles) {
+            conteneurControleTechnique.getChildren().add(creerLigneControle(c));
+        }
+    }
+
+    /** Grande carte : état du prochain contrôle, échéance et dernier contrôle connu. */
+    private VBox creerCarteControle(ControleTechniqueService.Suivi suivi) {
+        ControleTechnique dernier = suivi.getDernier();
+        ControleTechniqueService.Etat etat = suivi.getEtat();
+
+        Label titre = new Label("Prochain contrôle technique");
+        titre.getStyleClass().add("jauge-titre");
+        titre.setWrapText(true);
+
+        Region espace = new Region();
+        HBox.setHgrow(espace, Priority.ALWAYS);
+
+        Label badge = new Label(etat.getLibelle());
+        badge.getStyleClass().addAll("badge", "badge-" + etat.suffixe());
+
+        HBox haut = new HBox(12, titre, espace, badge);
+        haut.setAlignment(Pos.CENTER_LEFT);
+
+        Label prevision = new Label(texteEcheance(suivi));
+        prevision.getStyleClass().add("jauge-prevision");
+        prevision.setWrapText(true);
+
+        Label detail = new Label("Dernier contrôle le " + dernier.getDateRealisation().format(Formats.DATE_LONGUE)
+                + "   -   " + dernier.getResultat().getLibelle());
+        detail.getStyleClass().add("jauge-historique");
+        detail.setWrapText(true);
+
+        VBox carte = new VBox(10, haut, prevision, detail);
+        if (dernier.getNote() != null && !dernier.getNote().isBlank()) {
+            Label note = new Label("📝  " + dernier.getNote());
+            note.getStyleClass().add("jauge-historique");
+            note.setWrapText(true);
+            carte.getChildren().add(note);
+        }
+        carte.getStyleClass().addAll("carte-jauge", "jauge-" + etat.suffixe());
+        return carte;
+    }
+
+    /** Texte de l'échéance du prochain contrôle, avec le délai en jours. */
+    private String texteEcheance(ControleTechniqueService.Suivi suivi) {
+        String date = suivi.getDateProchaine().format(Formats.DATE_LONGUE);
+        return switch (suivi.getEtat()) {
+            case EN_RETARD -> "⚠  En retard depuis le " + date + " (" + delai(suivi.getJoursRestants()) + ")";
+            case A_PREVOIR -> "⏰  À prévoir pour le " + date + " (" + delai(suivi.getJoursRestants()) + ")";
+            case OK -> "📅  Valable jusqu'au " + date + " (" + delai(suivi.getJoursRestants()) + ")";
+            default -> "";
+        };
+    }
+
+    /** « aujourd'hui », « dans 3 jours » ou « depuis 10 jours ». */
+    private String delai(long jours) {
+        if (jours == 0) return "aujourd'hui";
+        long nombre = Math.abs(jours);
+        String unite = "jour" + (nombre > 1 ? "s" : "");
+        return jours > 0 ? "dans " + nombre + " " + unite : "depuis " + nombre + " " + unite;
+    }
+
+    /** Ligne de l'historique : date, résultat, prochaine visite, boutons de modification/suppression. */
+    private HBox creerLigneControle(ControleTechnique c) {
+        Label titre = new Label("Contrôle du " + c.getDateRealisation().format(Formats.DATE_LONGUE));
+        titre.getStyleClass().add("historique-titre");
+        titre.setWrapText(true);
+
+        String texteDetail = "Prochain contrôle le " + c.getDateProchaine().format(Formats.DATE_LONGUE);
+        if (c.getNote() != null && !c.getNote().isBlank()) {
+            texteDetail += "   -   " + c.getNote();
+        }
+        Label detail = new Label(texteDetail);
+        detail.getStyleClass().add("historique-detail");
+        detail.setWrapText(true);
+
+        VBox texte = new VBox(3, titre, detail);
+        HBox.setHgrow(texte, Priority.ALWAYS);
+
+        Label resultat = new Label(c.getResultat().getLibelle());
+        resultat.getStyleClass().addAll("badge",
+                c.getResultat() == ControleTechnique.Resultat.FAVORABLE ? "badge-ok" : "badge-urgent");
+
+        Button modifier = Composants.bouton("✏  Modifier", "btn-modif", "btn-petit");
+        modifier.setOnAction(ev -> modifierControle(c));
+
+        Button supprimer = Composants.bouton("🗑  Supprimer", "btn-danger", "btn-petit");
+        supprimer.setOnAction(ev -> supprimerControle(c));
+
+        HBox ligne = new HBox(14, texte, resultat, modifier, supprimer);
+        ligne.setAlignment(Pos.CENTER_LEFT);
+        ligne.getStyleClass().add("ligne-historique");
+        return ligne;
+    }
+
+    private void modifierControle(ControleTechnique controle) {
+        DialogueControleTechniqueController.ouvrir(dashboard, vehicule, controle).ifPresent(modifie -> {
+            ControleTechniqueDB.modifierControleTechnique(modifie);
+            afficher(vehicule);
+            dashboard.toast("✔  Contrôle technique modifié");
+        });
+    }
+
+    private void supprimerControle(ControleTechnique controle) {
+        if (!DialogueSupport.confirmer(dashboard, "Supprimer ce contrôle",
+                "Voulez-vous vraiment supprimer le contrôle technique du "
+                        + controle.getDateRealisation().format(Formats.DATE_LONGUE) + " ?",
+                "Oui, supprimer")) {
+            return;
+        }
+        ControleTechniqueDB.supprimerControleTechnique(controle.getId());
+        afficher(vehicule);
+        dashboard.toast("✔  Contrôle technique supprimé");
     }
 
     private void afficherHistorique(Vehicule v) {
@@ -286,6 +432,17 @@ public class VehiculeController {
             EntretienDB.ajouterEntretien(nouveau);
             afficher(vehicule);
             dashboard.toast("✔  Entretien enregistré");
+        });
+    }
+
+    /** Enregistre un contrôle technique réalisé pour le véhicule affiché. */
+    @FXML
+    public void enregistrerControleTechnique() {
+        if (vehicule == null) return;
+        DialogueControleTechniqueController.ouvrir(dashboard, vehicule, null).ifPresent(controle -> {
+            ControleTechniqueDB.ajouterControleTechnique(controle);
+            afficher(vehicule);
+            dashboard.toast("✔  Contrôle technique enregistré");
         });
     }
 

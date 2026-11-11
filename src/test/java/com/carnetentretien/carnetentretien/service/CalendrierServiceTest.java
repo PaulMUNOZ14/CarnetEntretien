@@ -1,5 +1,6 @@
 package com.carnetentretien.carnetentretien.service;
 
+import com.carnetentretien.carnetentretien.model.ControleTechnique;
 import com.carnetentretien.carnetentretien.model.Entretien;
 import com.carnetentretien.carnetentretien.model.EntretienPlanifie;
 import com.carnetentretien.carnetentretien.model.Preconisation;
@@ -157,5 +158,106 @@ class CalendrierServiceTest {
         assertEquals(2, evenements.size());
         assertEquals("Freins", evenements.get(0).getOperation());
         assertEquals("Vidange", evenements.get(1).getOperation());
+    }
+
+    // ---------- Contrôle technique ----------
+
+    /** Assemble les événements d'un seul véhicule, avec ses contrôles techniques et planifications. */
+    private static List<EvenementCalendrier> assemblerAvecControles(Vehicule v,
+                                                                   List<ControleTechnique> controles,
+                                                                   List<EntretienPlanifie> planifies) {
+        return CalendrierService.assembler(
+                List.of(v),
+                List.of(),
+                Map.of(v.getId(), List.<Entretien>of()),
+                Map.of(v.getId(), planifies),
+                Map.of(v.getId(), controles));
+    }
+
+    @Test
+    void unControleTechniqueDonneUneEcheanceEtUneLigneDHistorique() {
+        Vehicule v = voiture(1);
+        LocalDate realisation = AUJOURDHUI.minusYears(1);
+        ControleTechnique controle = new ControleTechnique(0, v.getId(), realisation,
+                ControleTechnique.Resultat.FAVORABLE, realisation.plusYears(2), null);
+
+        List<EvenementCalendrier> evenements = assemblerAvecControles(v, List.of(controle), List.of());
+
+        assertEquals(2, evenements.size());
+        assertEquals(EvenementCalendrier.Type.CONTROLE_FAIT, evenements.get(0).getType());
+        assertEquals(realisation, evenements.get(0).getDate());
+        assertEquals(EvenementCalendrier.Type.CONTROLE, evenements.get(1).getType());
+        assertEquals(realisation.plusYears(2), evenements.get(1).getDate());
+        assertEquals(ControleTechniqueService.OPERATION, evenements.get(1).getOperation());
+        assertFalse(evenements.get(1).isProche());
+        assertFalse(evenements.get(1).isEnRetard());
+    }
+
+    @Test
+    void uneContreVisiteEstProcheMaisPasEnRetard() {
+        Vehicule v = voiture(1);
+        LocalDate realisation = AUJOURDHUI.minusMonths(1);
+        ControleTechnique controle = new ControleTechnique(0, v.getId(), realisation,
+                ControleTechnique.Resultat.DEFAVORABLE, realisation.plusMonths(2), null);
+
+        List<EvenementCalendrier> evenements = assemblerAvecControles(v, List.of(controle), List.of());
+
+        EvenementCalendrier echeance = evenements.stream()
+                .filter(e -> e.getType() == EvenementCalendrier.Type.CONTROLE)
+                .findFirst().orElseThrow();
+        assertTrue(echeance.isProche());
+        assertFalse(echeance.isEnRetard());
+    }
+
+    @Test
+    void uneEcheanceDepasseeDuControleTechniqueEstEnRetard() {
+        Vehicule v = voiture(1);
+        LocalDate prochaine = AUJOURDHUI.minusDays(10);
+        ControleTechnique controle = new ControleTechnique(0, v.getId(), prochaine.minusYears(3),
+                ControleTechnique.Resultat.FAVORABLE, prochaine, null);
+
+        List<EvenementCalendrier> evenements = assemblerAvecControles(v, List.of(controle), List.of());
+
+        EvenementCalendrier echeance = evenements.stream()
+                .filter(e -> e.getType() == EvenementCalendrier.Type.CONTROLE)
+                .findFirst().orElseThrow();
+        assertEquals(prochaine, echeance.getDate());
+        assertTrue(echeance.isEnRetard());
+        assertTrue(echeance.isProche());
+    }
+
+    @Test
+    void seulLeControleLePlusRecentGenereUneEcheance() {
+        Vehicule v = voiture(1);
+        ControleTechnique ancien = new ControleTechnique(0, v.getId(), AUJOURDHUI.minusYears(3),
+                ControleTechnique.Resultat.FAVORABLE, AUJOURDHUI.minusYears(1), null);
+        ControleTechnique recent = new ControleTechnique(0, v.getId(), AUJOURDHUI.minusYears(1),
+                ControleTechnique.Resultat.FAVORABLE, AUJOURDHUI.plusYears(1), null);
+
+        List<EvenementCalendrier> evenements = assemblerAvecControles(v, List.of(ancien, recent), List.of());
+
+        assertEquals(3, evenements.size());
+        long echeances = evenements.stream()
+                .filter(e -> e.getType() == EvenementCalendrier.Type.CONTROLE)
+                .count();
+        assertEquals(1, echeances);
+        assertEquals(AUJOURDHUI.plusYears(1), evenements.get(evenements.size() - 1).getDate());
+    }
+
+    @Test
+    void leControleTechniqueNestPasMasqueParUnePlanificationDuMemeNom() {
+        Vehicule v = voiture(1);
+        ControleTechnique controle = new ControleTechnique(0, v.getId(), AUJOURDHUI.minusMonths(1),
+                ControleTechnique.Resultat.FAVORABLE, AUJOURDHUI.plusMonths(23), null);
+        EntretienPlanifie planifie = new EntretienPlanifie(0, v.getId(),
+                ControleTechniqueService.OPERATION, AUJOURDHUI.plusDays(5), null);
+
+        List<EvenementCalendrier> evenements = assemblerAvecControles(v, List.of(controle), List.of(planifie));
+
+        assertEquals(3, evenements.size());
+        assertEquals(EvenementCalendrier.Type.CONTROLE_FAIT, evenements.get(0).getType());
+        assertEquals(EvenementCalendrier.Type.PLANIFIE, evenements.get(1).getType());
+        assertEquals(EvenementCalendrier.Type.CONTROLE, evenements.get(2).getType());
+        assertTrue(evenements.stream().noneMatch(e -> e.getType() == EvenementCalendrier.Type.ECHEANCE));
     }
 }

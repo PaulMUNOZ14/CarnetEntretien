@@ -38,10 +38,10 @@ public class DatabaseManager {
     }
 
     /**
-     * Crée les tables {@code Vehicule}, {@code Entretien_Fait}, {@code Preconisation} et
-     * {@code Entretien_Planifie} si elles n'existent pas, et ajoute les colonnes récentes
-     * ({@code immatriculation}, {@code image_url}, {@code image_locale}) aux bases créées par une
-     * version précédente. Peut être appelée plusieurs fois sans perte de données.
+     * Crée les tables {@code Vehicule}, {@code Entretien_Fait}, {@code Preconisation},
+     * {@code Entretien_Planifie} et {@code ControleTechnique} si elles n'existent pas, et ajoute
+     * les colonnes récentes ({@code immatriculation}, {@code image_url}, {@code image_locale}) aux
+     * bases créées par une version précédente. Peut être appelée plusieurs fois sans perte de données.
      */
     public static void initDatabase() {
         String sqlVehicule = "CREATE TABLE IF NOT EXISTS Vehicule (\n"
@@ -81,12 +81,23 @@ public class DatabaseManager {
                 + " FOREIGN KEY (vehicule_id) REFERENCES Vehicule(id)\n"
                 + ");";
 
+        String sqlControleTechnique = "CREATE TABLE IF NOT EXISTS ControleTechnique (\n"
+                + " id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
+                + " vehicule_id INTEGER NOT NULL,\n"
+                + " date_realisation DATE NOT NULL,\n"
+                + " resultat TEXT NOT NULL,\n"
+                + " date_prochaine DATE NOT NULL,\n"
+                + " note TEXT,\n"
+                + " FOREIGN KEY (vehicule_id) REFERENCES Vehicule(id)\n"
+                + ");";
+
         try (Connection conn = connect();
              Statement stmt = conn.createStatement()) {
             stmt.execute(sqlVehicule);
             stmt.execute(sqlEntretien);
             stmt.execute(sqlPreconisation);
             stmt.execute(sqlEntretienPlanifie);
+            stmt.execute(sqlControleTechnique);
 
             ajouterColonneSiAbsente(conn, "Vehicule", "immatriculation", "TEXT");
             ajouterColonneSiAbsente(conn, "Vehicule", "image_url", "TEXT");

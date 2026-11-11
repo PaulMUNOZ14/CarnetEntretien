@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.net.URL?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.VBox?>
+
+<!-- Formulaire « Contrôle technique ». Contrôleur : DialogueControleTechniqueController. -->
+<VBox spacing="12.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.carnetentretien.carnetentretien.controller.dialogue.DialogueControleTechniqueController">
+  <stylesheets>
+    <URL value="@../style.css" />
+  </stylesheets>
+  <padding>
+    <Insets bottom="4.0" left="10.0" right="10.0" top="6.0" />
+  </padding>
+
+  <Label styleClass="texte-doux, intro-dialogue" text="Renseignez le contrôle technique réalisé. La date du prochain contrôle est proposée automatiquement : deux ans après un contrôle favorable, deux mois après un contrôle défavorable." wrapText="true" />
+
+  <VBox spacing="6.0">
+    <Label styleClass="question-champ" text="Quand a-t-il été réalisé ?" />
+    <DatePicker fx:id="dateRealisation" maxWidth="Infinity" />
+    <Label styleClass="aide-champ" text="La date ne peut pas être dans le futur." wrapText="true" />
+  </VBox>
+
+  <VBox spacing="6.0">
+    <Label styleClass="question-champ" text="Quel résultat ?" />
+    <ComboBox fx:id="resultat" maxWidth="Infinity" promptText="Choisissez le résultat" />
+  </VBox>
+
+  <VBox spacing="6.0">
+    <Label styleClass="question-champ" text="Quelle est la date du prochain contrôle ?" />
+    <DatePicker fx:id="dateProchaine" maxWidth="Infinity" />
+    <Label styleClass="aide-champ" text="Proposée automatiquement (+2 ans ou +2 mois). Modifiez-la si le rapport indique une autre date." wrapText="true" />
+  </VBox>
+
+  <VBox spacing="6.0">
+    <Label styleClass="question-champ" text="Une remarque ? (facultatif)" />
+    <TextField fx:id="note" maxWidth="Infinity" promptText="Ex : défauts mineurs, garage…" />
+  </VBox>
+</VBox>
