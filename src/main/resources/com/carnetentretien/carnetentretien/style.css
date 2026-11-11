@@ -269,6 +269,82 @@
 
 .contenu-page { -fx-padding: 28 40 30 40; }
 
+/* ===== Calendrier ===== */
+.calendrier {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 16;
+    -fx-border-color: #d5dde7;
+    -fx-border-width: 2;
+    -fx-border-radius: 16;
+    -fx-padding: 10;
+}
+.jour-semaine {
+    -fx-font-size: 15px;
+    -fx-font-weight: bold;
+    -fx-text-fill: #52606d;
+    -fx-padding: 4 0;
+}
+.jour-calendrier {
+    -fx-background-color: #f9fbfd;
+    -fx-background-radius: 10;
+    -fx-border-color: #e4e7eb;
+    -fx-border-width: 1;
+    -fx-border-radius: 10;
+    -fx-padding: 5 6;
+    -fx-min-height: 92;
+}
+.jour-calendrier.jour-hors-mois { -fx-background-color: #f3f6fa; -fx-opacity: 0.55; }
+.jour-calendrier.jour-aujourdhui {
+    -fx-border-color: #1d5fd1;
+    -fx-border-width: 2;
+    -fx-background-color: #eef4ff;
+}
+.jour-numero { -fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #3e4c59; }
+.jour-aujourdhui .jour-numero { -fx-text-fill: #1d5fd1; }
+.jour-plus { -fx-font-size: 12px; -fx-text-fill: #52606d; }
+
+.evenement {
+    -fx-font-size: 12px;
+    -fx-padding: 2 6;
+    -fx-background-radius: 7;
+    -fx-cursor: hand;
+}
+.evenement-echeance-ok      { -fx-background-color: #e4e7eb; -fx-text-fill: #3e4c59; }
+.evenement-echeance-prevoir { -fx-background-color: #fdf0d5; -fx-text-fill: #8a5a00; }
+.evenement-echeance-urgent  { -fx-background-color: #fde0dd; -fx-text-fill: #a02116; }
+.evenement-planifie         { -fx-background-color: #e6efff; -fx-text-fill: #1649a3; }
+.evenement-realise          { -fx-background-color: #dff5e7; -fx-text-fill: #14633a; }
+.evenement-retard {
+    -fx-font-weight: bold;
+    -fx-border-color: #c0392b;
+    -fx-border-width: 1;
+    -fx-border-radius: 7;
+}
+
+.legende { -fx-font-size: 14px; -fx-padding: 3 10; -fx-background-radius: 20; }
+.legende-echeance { -fx-background-color: #fdf0d5; -fx-text-fill: #8a5a00; }
+.legende-planifie { -fx-background-color: #e6efff; -fx-text-fill: #1649a3; }
+.legende-realise  { -fx-background-color: #dff5e7; -fx-text-fill: #14633a; }
+
+.jour-liste { -fx-font-size: 19px; -fx-font-weight: bold; -fx-text-fill: #12263f; -fx-padding: 6 0 0 0; }
+
+.ligne-evenement {
+    -fx-background-color: #ffffff;
+    -fx-background-radius: 12;
+    -fx-border-color: #d5dde7;
+    -fx-border-width: 1;
+    -fx-border-radius: 12;
+    -fx-padding: 12 18;
+}
+.ligne-evenement-retard {
+    -fx-border-color: #c0392b;
+    -fx-border-width: 2;
+    -fx-background-color: #fff8f7;
+}
+.evenement-icone { -fx-font-size: 24px; -fx-min-width: 34; -fx-alignment: center; }
+.evenement-titre { -fx-font-size: 19px; -fx-font-weight: bold; -fx-text-fill: #12263f; }
+.evenement-detail { -fx-font-size: 15px; -fx-text-fill: #52606d; }
+
 /* ===== Mode compact : fenêtre étroite ===== */
 .root.compact, .dialog-pane.compact { -fx-font-size: 14px; }
 
@@ -304,3 +380,16 @@
 .compact .champ-plaque { -fx-font-size: 20px; }
 .compact .apercu-titre { -fx-font-size: 19px; }
 .compact .toast { -fx-font-size: 16px; -fx-padding: 12 22; }
+
+.compact .calendrier { -fx-padding: 6; }
+.compact .jour-semaine { -fx-font-size: 11px; }
+.compact .jour-calendrier { -fx-min-height: 68; -fx-padding: 3 4; }
+.compact .jour-numero { -fx-font-size: 11px; }
+.compact .evenement { -fx-font-size: 9px; -fx-padding: 1 4; }
+.compact .jour-plus { -fx-font-size: 9px; }
+.compact .legende { -fx-font-size: 10px; -fx-padding: 2 7; }
+.compact .jour-liste { -fx-font-size: 15px; }
+.compact .ligne-evenement { -fx-padding: 8 10; }
+.compact .evenement-icone { -fx-font-size: 18px; -fx-min-width: 24; }
+.compact .evenement-titre { -fx-font-size: 15px; }
+.compact .evenement-detail { -fx-font-size: 12px; }

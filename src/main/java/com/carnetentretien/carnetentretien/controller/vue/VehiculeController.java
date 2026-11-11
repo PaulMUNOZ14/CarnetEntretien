@@ -228,6 +228,12 @@ public class VehiculeController {
         dashboard.rafraichir();
     }
 
+    /** Ouvre le calendrier filtré sur le véhicule affiché. */
+    @FXML
+    public void ouvrirCalendrier() {
+        if (vehicule != null) dashboard.ouvrirCalendrier(vehicule);
+    }
+
     /** Met à jour le kilométrage du compteur (refuse une valeur inférieure à l'actuelle). */
     @FXML
     public void mettreAJourKilometrage() {

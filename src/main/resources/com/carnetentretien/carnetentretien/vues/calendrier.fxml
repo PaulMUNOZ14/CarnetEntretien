@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.net.URL?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<!-- Écran calendrier : échéances, planifications et historique. Contrôleur : CalendrierController. -->
+<VBox xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.carnetentretien.carnetentretien.controller.vue.CalendrierController">
+
+  <stylesheets>
+    <URL value="@../style.css" />
+  </stylesheets>
+
+  <FlowPane alignment="CENTER_LEFT" hgap="12.0" vgap="10.0" styleClass="entete">
+    <Button onAction="#retourAccueil" styleClass="btn, btn-secondaire" text="⬅  Mes véhicules" />
+    <Label styleClass="titre-page" text="📅  Calendrier des entretiens" />
+    <Region HBox.hgrow="ALWAYS" />
+    <Label styleClass="texte-doux" text="Véhicule :" />
+    <ComboBox fx:id="filtreVehicule" onAction="#changerFiltre" prefWidth="290.0" promptText="Tous les véhicules" />
+  </FlowPane>
+
+  <ScrollPane fitToWidth="true" styleClass="zone-defilement" VBox.vgrow="ALWAYS">
+    <VBox spacing="18.0">
+      <padding>
+        <Insets bottom="30.0" left="40.0" right="40.0" top="26.0" />
+      </padding>
+
+      <HBox fx:id="bandeauRetard" alignment="CENTER_LEFT" managed="false" styleClass="bandeau, bandeau-urgent" visible="false">
+        <Label fx:id="messageRetard" maxWidth="Infinity" wrapText="true" HBox.hgrow="ALWAYS" />
+      </HBox>
+
+      <HBox alignment="CENTER_LEFT" spacing="12.0">
+        <Button onAction="#moisPrecedent" styleClass="btn, btn-discret, btn-petit" text="◀" />
+        <Label fx:id="titreMois" styleClass="titre-section" />
+        <Button onAction="#moisSuivant" styleClass="btn, btn-discret, btn-petit" text="▶" />
+        <Button onAction="#moisAujourdhui" styleClass="btn, btn-secondaire, btn-petit" text="Aujourd'hui" />
+        <Region HBox.hgrow="ALWAYS" />
+        <HBox alignment="CENTER_LEFT" spacing="8.0">
+          <Label styleClass="legende, legende-echeance" text="⏰  Échéance" />
+          <Label styleClass="legende, legende-planifie" text="📌  Planifié" />
+          <Label styleClass="legende, legende-realise" text="✔  Réalisé" />
+        </HBox>
+      </HBox>
+
+      <GridPane fx:id="grille" hgap="6.0" styleClass="calendrier" vgap="6.0" />
+
+      <HBox alignment="CENTER_LEFT" spacing="12.0">
+        <Label styleClass="titre-section" text="Les entretiens du mois" />
+        <Region HBox.hgrow="ALWAYS" />
+        <Label fx:id="resumeMois" styleClass="texte-doux" />
+      </HBox>
+      <VBox fx:id="conteneurListe" spacing="14.0" />
+    </VBox>
+  </ScrollPane>
+
+  <HBox alignment="CENTER" styleClass="barre-actions">
+    <Button onAction="#planifier" styleClass="btn, btn-succes, btn-grand" text="➕  Planifier un entretien" />
+  </HBox>
+</VBox>

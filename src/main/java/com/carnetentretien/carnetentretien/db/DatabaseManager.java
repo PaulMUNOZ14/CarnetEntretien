@@ -38,9 +38,10 @@ public class DatabaseManager {
     }
 
     /**
-     * Crée les tables {@code Vehicule}, {@code Entretien_Fait} et {@code Preconisation} si elles n'existent pas,
-     * et ajoute les colonnes récentes ({@code immatriculation}, {@code image_url}, {@code image_locale})
-     * aux bases créées par une version précédente. Peut être appelée plusieurs fois sans perte de données.
+     * Crée les tables {@code Vehicule}, {@code Entretien_Fait}, {@code Preconisation} et
+     * {@code Entretien_Planifie} si elles n'existent pas, et ajoute les colonnes récentes
+     * ({@code immatriculation}, {@code image_url}, {@code image_locale}) aux bases créées par une
+     * version précédente. Peut être appelée plusieurs fois sans perte de données.
      */
     public static void initDatabase() {
         String sqlVehicule = "CREATE TABLE IF NOT EXISTS Vehicule (\n"
@@ -71,11 +72,21 @@ public class DatabaseManager {
                 + " intervalle_mois INTEGER NOT NULL\n"
                 + ");";
 
+        String sqlEntretienPlanifie = "CREATE TABLE IF NOT EXISTS Entretien_Planifie (\n"
+                + " id INTEGER PRIMARY KEY AUTOINCREMENT,\n"
+                + " vehicule_id INTEGER NOT NULL,\n"
+                + " type_operation TEXT NOT NULL,\n"
+                + " date_prevue DATE NOT NULL,\n"
+                + " note TEXT,\n"
+                + " FOREIGN KEY (vehicule_id) REFERENCES Vehicule(id)\n"
+                + ");";
+
         try (Connection conn = connect();
              Statement stmt = conn.createStatement()) {
             stmt.execute(sqlVehicule);
             stmt.execute(sqlEntretien);
             stmt.execute(sqlPreconisation);
+            stmt.execute(sqlEntretienPlanifie);
 
             ajouterColonneSiAbsente(conn, "Vehicule", "immatriculation", "TEXT");
             ajouterColonneSiAbsente(conn, "Vehicule", "image_url", "TEXT");

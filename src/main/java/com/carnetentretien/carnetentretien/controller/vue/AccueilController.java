@@ -91,4 +91,10 @@ public class AccueilController {
         DialogueReglagesController.ouvrir(dashboard);
         dashboard.rafraichir();
     }
+
+    /** Ouvre le calendrier de tous les véhicules. */
+    @FXML
+    public void ouvrirCalendrier() {
+        dashboard.ouvrirCalendrier();
+    }
 }

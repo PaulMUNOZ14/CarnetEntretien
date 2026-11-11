@@ -47,6 +47,8 @@ class CalculateurEntretienTest {
         assertEquals(0, b.pourcentage, 0.0001);
         assertTrue(b.statut.contains("Action Requise"));
         assertTrue(b.details.contains("Aucun historique"));
+        assertNull(b.dateEcheance);
+        assertFalse(b.depasse);
     }
 
     @Test
@@ -70,6 +72,8 @@ class CalculateurEntretienTest {
         assertTrue(b.details.contains("À planifier pour le : " + AUJOURDHUI.plusDays(365)));
         assertTrue(b.details.contains("Atteinte des 60000 km"));
         assertTrue(b.details.contains("Dernier entretien le " + AUJOURDHUI.minusMonths(1) + " à 40000 km"));
+        assertEquals(AUJOURDHUI.plusDays(365), b.dateEcheance);
+        assertFalse(b.depasse);
     }
 
     @Test
@@ -94,6 +98,8 @@ class CalculateurEntretienTest {
         assertTrue(b.statut.contains("URGENT"));
         assertTrue(b.details.contains("Dépassé depuis le " + AUJOURDHUI));
         assertTrue(b.details.contains("Atteinte des 60000 km"));
+        assertEquals(AUJOURDHUI, b.dateEcheance);
+        assertTrue(b.depasse);
     }
 
     @Test
@@ -106,6 +112,8 @@ class CalculateurEntretienTest {
         assertTrue(b.statut.contains("URGENT"));
         assertTrue(b.details.contains("Délai de 12 mois écoulé"));
         assertTrue(b.details.contains("Dépassé depuis le " + dernier.plusMonths(12)));
+        assertEquals(dernier.plusMonths(12), b.dateEcheance);
+        assertTrue(b.depasse);
     }
 
     @Test

@@ -18,7 +18,13 @@ public interface DashboardContext {
     /** Ouvre l'écran d'un véhicule. */
     void ouvrirVehicule(Vehicule vehicule);
 
-    /** Réaffiche l'écran courant (accueil ou véhicule) après une modification. */
+    /** Ouvre le calendrier de tous les véhicules. */
+    void ouvrirCalendrier();
+
+    /** Ouvre le calendrier filtré sur un véhicule. */
+    void ouvrirCalendrier(Vehicule vehicule);
+
+    /** Réaffiche l'écran courant (accueil, véhicule ou calendrier) après une modification. */
     void rafraichir();
 
     /** Affiche un court message en bas de la fenêtre. */

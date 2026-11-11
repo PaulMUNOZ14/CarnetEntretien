@@ -2,6 +2,7 @@ package com.carnetentretien.carnetentretien.db;
 
 import com.carnetentretien.carnetentretien.BaseBddTest;
 import com.carnetentretien.carnetentretien.model.Entretien;
+import com.carnetentretien.carnetentretien.model.EntretienPlanifie;
 import com.carnetentretien.carnetentretien.model.Vehicule;
 import org.junit.jupiter.api.Test;
 
@@ -102,11 +103,15 @@ class VehiculeDBTest extends BaseBddTest {
     }
 
     @Test
-    void supprimerRetireLeVehiculeEtSonHistoriqueSansToucherLesAutres() {
+    void supprimerRetireLeVehiculeSonHistoriqueEtSesPlanificationsSansToucherLesAutres() {
         Vehicule a = simple("A", "1", 100, 200);
         Vehicule b = simple("B", "2", 300, 400);
         EntretienDB.ajouterEntretien(new Entretien(0, a.getId(), "Vidange", LocalDate.of(2026, 1, 10), 90, 50));
         EntretienDB.ajouterEntretien(new Entretien(0, b.getId(), "Freins", LocalDate.of(2026, 2, 10), 290, 120));
+        EntretienPlanifieDB.ajouterEntretienPlanifie(
+                new EntretienPlanifie(0, a.getId(), "Vidange", LocalDate.now().plusDays(10)));
+        EntretienPlanifieDB.ajouterEntretienPlanifie(
+                new EntretienPlanifie(0, b.getId(), "Freins", LocalDate.now().plusDays(20)));
 
         VehiculeDB.supprimerVehicule(a.getId());
 
@@ -115,6 +120,8 @@ class VehiculeDBTest extends BaseBddTest {
         assertEquals(b.getId(), restants.get(0).getId());
         assertTrue(EntretienDB.getEntretiensPourVehicule(a.getId()).isEmpty());
         assertEquals(1, EntretienDB.getEntretiensPourVehicule(b.getId()).size());
+        assertTrue(EntretienPlanifieDB.getEntretiensPlanifiesPourVehicule(a.getId()).isEmpty());
+        assertEquals(1, EntretienPlanifieDB.getEntretiensPlanifiesPourVehicule(b.getId()).size());
     }
 
     @Test

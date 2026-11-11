@@ -20,6 +20,7 @@
   <HBox alignment="CENTER_LEFT" spacing="16.0" styleClass="entete">
     <Label styleClass="titre-page" text="🚗  Mon carnet d'entretien" />
     <Region HBox.hgrow="ALWAYS" />
+    <Button onAction="#ouvrirCalendrier" styleClass="btn, btn-secondaire" text="📅  Calendrier" />
     <Button onAction="#ouvrirReglages" styleClass="btn, btn-discret" text="⚙  Réglages" />
   </HBox>
 

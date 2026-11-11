@@ -2,6 +2,7 @@ package com.carnetentretien.carnetentretien.controller;
 
 import com.carnetentretien.carnetentretien.controller.dialogue.DialogueCleApiController;
 import com.carnetentretien.carnetentretien.controller.vue.AccueilController;
+import com.carnetentretien.carnetentretien.controller.vue.CalendrierController;
 import com.carnetentretien.carnetentretien.controller.vue.VehiculeController;
 import com.carnetentretien.carnetentretien.db.PreconisationDB;
 import com.carnetentretien.carnetentretien.model.Preconisation;
@@ -38,10 +39,15 @@ public class DashboardController implements DashboardContext {
     @FXML private AccueilController accueilController;
     @FXML private VBox vehicule;
     @FXML private VehiculeController vehiculeController;
+    @FXML private VBox calendrier;
+    @FXML private CalendrierController calendrierController;
     @FXML private Label toast;
 
     /** Véhicule actuellement ouvert ; {@code null} sur l'écran d'accueil. */
     private Vehicule vehiculeSelectionne = null;
+
+    /** Vue affichée actuellement, pour savoir quoi rafraîchir après une modification. */
+    private Node vueCourante;
     private SequentialTransition animationToast;
 
     /** {@code true} quand la fenêtre est étroite : polices et marges réduites (classe CSS {@code compact}). */
@@ -56,6 +62,7 @@ public class DashboardController implements DashboardContext {
     public void initialize() {
         accueilController.installer(this);
         vehiculeController.installer(this);
+        calendrierController.installer(this);
 
         racine.widthProperty().addListener((o, a, b) -> adapterTaille(b.doubleValue()));
         adapterTaille(racine.getPrefWidth());
@@ -112,7 +119,9 @@ public class DashboardController implements DashboardContext {
     public void afficherAccueil() {
         vehiculeSelectionne = null;
         afficher(vehicule, false);
+        afficher(calendrier, false);
         afficher(accueil, true);
+        vueCourante = accueil;
         accueilController.charger();
     }
 
@@ -120,13 +129,32 @@ public class DashboardController implements DashboardContext {
     public void ouvrirVehicule(Vehicule v) {
         vehiculeSelectionne = v;
         afficher(accueil, false);
+        afficher(calendrier, false);
         afficher(vehicule, true);
+        vueCourante = vehicule;
         vehiculeController.afficher(v);
     }
 
     @Override
+    public void ouvrirCalendrier() {
+        ouvrirCalendrier(null);
+    }
+
+    @Override
+    public void ouvrirCalendrier(Vehicule filtre) {
+        vehiculeSelectionne = null;
+        afficher(accueil, false);
+        afficher(vehicule, false);
+        afficher(calendrier, true);
+        vueCourante = calendrier;
+        calendrierController.ouvrir(filtre);
+    }
+
+    @Override
     public void rafraichir() {
-        if (vehiculeSelectionne != null) {
+        if (vueCourante == calendrier) {
+            calendrierController.rafraichir();
+        } else if (vehiculeSelectionne != null) {
             vehiculeController.afficher(vehiculeSelectionne);
         } else {
             accueilController.charger();

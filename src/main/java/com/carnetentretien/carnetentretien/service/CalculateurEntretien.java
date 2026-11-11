@@ -25,9 +25,15 @@ public class CalculateurEntretien {
         public String statut;
         /** Texte sur deux lignes : la date prévue (ou de dépassement) et sa cause, puis le dernier entretien connu. */
         public String details;
+        /** Date d'échéance estimée ; {@code null} quand aucun historique ne permet de la calculer. */
+        public LocalDate dateEcheance;
+        /** {@code true} quand l'échéance est déjà dépassée (usure ≥ 100 %). */
+        public boolean depasse;
 
-        public Bilan(String piece, double pourcentage, String statut, String details) {
+        public Bilan(String piece, double pourcentage, String statut, String details,
+                     LocalDate dateEcheance, boolean depasse) {
             this.piece = piece; this.pourcentage = pourcentage; this.statut = statut; this.details = details;
+            this.dateEcheance = dateEcheance; this.depasse = depasse;
         }
     }
 
@@ -60,7 +66,7 @@ public class CalculateurEntretien {
                     .orElse(null);
 
             if (dernierEntretien == null) {
-                resultats.add(new Bilan(preco.getTypeOperation(), 0, "⚠ Action Requise", "Aucun historique. Renseignez la dernière intervention."));
+                resultats.add(new Bilan(preco.getTypeOperation(), 0, "⚠ Action Requise", "Aucun historique. Renseignez la dernière intervention.", null, false));
                 continue;
             }
 
@@ -104,7 +110,8 @@ public class CalculateurEntretien {
                         dateEcheanceFinale, causeEcheance, dernierEntretien.getDateRealisation(), dernierEntretien.getKilometrageRealisation());
             }
 
-            resultats.add(new Bilan(preco.getTypeOperation(), usureReelle, statut, details));
+            resultats.add(new Bilan(preco.getTypeOperation(), usureReelle, statut, details,
+                    dateEcheanceFinale, usureReelle >= 100));
         }
         return resultats;
     }

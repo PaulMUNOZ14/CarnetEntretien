@@ -64,19 +64,24 @@ public class VehiculeDB {
     }
 
     /**
-     * Supprime un véhicule <b>et tout son historique d'entretien</b>.
+     * Supprime un véhicule, <b>tout son historique d'entretien</b> et ses entretiens planifiés.
      * Le fichier de la photo personnelle n'est pas touché : voir {@code ImageService#supprimer}.
      */
     public static void supprimerVehicule(int id) {
         String sqlEntretiens = "DELETE FROM Entretien_Fait WHERE vehicule_id = ?";
+        String sqlPlanifies = "DELETE FROM Entretien_Planifie WHERE vehicule_id = ?";
         String sqlVehicule = "DELETE FROM Vehicule WHERE id = ?";
 
         try (Connection conn = DatabaseManager.connect();
              PreparedStatement pstmtEntretiens = conn.prepareStatement(sqlEntretiens);
+             PreparedStatement pstmtPlanifies = conn.prepareStatement(sqlPlanifies);
              PreparedStatement pstmtVehicule = conn.prepareStatement(sqlVehicule)) {
 
             pstmtEntretiens.setInt(1, id);
             pstmtEntretiens.executeUpdate();
+
+            pstmtPlanifies.setInt(1, id);
+            pstmtPlanifies.executeUpdate();
 
             pstmtVehicule.setInt(1, id);
             pstmtVehicule.executeUpdate();

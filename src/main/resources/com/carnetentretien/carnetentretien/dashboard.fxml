@@ -21,6 +21,9 @@
   <!-- ÉCRAN 2 : un véhicule (voir vues/vehicule.fxml) -->
   <fx:include fx:id="vehicule" source="vues/vehicule.fxml" />
 
+  <!-- ÉCRAN 3 : calendrier des entretiens (voir vues/calendrier.fxml) -->
+  <fx:include fx:id="calendrier" source="vues/calendrier.fxml" />
+
   <!-- Message de confirmation (apparaît quelques secondes puis disparaît) -->
   <Label fx:id="toast" mouseTransparent="true" styleClass="toast" visible="false" StackPane.alignment="BOTTOM_CENTER">
     <StackPane.margin>

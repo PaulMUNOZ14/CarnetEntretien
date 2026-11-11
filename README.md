@@ -13,6 +13,7 @@
 - Gérer plusieurs véhicules (marque, modèle, kilométrage)
 - Estimer automatiquement le kilométrage actuel en fonction de votre usage annuel
 - Anticiper les échéances d'entretien (vidange, courroie de distribution, filtres, etc.)
+- Planifier les entretiens à venir et les retrouver dans un calendrier mensuel
 - Stocker les données localement dans une base SQLite (aucun serveur requis)
 - Archiver les factures et suivre les dépenses d'entretien
 
@@ -41,10 +42,11 @@ Ce projet propose un outil pour toute personne souhaitant suivre sérieusement l
 - [x] Affichage de la voiture si saisie par plaque d'immatriculation
 - [x] Photo personnelle du véhicule : importée depuis l'ordinateur et copiée dans l'application
 - [x] Export en installeur autonome (via `jpackage`)
+- [x] Calendrier des entretiens : grille mensuelle, échéances calculées, historique et planifications
+- [x] Planification d'un entretien (date, véhicule, remarque) et marquage « Fait »
 
 ### En cours / À venir
 
-- [ ] Calendrier des entretiens
 - [ ] Suivi du contrôle technique
 - [ ] Historique kilométrique
 - [ ] Gestion des factures PDF
@@ -169,11 +171,13 @@ CarnetEntretien/
     │   │       ├── Launcher.java                       # Lanceur de l'application
     │   │       ├── model/                              # Objets métier
     │   │       │   ├── Entretien.java                  # Objet Entretien
+    │   │       │   ├── EntretienPlanifie.java          # Objet Entretien planifié
     │   │       │   ├── Preconisation.java              # Objet Preconisation
     │   │       │   └── Vehicule.java                   # Objet Vehicule
     │   │       ├── db/                                 # Accès base de données
     │   │       │   ├── DatabaseManager.java            # Connexion, création et migration de la base
     │   │       │   ├── EntretienDB.java                # Accès aux entretiens
+    │   │       │   ├── EntretienPlanifieDB.java        # Accès aux entretiens planifiés
     │   │       │   ├── PreconisationDB.java            # Accès aux préconisations
     │   │       │   └── VehiculeDB.java                 # Accès aux véhicules
     │   │       ├── controller/                         # Contrôleurs FXML
@@ -186,19 +190,23 @@ CarnetEntretien/
     │   │       │   │   └── Formats.java                # Nombres, montants et dates
     │   │       │   ├── vue/                            # Contrôleurs des écrans
     │   │       │   │   ├── AccueilController.java      # Écran d'accueil (liste des véhicules)
+    │   │       │   │   ├── CalendrierController.java   # Calendrier mensuel (grille, liste, actions)
     │   │       │   │   └── VehiculeController.java     # Écran d'un véhicule (jauges, historique)
     │   │       │   └── dialogue/                       # Contrôleurs des fenêtres de saisie
     │   │       │       ├── DialogueCleApiController.java
     │   │       │       ├── DialogueEntretienController.java
     │   │       │       ├── DialogueKilometrageController.java
+    │   │       │       ├── DialoguePlanificationController.java
     │   │       │       ├── DialogueRegleController.java
     │   │       │       ├── DialogueReglagesController.java
     │   │       │       └── DialogueVehiculeController.java
     │   │       └── service/                            # Logique métier
     │   │           ├── AppPaths.java                   # Emplacement des données (base, images, config)
     │   │           ├── CalculateurEntretien.java       # Détermine quand prévoir un entretien
+    │   │           ├── CalendrierService.java          # Rassemble historique, planifications et échéances
     │   │           ├── ConfigService.java              # Lecture/écriture de la clé API (config.properties)
     │   │           ├── CsvHistorique.java              # Écriture du fichier CSV de l'historique
+    │   │           ├── EvenementCalendrier.java        # Événement affiché dans le calendrier
     │   │           ├── ExportService.java              # Export CSV (fenêtre « Enregistrer sous »)
     │   │           ├── ImageService.java               # Import/copie des photos de véhicules
     │   │           └── RecherchePlaqueService.java     # Recherche d'un véhicule par plaque
@@ -207,11 +215,13 @@ CarnetEntretien/
     │       ├── dashboard.fxml                          # Fenêtre principale (assemble les vues)
     │       ├── vues/                                   # Écrans modifiables dans SceneBuilder
     │       │   ├── accueil.fxml                        # Écran d'accueil
+    │       │   ├── calendrier.fxml                     # Calendrier mensuel des entretiens
     │       │   └── vehicule.fxml                       # Écran d'un véhicule
     │       └── dialogues/                              # Fenêtres de saisie modifiables dans SceneBuilder
     │           ├── cle-api.fxml                        # Clé d'accès au service de plaques
     │           ├── entretien.fxml                      # Ajout/modification d'un entretien
     │           ├── kilometrage.fxml                    # Mise à jour du compteur
+    │           ├── planification.fxml                  # Planification d'un entretien
     │           ├── regle.fxml                          # Ajout/modification d'une règle de suivi
     │           ├── reglages.fxml                       # Liste des règles de suivi
     │           └── vehicule.fxml                       # Ajout/modification d'un véhicule
@@ -225,11 +235,13 @@ CarnetEntretien/
         ├── db/
         │   ├── DatabaseManagerTest.java                # Test DatabaseManager
         │   ├── EntretienDBTest.java                    # Test EntretienDB
+        │   ├── EntretienPlanifieDBTest.java            # Test EntretienPlanifieDB
         │   ├── PreconisationDBTest.java                # Test PreconisationDB
         │   └── VehiculeDBTest.java                     # Test VehiculeDB
         └── service/
             ├── AppPathsTest.java                       # Test AppPaths
             ├── CalculateurEntretienTest.java           # Test CalculateurEntretien
+            ├── CalendrierServiceTest.java              # Test CalendrierService
             ├── ConfigServiceTest.java                  # Test ConfigService
             ├── CsvHistoriqueTest.java                  # Test CsvHistorique
             ├── ImageServiceTest.java                   # Test ImageService

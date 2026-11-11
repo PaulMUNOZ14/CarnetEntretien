@@ -46,6 +46,20 @@ public class DialogueEntretienController {
      * @return l'entretien saisi, ou vide si l'utilisateur a annulé
      */
     public static Optional<Entretien> ouvrir(DashboardContext dashboard, Vehicule vehicule, Entretien existant) {
+        return ouvrir(dashboard, vehicule, existant, null, null);
+    }
+
+    /**
+     * Ouvre la fenêtre de saisie d'un entretien en préremplissant l'opération et/ou la date.
+     *
+     * @param dashboard    services de la fenêtre principale
+     * @param vehicule     véhicule concerné
+     * @param existant     entretien à modifier, ou {@code null} pour une création
+     * @param typeSuggere  opération proposée par défaut, ou {@code null}
+     * @param dateSuggeree date proposée par défaut, ou {@code null} (aujourd'hui)
+     * @return l'entretien saisi, ou vide si l'utilisateur a annulé
+     */
+    public static Optional<Entretien> ouvrir(DashboardContext dashboard, Vehicule vehicule, Entretien existant, String typeSuggere, LocalDate dateSuggeree) {
         FXMLLoader loader = new FXMLLoader(DialogueEntretienController.class.getResource(FXML));
         VBox contenu;
         try {
@@ -54,14 +68,14 @@ public class DialogueEntretienController {
             throw new UncheckedIOException(e);
         }
         DialogueEntretienController controleur = loader.getController();
-        controleur.initialiser(vehicule, existant);
+        controleur.initialiser(vehicule, existant, typeSuggere, dateSuggeree);
 
         String titre = existant == null ? "J'ai fait un entretien" : "Modifier l'entretien";
         boolean ok = DialogueSupport.afficherFormulaire(dashboard, titre, contenu, "✔  Enregistrer", controleur::valider);
         return ok ? Optional.ofNullable(controleur.resultat) : Optional.empty();
     }
 
-    private void initialiser(Vehicule vehicule, Entretien existant) {
+    private void initialiser(Vehicule vehicule, Entretien existant, String typeSuggere, LocalDate dateSuggeree) {
         this.vehicule = vehicule;
         this.existant = existant;
 
@@ -69,8 +83,10 @@ public class DialogueEntretienController {
             type.getItems().add(p.getTypeOperation());
         }
         if (existant != null) type.setValue(existant.getTypeOperation());
+        else if (typeSuggere != null) type.setValue(typeSuggere);
 
-        date.setValue(existant != null ? existant.getDateRealisation() : LocalDate.now());
+        date.setValue(existant != null ? existant.getDateRealisation()
+                : (dateSuggeree != null ? dateSuggeree : LocalDate.now()));
         kmField.setText(String.valueOf(existant != null ? existant.getKilometrageRealisation()
                 : vehicule.getKilometrageActuel()));
         if (existant != null) coutField.setText(String.format(Locale.FRANCE, "%.2f", existant.getCout()));
