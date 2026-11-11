@@ -58,7 +58,7 @@ public class AccueilController {
         Label compteur = new Label(Formats.km(v.getKilometrageActuel()) + " km");
         compteur.getStyleClass().add("carte-km");
 
-        Label etat = EntretienUi.creerBadge(EntretienUi.niveauGlobal(EntretienUi.analyser(v)));
+        Label etat = EntretienUi.creerBadge(EntretienUi.niveauGlobal(v));
 
         VBox contenu = new VBox(8, photo, nom);
         if (v.getImmatriculation() != null && !v.getImmatriculation().isBlank()) {

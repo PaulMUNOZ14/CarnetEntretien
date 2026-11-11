@@ -63,7 +63,7 @@ public class VehiculeController {
         this.dashboard = dashboard;
     }
 
-    /** Affiche un véhicule : en-tête, jauges d'usure et historique. */
+    /** Affiche un véhicule : en-tête, jauges d'usure, contrôle technique et historique. */
     public void afficher(Vehicule v) {
         this.vehicule = v;
         if (v == null) return;
@@ -80,7 +80,9 @@ public class VehiculeController {
                 + Formats.km(v.getKilometrageAnnuelEstime()) + " km par an");
 
         List<CalculateurEntretien.Bilan> bilans = EntretienUi.analyser(v);
-        afficherBandeau(bilans);
+        List<ControleTechnique> controles = ControleTechniqueDB.getControlesPourVehicule(v.getId());
+        ControleTechniqueService.Suivi suiviCt = ControleTechniqueService.analyser(controles);
+        afficherBandeau(bilans, suiviCt);
 
         conteneurJauges.getChildren().clear();
         if (bilans.isEmpty()) {
@@ -95,30 +97,62 @@ public class VehiculeController {
             }
         }
 
-        afficherControleTechnique(v);
+        afficherControleTechnique(controles, suiviCt);
         afficherHistorique(v);
     }
 
-    private void afficherBandeau(List<CalculateurEntretien.Bilan> bilans) {
-        int niveau = EntretienUi.niveauGlobal(bilans);
+    private void afficherBandeau(List<CalculateurEntretien.Bilan> bilans, ControleTechniqueService.Suivi suiviCt) {
+        int niveauEntretiens = EntretienUi.niveauGlobal(bilans);
+        boolean ctUrgent = suiviCt.getEtat() == ControleTechniqueService.Etat.EN_RETARD;
+        boolean ctPrevoir = suiviCt.getEtat() == ControleTechniqueService.Etat.A_PREVOIR;
+        boolean ctOk = suiviCt.getEtat() == ControleTechniqueService.Etat.OK;
+
+        long urgentsEntretien = bilans.stream()
+                .filter(b -> EntretienUi.niveauDe(b) == EntretienUi.URGENT).count();
+        boolean prevoirEntretien = bilans.stream()
+                .anyMatch(b -> EntretienUi.niveauDe(b) == EntretienUi.PREVOIR);
+
+        int niveau;
         String message;
-        switch (niveau) {
-            case EntretienUi.URGENT -> {
-                long n = bilans.stream().filter(b -> EntretienUi.niveauDe(b.pourcentage) == EntretienUi.URGENT).count();
-                message = "⚠  " + (n > 1 ? n + " entretiens sont à faire maintenant" : "Un entretien est à faire maintenant");
+
+        if (niveauEntretiens == EntretienUi.URGENT || ctUrgent) {
+            niveau = EntretienUi.URGENT;
+            long total = urgentsEntretien + (ctUrgent ? 1 : 0);
+            if (total > 1) {
+                message = "⚠  " + total + " échéances sont à traiter maintenant";
+            } else if (ctUrgent) {
+                message = "⚠  Le contrôle technique est dépassé : à faire maintenant";
+            } else {
+                message = "⚠  Un entretien est à faire maintenant";
             }
-            case EntretienUi.PREVOIR -> message = "⏰  Pensez à prévoir un entretien bientôt";
-            case EntretienUi.OK -> message = "✔  Tout va bien : rien à faire pour le moment";
-            case EntretienUi.INCONNU -> message = "ℹ  Ajoutez vos entretiens déjà faits pour recevoir des conseils";
-            default -> message = "ℹ  Aucun entretien à surveiller : ouvrez les « Réglages »";
+        } else if (niveauEntretiens == EntretienUi.PREVOIR || ctPrevoir) {
+            niveau = EntretienUi.PREVOIR;
+            if (ctPrevoir && prevoirEntretien) {
+                message = "⏰  Pensez à prévoir un entretien et le contrôle technique bientôt";
+            } else if (ctPrevoir) {
+                message = "⏰  Le contrôle technique est à prévoir bientôt";
+            } else {
+                message = "⏰  Pensez à prévoir un entretien bientôt";
+            }
+        } else if (niveauEntretiens == EntretienUi.OK || ctOk) {
+            niveau = EntretienUi.OK;
+            message = "✔  Tout va bien : rien à faire pour le moment";
+        } else if (niveauEntretiens == EntretienUi.INCONNU) {
+            niveau = EntretienUi.INCONNU;
+            message = "ℹ  Ajoutez vos entretiens déjà faits pour recevoir des conseils";
+        } else {
+            // Aucune règle d'entretien : le CT (s'il est présent) a déjà été pris en compte ci-dessus.
+            niveau = ctOk ? EntretienUi.OK : EntretienUi.AUCUNE_REGLE;
+            message = "ℹ  Aucun entretien à surveiller : ouvrez les « Réglages »";
         }
+
         messageBandeau.setText(message);
         bandeauEtat.getStyleClass().removeAll("bandeau-ok", "bandeau-prevoir", "bandeau-urgent", "bandeau-neutre");
         bandeauEtat.getStyleClass().add("bandeau-" + EntretienUi.suffixe(niveau));
     }
 
     private VBox creerCarteJauge(CalculateurEntretien.Bilan b) {
-        int niveau = EntretienUi.niveauDe(b.pourcentage);
+        int niveau = EntretienUi.niveauDe(b);
 
         Label nom = new Label(b.piece);
         nom.getStyleClass().add("jauge-titre");
@@ -153,9 +187,7 @@ public class VehiculeController {
     // ---------- Contrôle technique ----------
 
     /** Affiche la carte du prochain contrôle et l'historique des contrôles techniques. */
-    private void afficherControleTechnique(Vehicule v) {
-        List<ControleTechnique> controles = ControleTechniqueDB.getControlesPourVehicule(v.getId());
-        ControleTechniqueService.Suivi suivi = ControleTechniqueService.analyser(controles);
+    private void afficherControleTechnique(List<ControleTechnique> controles, ControleTechniqueService.Suivi suivi) {
         conteneurControleTechnique.getChildren().clear();
 
         if (controles.isEmpty()) {
