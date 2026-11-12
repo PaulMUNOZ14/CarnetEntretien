@@ -48,6 +48,21 @@ public class DialogueControleTechniqueController {
      */
     public static Optional<ControleTechnique> ouvrir(DashboardContext dashboard, Vehicule vehicule,
                                                      ControleTechnique existant) {
+        return ouvrir(dashboard, vehicule, existant, null);
+    }
+
+    /**
+     * Ouvre la fenêtre pour enregistrer un contrôle technique en proposant une date de réalisation.
+     *
+     * @param dashboard            services de la fenêtre principale
+     * @param vehicule             véhicule concerné
+     * @param existant             contrôle à modifier, ou {@code null} pour une création
+     * @param dateRealisationSuggeree date proposée lors d'une création (par exemple la date d'une
+     *                                planification), ou {@code null}. Une date future est ignorée.
+     * @return le contrôle saisi, ou vide si l'utilisateur a annulé
+     */
+    public static Optional<ControleTechnique> ouvrir(DashboardContext dashboard, Vehicule vehicule,
+                                                     ControleTechnique existant, LocalDate dateRealisationSuggeree) {
         FXMLLoader loader = new FXMLLoader(DialogueControleTechniqueController.class.getResource(FXML));
         VBox contenu;
         try {
@@ -56,14 +71,14 @@ public class DialogueControleTechniqueController {
             throw new UncheckedIOException(e);
         }
         DialogueControleTechniqueController controleur = loader.getController();
-        controleur.initialiser(vehicule, existant);
+        controleur.initialiser(vehicule, existant, dateRealisationSuggeree);
 
         String titre = existant == null ? "Enregistrer un contrôle technique" : "Modifier le contrôle technique";
         boolean ok = DialogueSupport.afficherFormulaire(dashboard, titre, contenu, "✔  Enregistrer", controleur::valider);
         return ok ? Optional.ofNullable(controleur.resultatSaisi) : Optional.empty();
     }
 
-    private void initialiser(Vehicule vehicule, ControleTechnique existant) {
+    private void initialiser(Vehicule vehicule, ControleTechnique existant, LocalDate dateRealisationSuggeree) {
         this.vehicule = vehicule;
         this.existant = existant;
 
@@ -76,10 +91,12 @@ public class DialogueControleTechniqueController {
             note.setText(existant.getNote() != null ? existant.getNote() : "");
         } else {
             LocalDate aujourdhui = LocalDate.now();
-            dateRealisation.setValue(aujourdhui);
+            LocalDate realisation = dateRealisationSuggeree != null && !dateRealisationSuggeree.isAfter(aujourdhui)
+                    ? dateRealisationSuggeree : aujourdhui;
+            dateRealisation.setValue(realisation);
             resultat.setValue(ControleTechnique.Resultat.FAVORABLE);
             dateProchaine.setValue(ControleTechniqueService.prochaineDate(
-                    aujourdhui, ControleTechnique.Resultat.FAVORABLE));
+                    realisation, ControleTechnique.Resultat.FAVORABLE));
         }
         initialisation = false;
 

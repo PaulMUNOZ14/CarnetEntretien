@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import java.net.URL?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.VBox?>
+
+<!-- Formulaire « Planifier un contrôle technique ». Contrôleur : DialogueControleTechniquePlanificationController. -->
+<VBox spacing="12.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.carnetentretien.carnetentretien.controller.dialogue.DialogueControleTechniquePlanificationController">
+  <stylesheets>
+    <URL value="@../style.css" />
+  </stylesheets>
+  <padding>
+    <Insets bottom="4.0" left="10.0" right="10.0" top="6.0" />
+  </padding>
+
+  <Label styleClass="texte-doux, intro-dialogue" text="Choisissez le véhicule et la date prévue du contrôle technique. Une fois le contrôle passé, marquez-le comme réalisé depuis le calendrier." wrapText="true" />
+
+  <VBox spacing="6.0">
+    <Label styleClass="question-champ" text="Pour quel véhicule ?" />
+    <ComboBox fx:id="vehicule" maxWidth="Infinity" promptText="Choisissez un véhicule" />
+  </VBox>
+
+  <VBox spacing="6.0">
+    <Label styleClass="question-champ" text="À quelle date est-il prévu ?" />
+    <DatePicker fx:id="date" maxWidth="Infinity" />
+    <Label styleClass="aide-champ" text="La date doit être aujourd'hui ou plus tard." wrapText="true" />
+  </VBox>
+
+  <VBox spacing="6.0">
+    <Label styleClass="question-champ" text="Une remarque ? (facultatif)" />
+    <TextField fx:id="note" maxWidth="Infinity" promptText="Ex : centre de contrôle, contre-visite…" />
+  </VBox>
+</VBox>

@@ -1,6 +1,7 @@
 package com.carnetentretien.carnetentretien.service;
 
 import com.carnetentretien.carnetentretien.model.ControleTechnique;
+import com.carnetentretien.carnetentretien.model.ControleTechniquePlanifie;
 import com.carnetentretien.carnetentretien.model.Entretien;
 import com.carnetentretien.carnetentretien.model.EntretienPlanifie;
 import com.carnetentretien.carnetentretien.model.Preconisation;
@@ -174,6 +175,18 @@ class CalendrierServiceTest {
                 Map.of(v.getId(), controles));
     }
 
+    /** Assemble les événements d'un seul véhicule, avec ses contrôles planifiés. */
+    private static List<EvenementCalendrier> assemblerAvecControlesPlanifies(
+            Vehicule v, List<ControleTechnique> controles, List<ControleTechniquePlanifie> controlesPlanifies) {
+        return CalendrierService.assembler(
+                List.of(v),
+                List.of(),
+                Map.of(v.getId(), List.<Entretien>of()),
+                Map.of(v.getId(), List.<EntretienPlanifie>of()),
+                Map.of(v.getId(), controles),
+                Map.of(v.getId(), controlesPlanifies));
+    }
+
     @Test
     void unControleTechniqueDonneUneEcheanceEtUneLigneDHistorique() {
         Vehicule v = voiture(1);
@@ -259,5 +272,40 @@ class CalendrierServiceTest {
         assertEquals(EvenementCalendrier.Type.PLANIFIE, evenements.get(1).getType());
         assertEquals(EvenementCalendrier.Type.CONTROLE, evenements.get(2).getType());
         assertTrue(evenements.stream().noneMatch(e -> e.getType() == EvenementCalendrier.Type.ECHEANCE));
+    }
+
+    // ---------- Contrôle technique planifié ----------
+
+    @Test
+    void unControleTechniquePlanifieApparaitDansLeCalendrierSansHistorique() {
+        Vehicule v = voiture(1);
+        LocalDate date = AUJOURDHUI.plusMonths(1);
+        ControleTechniquePlanifie planifie = new ControleTechniquePlanifie(0, v.getId(), date, "Centre agréé");
+
+        List<EvenementCalendrier> evenements = assemblerAvecControlesPlanifies(v, List.of(), List.of(planifie));
+
+        assertEquals(1, evenements.size());
+        EvenementCalendrier evenement = evenements.get(0);
+        assertEquals(EvenementCalendrier.Type.CONTROLE_PLANIFIE, evenement.getType());
+        assertEquals(date, evenement.getDate());
+        assertEquals(ControleTechniqueService.OPERATION, evenement.getOperation());
+        assertEquals(planifie, evenement.getControlePlanifie());
+    }
+
+    @Test
+    void unePlanificationDeControleTechniqueRemplaceLEcheanceCalculee() {
+        Vehicule v = voiture(1);
+        ControleTechnique controle = new ControleTechnique(0, v.getId(), AUJOURDHUI.minusMonths(1),
+                ControleTechnique.Resultat.FAVORABLE, AUJOURDHUI.plusMonths(23), null);
+        ControleTechniquePlanifie planifie = new ControleTechniquePlanifie(0, v.getId(),
+                AUJOURDHUI.plusDays(15), null);
+
+        List<EvenementCalendrier> evenements = assemblerAvecControlesPlanifies(
+                v, List.of(controle), List.of(planifie));
+
+        assertEquals(2, evenements.size());
+        assertEquals(EvenementCalendrier.Type.CONTROLE_FAIT, evenements.get(0).getType());
+        assertEquals(EvenementCalendrier.Type.CONTROLE_PLANIFIE, evenements.get(1).getType());
+        assertTrue(evenements.stream().noneMatch(e -> e.getType() == EvenementCalendrier.Type.CONTROLE));
     }
 }

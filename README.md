@@ -46,6 +46,7 @@ Ce projet propose un outil pour toute personne souhaitant suivre sérieusement l
 - [x] Calendrier des entretiens : grille mensuelle, échéances calculées, historique et planifications
 - [x] Planification d'un entretien (date, véhicule, remarque) et marquage « Fait »
 - [x] Suivi du contrôle technique : historique, échéance (2 ans ou contre-visite) et alerte à 2 mois
+- [x] Planification d'un contrôle technique dans le calendrier, avec marquage « Fait »
 
 ### En cours / À venir
 
@@ -172,12 +173,14 @@ CarnetEntretien/
     │   │       ├── Launcher.java                       # Lanceur de l'application
     │   │       ├── model/                              # Objets métier
     │   │       │   ├── ControleTechnique.java          # Objet ControleTechnique (avec le résultat)
+    │   │       │   ├── ControleTechniquePlanifie.java  # Objet Contrôle technique planifié
     │   │       │   ├── Entretien.java                  # Objet Entretien
     │   │       │   ├── EntretienPlanifie.java          # Objet Entretien planifié
     │   │       │   ├── Preconisation.java              # Objet Preconisation
     │   │       │   └── Vehicule.java                   # Objet Vehicule
     │   │       ├── db/                                 # Accès base de données
     │   │       │   ├── ControleTechniqueDB.java        # Accès aux contrôles techniques
+    │   │       │   ├── ControleTechniquePlanifieDB.java # Accès aux contrôles techniques planifiés
     │   │       │   ├── DatabaseManager.java            # Connexion, création et migration de la base
     │   │       │   ├── EntretienDB.java                # Accès aux entretiens
     │   │       │   ├── EntretienPlanifieDB.java        # Accès aux entretiens planifiés
@@ -198,6 +201,7 @@ CarnetEntretien/
     │   │       │   └── dialogue/                       # Contrôleurs des fenêtres de saisie
     │   │       │       ├── DialogueCleApiController.java
     │   │       │       ├── DialogueControleTechniqueController.java
+    │   │       │       ├── DialogueControleTechniquePlanificationController.java
     │   │       │       ├── DialogueEntretienController.java
     │   │       │       ├── DialogueKilometrageController.java
     │   │       │       ├── DialoguePlanificationController.java
@@ -225,6 +229,7 @@ CarnetEntretien/
     │       └── dialogues/                              # Fenêtres de saisie modifiables dans SceneBuilder
     │           ├── cle-api.fxml                        # Clé d'accès au service de plaques
     │           ├── controle-technique.fxml             # Enregistrement d'un contrôle technique
+    │           ├── controle-technique-planification.fxml # Planification d'un contrôle technique
     │           ├── entretien.fxml                      # Ajout/modification d'un entretien
     │           ├── kilometrage.fxml                    # Mise à jour du compteur
     │           ├── planification.fxml                  # Planification d'un entretien
@@ -240,6 +245,7 @@ CarnetEntretien/
         │   └── VehiculeTest.java                       # Test Vehicule
         ├── db/
         │   ├── ControleTechniqueDBTest.java            # Test ControleTechniqueDB
+        │   ├── ControleTechniquePlanifieDBTest.java    # Test ControleTechniquePlanifieDB
         │   ├── DatabaseManagerTest.java                # Test DatabaseManager
         │   ├── EntretienDBTest.java                    # Test EntretienDB
         │   ├── EntretienPlanifieDBTest.java            # Test EntretienPlanifieDB
@@ -263,37 +269,40 @@ CarnetEntretien/
 | Colonne | Type | Description |
 |---------|------|-------------|
 | `id` | INTEGER PK | Identifiant unique |
+| `immatriculation` | TEXT | Plaque d'immatriculation (facultative) |
 | `marque` | TEXT | Marque du véhicule |
 | `modele` | TEXT | Modèle |
 | `kilometrage_actuel` | INTEGER | Dernier kilométrage relevé |
 | `kilometrage_annuel_estime` | INTEGER | Estimation km/an |
+| `image_url` | TEXT | URL de la photo trouvée par la recherche de plaque |
+| `image_locale` | TEXT | Chemin de la photo personnelle importée |
 
 ### Table `Entretien_Fait`
 
 | Colonne | Type | Description |
 |---------|------|-------------|
 | `id` | INTEGER PK | Identifiant unique |
-| `vehicule_id` | INTEGER | Identifiant du véhicule |
+| `vehicule_id` | INTEGER | Identifiant du véhicule (clé étrangère vers `Vehicule`) |
 | `type_operation` | TEXT | Type d'opération |
 | `date_realisation` | DATE | Date de réalisation |
 | `kilometrage_realisation` | INTEGER | Kilométrage du véhicule au moment de l'opération |
-| `cout` | REAL | cout de l'opération |
+| `cout` | REAL | Coût de l'opération |
 
-### Tables `Preconisation`
+### Table `Preconisation`
 
 | Colonne | Type | Description |
 |---------|------|-------------|
 | `id` | INTEGER PK | Identifiant unique |
 | `type_operation` | TEXT | Type d'opération |
 | `intervalle_km` | INTEGER | Intervalle en kilomètres |
-| `intervalle_mois` | INTEGER | Intervalle en mois|
+| `intervalle_mois` | INTEGER | Intervalle en mois |
 
 ### Table `Entretien_Planifie`
 
 | Colonne | Type | Description |
 |---------|------|-------------|
 | `id` | INTEGER PK | Identifiant unique |
-| `vehicule_id` | INTEGER | Identifiant du véhicule |
+| `vehicule_id` | INTEGER | Identifiant du véhicule (clé étrangère vers `Vehicule`) |
 | `type_operation` | TEXT | Type d'opération prévue |
 | `date_prevue` | DATE | Date à laquelle l'entretien est prévu |
 | `note` | TEXT | Remarque libre (facultative) |
@@ -303,10 +312,19 @@ CarnetEntretien/
 | Colonne | Type | Description |
 |---------|------|-------------|
 | `id` | INTEGER PK | Identifiant unique |
-| `vehicule_id` | INTEGER | Identifiant du véhicule |
+| `vehicule_id` | INTEGER | Identifiant du véhicule (clé étrangère vers `Vehicule`) |
 | `date_realisation` | DATE | Date du contrôle |
 | `resultat` | TEXT | `FAVORABLE` ou `DEFAVORABLE` |
 | `date_prochaine` | DATE | Date de la prochaine visite (2 ans ou 2 mois) |
+| `note` | TEXT | Remarque libre (facultative) |
+
+### Table `ControleTechnique_Planifie`
+
+| Colonne | Type | Description |
+|---------|------|-------------|
+| `id` | INTEGER PK | Identifiant unique |
+| `vehicule_id` | INTEGER | Identifiant du véhicule (clé étrangère vers `Vehicule`) |
+| `date_prevue` | DATE | Date à laquelle le contrôle technique est prévu |
 | `note` | TEXT | Remarque libre (facultative) |
 
 ## Principe de la prédiction
@@ -332,7 +350,9 @@ Le suivi du contrôle technique s'appuie sur un historique complet (table `Contr
 - la date proposée reste modifiable (le rapport officiel fait foi) ;
 - le prochain contrôle est signalé **2 mois** avant son échéance (badge « À prévoir », bandeau et
   événements dans le calendrier), puis « En retard » une fois la date dépassée ;
-- la suppression d'un véhicule efface aussi ses contrôles techniques.
+- un contrôle peut être **planifié** depuis le calendrier (date, véhicule, remarque) : la
+  planification remplace alors l'échéance calculée, puis « Fait » enregistre le contrôle réalisé ;
+- la suppression d'un véhicule efface aussi ses contrôles techniques et leurs planifications.
 
 ## Contribution
 
@@ -340,7 +360,7 @@ Les contributions sont les bienvenues ! N'hésitez pas à ouvrir une ***issue***
 
 ## Licence
 
-Copyright (c) 2026 PaulMUNOZ14. Tous droits réservés.
+Copyright (c) 2026 [PaulMUNOZ14](https://github.com/PaulMUNOZ14). Tous droits réservés.
 
 Aucune autorisation n'est accordée pour utiliser, copier, modifier ou distribuer ce logiciel, en tout ou en partie, sans l'accord écrit préalable de l'auteur.
 
@@ -351,4 +371,4 @@ Aucune autorisation n'est accordée pour utiliser, copier, modifier ou distribue
 
 ---
 
-**Auteur** : PaulMUNOZ14
+**Auteur** : [PaulMUNOZ14](https://github.com/PaulMUNOZ14)

@@ -2,6 +2,7 @@ package com.carnetentretien.carnetentretien.controller.vue;
 
 import com.carnetentretien.carnetentretien.controller.DashboardContext;
 import com.carnetentretien.carnetentretien.controller.dialogue.DialogueControleTechniqueController;
+import com.carnetentretien.carnetentretien.controller.dialogue.DialogueControleTechniquePlanificationController;
 import com.carnetentretien.carnetentretien.controller.dialogue.DialogueEntretienController;
 import com.carnetentretien.carnetentretien.controller.dialogue.DialoguePlanificationController;
 import com.carnetentretien.carnetentretien.controller.ui.Composants;
@@ -9,10 +10,12 @@ import com.carnetentretien.carnetentretien.controller.ui.DialogueSupport;
 import com.carnetentretien.carnetentretien.controller.ui.EntretienUi;
 import com.carnetentretien.carnetentretien.controller.ui.Formats;
 import com.carnetentretien.carnetentretien.db.ControleTechniqueDB;
+import com.carnetentretien.carnetentretien.db.ControleTechniquePlanifieDB;
 import com.carnetentretien.carnetentretien.db.EntretienDB;
 import com.carnetentretien.carnetentretien.db.EntretienPlanifieDB;
 import com.carnetentretien.carnetentretien.db.VehiculeDB;
 import com.carnetentretien.carnetentretien.model.ControleTechnique;
+import com.carnetentretien.carnetentretien.model.ControleTechniquePlanifie;
 import com.carnetentretien.carnetentretien.model.Entretien;
 import com.carnetentretien.carnetentretien.model.EntretienPlanifie;
 import com.carnetentretien.carnetentretien.model.Vehicule;
@@ -45,7 +48,7 @@ import java.util.stream.Collectors;
 
 /**
  * Contrôleur de l'écran calendrier ({@code vues/calendrier.fxml}) : grille mensuelle, liste
- * des entretiens du mois, échéances en retard et planification d'entretiens.
+ * des entretiens du mois, échéances en retard, planification d'entretiens et de contrôles techniques.
  */
 public class CalendrierController {
 
@@ -209,6 +212,11 @@ public class CalendrierController {
         if (duJour.size() > affiches) {
             Label plus = new Label("+" + (duJour.size() - affiches) + " autre" + (duJour.size() - affiches > 1 ? "s" : ""));
             plus.getStyleClass().add("jour-plus");
+            plus.setCursor(Cursor.HAND);
+            plus.setOnMouseClicked(e -> {
+                ouvrirJour(date);
+                e.consume();
+            });
             liste.getChildren().add(plus);
         }
 
@@ -218,6 +226,10 @@ public class CalendrierController {
         if (date.equals(aujourdhui)) cellule.getStyleClass().add("jour-aujourdhui");
         cellule.setMaxWidth(Double.MAX_VALUE);
         cellule.setMaxHeight(Double.MAX_VALUE);
+        if (!duJour.isEmpty()) {
+            cellule.setCursor(Cursor.HAND);
+            cellule.setOnMouseClicked(e -> ouvrirJour(date));
+        }
         return cellule;
     }
 
@@ -229,7 +241,10 @@ public class CalendrierController {
         puce.setTextOverrun(OverrunStyle.ELLIPSIS);
         puce.setTooltip(new Tooltip(libelleComplet(evenement)));
         puce.setCursor(Cursor.HAND);
-        puce.setOnMouseClicked(e -> actionner(evenement));
+        puce.setOnMouseClicked(e -> {
+            actionner(evenement);
+            e.consume();
+        });
         return puce;
     }
 
@@ -259,7 +274,7 @@ public class CalendrierController {
         if (duMois.isEmpty()) {
             Label vide = new Label(enRetard.isEmpty()
                     ? "Aucun événement ce mois-ci. Utilisez « ◀ » et « ▶ » pour changer de mois, "
-                      + "ou planifiez un entretien avec le bouton ci-dessous."
+                      + "ou planifiez un entretien ou un contrôle technique avec les boutons ci-dessous."
                     : "Aucun autre événement ce mois-ci.");
             vide.getStyleClass().add("historique-vide");
             vide.setWrapText(true);
@@ -321,14 +336,29 @@ public class CalendrierController {
 
                 ligne.getChildren().addAll(fait, modifier, supprimer);
             }
+            case CONTROLE_PLANIFIE -> {
+                Button fait = Composants.bouton("✔  Fait", "btn-succes", "btn-petit");
+                fait.setOnAction(e -> marquerControleFait(evenement));
+
+                Button modifier = Composants.bouton("✏  Modifier", "btn-modif", "btn-petit");
+                modifier.setOnAction(e -> modifierPlanificationControle(evenement));
+
+                Button supprimer = Composants.bouton("🗑  Supprimer", "btn-danger", "btn-petit");
+                supprimer.setOnAction(e -> supprimerPlanificationControle(evenement));
+
+                ligne.getChildren().addAll(fait, modifier, supprimer);
+            }
             case ECHEANCE -> {
                 Button planifier = Composants.bouton("📌  Planifier", "btn-secondaire", "btn-petit");
                 planifier.setOnAction(e -> planifierEcheance(evenement));
 
+                Button enregistrer = Composants.bouton("✔  Enregistrer", "btn-succes", "btn-petit");
+                enregistrer.setOnAction(e -> enregistrerEntretien(evenement));
+
                 Button voir = Composants.bouton("👁  Voir", "btn-discret", "btn-petit");
                 voir.setOnAction(e -> dashboard.ouvrirVehicule(evenement.getVehicule()));
 
-                ligne.getChildren().addAll(planifier, voir);
+                ligne.getChildren().addAll(planifier, enregistrer, voir);
             }
             case REALISE -> {
                 Button voir = Composants.bouton("👁  Voir", "btn-discret", "btn-petit");
@@ -336,13 +366,16 @@ public class CalendrierController {
                 ligne.getChildren().add(voir);
             }
             case CONTROLE -> {
+                Button planifier = Composants.bouton("📌  Planifier", "btn-secondaire", "btn-petit");
+                planifier.setOnAction(e -> planifierControle(evenement.getVehicule(), evenement.getDate()));
+
                 Button enregistrer = Composants.bouton("🔍  Enregistrer", "btn-succes", "btn-petit");
                 enregistrer.setOnAction(e -> enregistrerControle(evenement));
 
                 Button voir = Composants.bouton("👁  Voir", "btn-discret", "btn-petit");
                 voir.setOnAction(e -> dashboard.ouvrirVehicule(evenement.getVehicule()));
 
-                ligne.getChildren().addAll(enregistrer, voir);
+                ligne.getChildren().addAll(planifier, enregistrer, voir);
             }
             case CONTROLE_FAIT -> {
                 Button voir = Composants.bouton("👁  Voir", "btn-discret", "btn-petit");
@@ -351,6 +384,70 @@ public class CalendrierController {
             }
         }
         return ligne;
+    }
+
+    /** Ouvre le détail complet d'une journée : tous les événements, même ceux masqués par « +N autres ». */
+    private void ouvrirJour(LocalDate date) {
+        List<EvenementCalendrier> duJour = evenements.stream()
+                .filter(e -> date.equals(e.getDate()))
+                .toList();
+        if (duJour.isEmpty()) return;
+
+        Label resume = new Label(duJour.size() == 1 ? "1 événement" : duJour.size() + " événements");
+        resume.getStyleClass().add("texte-doux");
+
+        VBox contenu = new VBox(12, resume);
+        for (EvenementCalendrier evenement : duJour) {
+            contenu.getChildren().add(creerLigneJour(evenement));
+        }
+
+        DialogueSupport.afficherDetail(dashboard, capitaliser(date.format(FORMAT_JOUR)), contenu);
+    }
+
+    /** Ligne en lecture seule utilisée dans le détail d'une journée. */
+    private HBox creerLigneJour(EvenementCalendrier evenement) {
+        Label icone = new Label(icone(evenement));
+        icone.getStyleClass().addAll("evenement-icone", classeEvenement(evenement));
+
+        Label titre = new Label(evenement.getOperation());
+        titre.getStyleClass().add("evenement-titre");
+        titre.setWrapText(true);
+
+        Label detail = new Label(detail(evenement));
+        detail.getStyleClass().add("evenement-detail");
+        detail.setWrapText(true);
+
+        Label type = new Label(libelleType(evenement));
+        type.getStyleClass().addAll("badge", "badge-petit", classeBadge(evenement));
+
+        VBox texte = new VBox(3, titre, detail);
+        HBox.setHgrow(texte, Priority.ALWAYS);
+
+        HBox ligne = new HBox(14, icone, texte, type);
+        ligne.setAlignment(Pos.CENTER_LEFT);
+        ligne.getStyleClass().add("ligne-evenement");
+        if (evenement.isEnRetard()) ligne.getStyleClass().add("ligne-evenement-retard");
+        return ligne;
+    }
+
+    private String libelleType(EvenementCalendrier evenement) {
+        return switch (evenement.getType()) {
+            case ECHEANCE -> "Échéance";
+            case CONTROLE -> "Contrôle technique";
+            case PLANIFIE -> "Entretien planifié";
+            case CONTROLE_PLANIFIE -> "Contrôle planifié";
+            case REALISE -> "Entretien réalisé";
+            case CONTROLE_FAIT -> "Contrôle réalisé";
+        };
+    }
+
+    private String classeBadge(EvenementCalendrier evenement) {
+        return switch (evenement.getType()) {
+            case ECHEANCE -> "badge-" + EntretienUi.suffixe(EntretienUi.niveauDe(evenement.getPourcentage()));
+            case CONTROLE -> "badge-" + (evenement.isEnRetard() ? "urgent" : evenement.isProche() ? "prevoir" : "ok");
+            case PLANIFIE, CONTROLE_PLANIFIE -> "badge-neutre";
+            case REALISE, CONTROLE_FAIT -> "badge-ok";
+        };
     }
 
     private void dessinerBandeau() {
@@ -376,6 +473,21 @@ public class CalendrierController {
             rafraichir();
             dashboard.toast("✔  Entretien planifié");
         });
+    }
+
+    /** Planifie un contrôle technique pour le véhicule sélectionné (ou n'importe quel véhicule). */
+    @FXML
+    public void planifierControleTechnique() {
+        planifierControle(filtre, null);
+    }
+
+    private void planifierControle(Vehicule vehicule, LocalDate dateSuggeree) {
+        DialogueControleTechniquePlanificationController.ouvrirCreation(dashboard, vehicule, dateSuggeree)
+                .ifPresent(planifie -> {
+                    ControleTechniquePlanifieDB.ajouterControleTechniquePlanifie(planifie);
+                    rafraichir();
+                    dashboard.toast("✔  Contrôle technique planifié");
+                });
     }
 
     private void planifierEcheance(EvenementCalendrier evenement) {
@@ -421,6 +533,16 @@ public class CalendrierController {
         });
     }
 
+    /** Enregistre un entretien réalisé pour le véhicule de l'échéance. */
+    private void enregistrerEntretien(EvenementCalendrier evenement) {
+        DialogueEntretienController.ouvrir(dashboard, evenement.getVehicule(), null,
+                evenement.getOperation(), null).ifPresent(fait -> {
+            EntretienDB.ajouterEntretien(fait);
+            rafraichir();
+            dashboard.toast("✔  Entretien enregistré");
+        });
+    }
+
     /** Enregistre un contrôle technique réalisé pour le véhicule de l'événement. */
     private void enregistrerControle(EvenementCalendrier evenement) {
         DialogueControleTechniqueController.ouvrir(dashboard, evenement.getVehicule(), null)
@@ -431,9 +553,47 @@ public class CalendrierController {
                 });
     }
 
+    private void modifierPlanificationControle(EvenementCalendrier evenement) {
+        DialogueControleTechniquePlanificationController.ouvrirModification(dashboard, evenement.getControlePlanifie())
+                .ifPresent(planifie -> {
+                    ControleTechniquePlanifieDB.modifierControleTechniquePlanifie(planifie);
+                    rafraichir();
+                    dashboard.toast("✔  Planification modifiée");
+                });
+    }
+
+    private void supprimerPlanificationControle(EvenementCalendrier evenement) {
+        ControleTechniquePlanifie planifie = evenement.getControlePlanifie();
+        if (!DialogueSupport.confirmer(dashboard, "Supprimer cette planification",
+                "Voulez-vous vraiment supprimer le contrôle technique prévu le "
+                        + planifie.getDatePrevue().format(Formats.DATE_LONGUE) + " ?",
+                "Oui, supprimer")) {
+            return;
+        }
+        ControleTechniquePlanifieDB.supprimerControleTechniquePlanifie(planifie.getId());
+        rafraichir();
+        dashboard.toast("✔  Planification supprimée");
+    }
+
+    /** Enregistre le contrôle planifié dans l'historique, puis retire la planification. */
+    private void marquerControleFait(EvenementCalendrier evenement) {
+        ControleTechniquePlanifie planifie = evenement.getControlePlanifie();
+        LocalDate dateProposee = planifie.getDatePrevue().isAfter(LocalDate.now())
+                ? LocalDate.now() : planifie.getDatePrevue();
+        DialogueControleTechniqueController.ouvrir(dashboard, evenement.getVehicule(), null, dateProposee)
+                .ifPresent(controle -> {
+                    ControleTechniqueDB.ajouterControleTechnique(controle);
+                    ControleTechniquePlanifieDB.supprimerControleTechniquePlanifie(planifie.getId());
+                    rafraichir();
+                    dashboard.toast("✔  Contrôle technique enregistré");
+                });
+    }
+
     private void actionner(EvenementCalendrier evenement) {
         if (evenement.getType() == EvenementCalendrier.Type.PLANIFIE) {
             modifierPlanification(evenement);
+        } else if (evenement.getType() == EvenementCalendrier.Type.CONTROLE_PLANIFIE) {
+            modifierPlanificationControle(evenement);
         } else {
             dashboard.ouvrirVehicule(evenement.getVehicule());
         }
@@ -446,7 +606,7 @@ public class CalendrierController {
             case ECHEANCE -> "evenement-echeance-" + EntretienUi.suffixe(EntretienUi.niveauDe(evenement.getPourcentage()));
             case CONTROLE -> "evenement-echeance-"
                     + (evenement.isEnRetard() ? "urgent" : evenement.isProche() ? "prevoir" : "ok");
-            case PLANIFIE -> "evenement-planifie";
+            case PLANIFIE, CONTROLE_PLANIFIE -> "evenement-planifie";
             case REALISE, CONTROLE_FAIT -> "evenement-realise";
         };
     }
@@ -455,7 +615,7 @@ public class CalendrierController {
         return switch (evenement.getType()) {
             case ECHEANCE -> "⏰";
             case CONTROLE -> "🔍";
-            case PLANIFIE -> "📌";
+            case PLANIFIE, CONTROLE_PLANIFIE -> "📌";
             case REALISE, CONTROLE_FAIT -> "✔";
         };
     }
@@ -478,6 +638,14 @@ public class CalendrierController {
             }
             case PLANIFIE -> {
                 EntretienPlanifie planifie = evenement.getPlanifie();
+                String texte = libelle(evenement.getVehicule());
+                if (planifie.getNote() != null && !planifie.getNote().isBlank()) {
+                    texte += " · " + planifie.getNote();
+                }
+                yield texte;
+            }
+            case CONTROLE_PLANIFIE -> {
+                ControleTechniquePlanifie planifie = evenement.getControlePlanifie();
                 String texte = libelle(evenement.getVehicule());
                 if (planifie.getNote() != null && !planifie.getNote().isBlank()) {
                     texte += " · " + planifie.getNote();

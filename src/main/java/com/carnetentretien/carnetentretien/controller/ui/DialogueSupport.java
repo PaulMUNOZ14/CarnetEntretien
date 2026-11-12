@@ -70,20 +70,7 @@ public final class DialogueSupport {
         Composants.montrer(erreur, false);
         contenu.getChildren().add(erreur);
 
-        contenu.setPrefWidth(contexte.largeurDialogue(720));
-        if (contexte.petitEcran()) {
-            contenu.lookupAll(".intro-dialogue").forEach(n -> Composants.montrer(n, false));
-        }
-
-        ScrollPane defilement = new ScrollPane(contenu);
-        defilement.setFitToWidth(true);
-        defilement.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
-        defilement.getStyleClass().add("zone-defilement");
-        defilement.setMinHeight(0);
-        defilement.prefViewportHeightProperty().bind(
-                Bindings.min(contenu.heightProperty(), contexte.hauteurMaxDialogue()));
-        defilement.setMaxHeight(contexte.hauteurMaxDialogue());
-        dialog.getDialogPane().setContent(defilement);
+        dialog.getDialogPane().setContent(defiler(contenu, contexte));
 
         dialog.setOnShown(e -> ajusterFenetre(dialog.getDialogPane().getScene().getWindow(), contexte));
 
@@ -103,6 +90,48 @@ public final class DialogueSupport {
         });
 
         return dialog.showAndWait().filter(r -> r == ok).isPresent();
+    }
+
+    /**
+     * Affiche une fenêtre de consultation avec un simple bouton « Fermer ».
+     * Utilisée pour montrer un contenu plus long sans le modifier (par exemple le détail d'une journée
+     * du calendrier).
+     *
+     * @param contexte services de la fenêtre principale
+     * @param titre    titre de la fenêtre
+     * @param contenu  contenu à afficher, défilant si nécessaire
+     */
+    public static void afficherDetail(DashboardContext contexte, String titre, VBox contenu) {
+        Dialog<ButtonType> dialog = new Dialog<>();
+        preparer(dialog, titre, contexte);
+
+        ButtonType fermer = new ButtonType("Fermer", ButtonBar.ButtonData.CANCEL_CLOSE);
+        dialog.getDialogPane().getButtonTypes().add(fermer);
+        dialog.getDialogPane().setContent(defiler(contenu, contexte));
+
+        dialog.setOnShown(e -> ajusterFenetre(dialog.getDialogPane().getScene().getWindow(), contexte));
+
+        Button boutonFermer = (Button) dialog.getDialogPane().lookupButton(fermer);
+        boutonFermer.getStyleClass().addAll("btn", "btn-secondaire");
+        dialog.showAndWait();
+    }
+
+    /** Prépare un contenu défilant et de largeur adaptée à la fenêtre de saisie. */
+    private static ScrollPane defiler(VBox contenu, DashboardContext contexte) {
+        contenu.setPrefWidth(contexte.largeurDialogue(720));
+        if (contexte.petitEcran()) {
+            contenu.lookupAll(".intro-dialogue").forEach(n -> Composants.montrer(n, false));
+        }
+
+        ScrollPane defilement = new ScrollPane(contenu);
+        defilement.setFitToWidth(true);
+        defilement.setHbarPolicy(ScrollPane.ScrollBarPolicy.NEVER);
+        defilement.getStyleClass().add("zone-defilement");
+        defilement.setMinHeight(0);
+        defilement.prefViewportHeightProperty().bind(
+                Bindings.min(contenu.heightProperty(), contexte.hauteurMaxDialogue()));
+        defilement.setMaxHeight(contexte.hauteurMaxDialogue());
+        return defilement;
     }
 
     /** Fenêtre « Êtes-vous sûr ? » dont le bouton par défaut est « Non » pour éviter les suppressions par erreur. */

@@ -43,12 +43,15 @@ class DatabaseManagerTest extends BaseBddTest {
     }
 
     @Test
-    void initDatabaseCreeLesTroisTables() throws SQLException {
+    void initDatabaseCreeLesTablesAttendues() throws SQLException {
         List<String> tables = valeurs("SELECT name FROM sqlite_master WHERE type = 'table'", "name");
 
         assertTrue(tables.contains("Vehicule"));
         assertTrue(tables.contains("Entretien_Fait"));
         assertTrue(tables.contains("Preconisation"));
+        assertTrue(tables.contains("Entretien_Planifie"));
+        assertTrue(tables.contains("ControleTechnique"));
+        assertTrue(tables.contains("ControleTechnique_Planifie"));
     }
 
     @Test
