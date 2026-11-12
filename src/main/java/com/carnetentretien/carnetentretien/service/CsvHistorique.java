@@ -3,6 +3,7 @@ package com.carnetentretien.carnetentretien.service;
 import com.carnetentretien.carnetentretien.model.ControleTechnique;
 import com.carnetentretien.carnetentretien.model.Entretien;
 import com.carnetentretien.carnetentretien.model.EntretienPlanifie;
+import com.carnetentretien.carnetentretien.model.ReleveKilometrage;
 import com.carnetentretien.carnetentretien.model.Vehicule;
 
 import java.io.File;
@@ -23,10 +24,11 @@ public final class CsvHistorique {
     }
 
     /**
-     * Écrit un export complet : entretiens réalisés, entretiens planifiés, contrôles techniques
-     * et échéances à surveiller.
+     * Écrit un export complet : relevés kilométriques, entretiens réalisés, entretiens planifiés,
+     * contrôles techniques et échéances à surveiller.
      */
     public static void ecrire(File fichier, Vehicule vehicule,
+                              List<ReleveKilometrage> releves,
                               List<Entretien> historique,
                               List<EntretienPlanifie> planifies,
                               List<ControleTechnique> controles,
@@ -42,6 +44,27 @@ public final class CsvHistorique {
             writer.println("Kilométrage actuel :;" + vehicule.getKilometrageActuel() + " km");
             writer.println("Kilométrage annuel estimé :;" + vehicule.getKilometrageAnnuelEstime() + " km/an");
             writer.println("Date d'export :;" + LocalDate.now());
+            writer.println();
+
+            // Historique kilométrique
+            writer.println("HISTORIQUE KILOMÉTRIQUE");
+            writer.println("Date;Kilométrage;Variation;Remarque");
+            List<ReleveKilometrage> km = releves.stream()
+                    .sorted(Comparator.comparing(ReleveKilometrage::getDateReleve)
+                            .thenComparingInt(ReleveKilometrage::getId)
+                            .reversed())
+                    .toList();
+            for (int i = 0; i < km.size(); i++) {
+                ReleveKilometrage r = km.get(i);
+                String variation = "";
+                if (i + 1 < km.size()) {
+                    int delta = r.getKilometrage() - km.get(i + 1).getKilometrage();
+                    variation = delta > 0 ? "+" + delta : String.valueOf(delta);
+                }
+                writer.println(r.getDateReleve() + ";" + r.getKilometrage() + ";"
+                        + variation + ";" + echapper(r.getNote()));
+            }
+            if (km.isEmpty()) writer.println("Aucun");
             writer.println();
 
             // Entretiens réalisés
@@ -105,6 +128,19 @@ public final class CsvHistorique {
                         + echapper("Dernier contrôle : " + suiviCt.getDernier().getResultat().getLibelle()));
             }
         }
+    }
+
+    /**
+     * Ancienne signature, conservée pour les appels qui ne fournissent pas l'historique
+     * kilométrique. Le fichier produit ne contient alors aucun relevé.
+     */
+    public static void ecrire(File fichier, Vehicule vehicule,
+                              List<Entretien> historique,
+                              List<EntretienPlanifie> planifies,
+                              List<ControleTechnique> controles,
+                              List<CalculateurEntretien.Bilan> bilans,
+                              ControleTechniqueService.Suivi suiviCt) throws IOException {
+        ecrire(fichier, vehicule, List.of(), historique, planifies, controles, bilans, suiviCt);
     }
 
     private static String nomVehicule(Vehicule vehicule) {

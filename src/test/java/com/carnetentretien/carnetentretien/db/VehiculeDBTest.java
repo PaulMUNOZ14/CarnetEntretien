@@ -4,6 +4,7 @@ import com.carnetentretien.carnetentretien.BaseBddTest;
 import com.carnetentretien.carnetentretien.model.ControleTechnique;
 import com.carnetentretien.carnetentretien.model.Entretien;
 import com.carnetentretien.carnetentretien.model.EntretienPlanifie;
+import com.carnetentretien.carnetentretien.model.ReleveKilometrage;
 import com.carnetentretien.carnetentretien.model.Vehicule;
 import org.junit.jupiter.api.Test;
 
@@ -41,6 +42,12 @@ class VehiculeDBTest extends BaseBddTest {
         assertEquals(12000, v.getKilometrageAnnuelEstime());
         assertEquals("https://x/p.jpg", v.getImageUrl());
         assertEquals("abc.png", v.getImageLocale());
+
+        List<ReleveKilometrage> releves = ReleveKilometrageDB.getRelevesPourVehicule(v.getId());
+        assertEquals(1, releves.size());
+        assertEquals(45000, releves.get(0).getKilometrage());
+        assertEquals(LocalDate.now(), releves.get(0).getDateReleve());
+        assertEquals("Relevé initial", releves.get(0).getNote());
     }
 
     @Test
@@ -117,6 +124,8 @@ class VehiculeDBTest extends BaseBddTest {
                 LocalDate.of(2026, 3, 1), ControleTechnique.Resultat.FAVORABLE, LocalDate.of(2028, 3, 1)));
         ControleTechniqueDB.ajouterControleTechnique(new ControleTechnique(0, b.getId(),
                 LocalDate.of(2025, 6, 1), ControleTechnique.Resultat.DEFAVORABLE, LocalDate.of(2025, 8, 1)));
+        ReleveKilometrageDB.ajouterReleve(new ReleveKilometrage(0, a.getId(), LocalDate.of(2026, 4, 1), 1200));
+        ReleveKilometrageDB.ajouterReleve(new ReleveKilometrage(0, b.getId(), LocalDate.of(2026, 4, 1), 3200));
 
         VehiculeDB.supprimerVehicule(a.getId());
 
@@ -129,6 +138,8 @@ class VehiculeDBTest extends BaseBddTest {
         assertEquals(1, EntretienPlanifieDB.getEntretiensPlanifiesPourVehicule(b.getId()).size());
         assertTrue(ControleTechniqueDB.getControlesPourVehicule(a.getId()).isEmpty());
         assertEquals(1, ControleTechniqueDB.getControlesPourVehicule(b.getId()).size());
+        assertTrue(ReleveKilometrageDB.getRelevesPourVehicule(a.getId()).isEmpty());
+        assertFalse(ReleveKilometrageDB.getRelevesPourVehicule(b.getId()).isEmpty());
     }
 
     @Test

@@ -13,9 +13,11 @@ import com.carnetentretien.carnetentretien.controller.ui.EntretienUi;
 import com.carnetentretien.carnetentretien.controller.ui.Formats;
 import com.carnetentretien.carnetentretien.db.ControleTechniqueDB;
 import com.carnetentretien.carnetentretien.db.EntretienDB;
+import com.carnetentretien.carnetentretien.db.ReleveKilometrageDB;
 import com.carnetentretien.carnetentretien.db.VehiculeDB;
 import com.carnetentretien.carnetentretien.model.ControleTechnique;
 import com.carnetentretien.carnetentretien.model.Entretien;
+import com.carnetentretien.carnetentretien.model.ReleveKilometrage;
 import com.carnetentretien.carnetentretien.model.Vehicule;
 import com.carnetentretien.carnetentretien.service.CalculateurEntretien;
 import com.carnetentretien.carnetentretien.service.ControleTechniqueService;
@@ -51,6 +53,7 @@ public class VehiculeController {
     @FXML private HBox bandeauEtat;
     @FXML private Label messageBandeau;
     @FXML private VBox conteneurJauges;
+    @FXML private VBox conteneurKilometrage;
     @FXML private VBox conteneurControleTechnique;
     @FXML private VBox conteneurHistorique;
     @FXML private Label totalDepense;
@@ -97,6 +100,7 @@ public class VehiculeController {
             }
         }
 
+        afficherHistoriqueKilometrique(v);
         afficherControleTechnique(controles, suiviCt);
         afficherHistorique(v);
     }
@@ -182,6 +186,101 @@ public class VehiculeController {
         }
         carte.getStyleClass().addAll("carte-jauge", "jauge-" + EntretienUi.suffixe(niveau));
         return carte;
+    }
+
+    // ---------- Historique kilométrique ----------
+
+    /** Affiche les relevés du compteur, du plus récent au plus ancien. */
+    private void afficherHistoriqueKilometrique(Vehicule v) {
+        List<ReleveKilometrage> releves = ReleveKilometrageDB.getRelevesPourVehicule(v.getId());
+        conteneurKilometrage.getChildren().clear();
+
+        if (releves.isEmpty()) {
+            Label vide = new Label("Aucun relevé kilométrique enregistré.\n"
+                    + "Appuyez sur « ➕ Enregistrer un relevé » pour noter le compteur et suivre son évolution.");
+            vide.getStyleClass().add("historique-vide");
+            vide.setWrapText(true);
+            vide.setMaxWidth(Double.MAX_VALUE);
+            conteneurKilometrage.getChildren().add(vide);
+            return;
+        }
+
+        for (int i = 0; i < releves.size(); i++) {
+            ReleveKilometrage releve = releves.get(i);
+            ReleveKilometrage precedent = i + 1 < releves.size() ? releves.get(i + 1) : null;
+            conteneurKilometrage.getChildren().add(creerLigneReleve(releve, precedent));
+        }
+    }
+
+    /** Ligne de l'historique : kilométrage, date, évolution, boutons de modification/suppression. */
+    private HBox creerLigneReleve(ReleveKilometrage releve, ReleveKilometrage precedent) {
+        Label kilometrage = new Label(Formats.km(releve.getKilometrage()) + " km");
+        kilometrage.getStyleClass().add("historique-titre");
+
+        String texteDetail = releve.getDateReleve().format(Formats.DATE_LONGUE);
+        if (releve.getNote() != null && !releve.getNote().isBlank()) {
+            texteDetail += "   -   " + releve.getNote();
+        }
+        Label detail = new Label(texteDetail);
+        detail.getStyleClass().add("historique-detail");
+        detail.setWrapText(true);
+
+        VBox texte = new VBox(3, kilometrage, detail);
+        HBox.setHgrow(texte, Priority.ALWAYS);
+
+        HBox ligne = new HBox(14, texte);
+        ligne.setAlignment(Pos.CENTER_LEFT);
+        ligne.getStyleClass().add("ligne-historique");
+
+        if (precedent != null) {
+            int delta = releve.getKilometrage() - precedent.getKilometrage();
+            if (delta > 0) {
+                String depuis = precedent.getDateReleve().equals(releve.getDateReleve())
+                        ? "depuis le relevé précédent"
+                        : "depuis le " + precedent.getDateReleve().format(Formats.DATE_LONGUE);
+                Label evolution = new Label("+" + Formats.km(delta) + " km " + depuis);
+                evolution.getStyleClass().add("historique-evolution");
+                evolution.setWrapText(true);
+                ligne.getChildren().add(evolution);
+            }
+        }
+
+        Button modifier = Composants.bouton("✏  Modifier", "btn-modif", "btn-petit");
+        modifier.setOnAction(ev -> modifierReleve(releve));
+
+        Button supprimer = Composants.bouton("🗑  Supprimer", "btn-danger", "btn-petit");
+        supprimer.setOnAction(ev -> supprimerReleve(releve));
+
+        ligne.getChildren().addAll(modifier, supprimer);
+        return ligne;
+    }
+
+    private void modifierReleve(ReleveKilometrage releve) {
+        DialogueKilometrageController.ouvrir(dashboard, vehicule, releve).ifPresent(modifie -> {
+            ReleveKilometrageDB.modifierReleve(modifie);
+            rafraichirKilometrage();
+            afficher(vehicule);
+            dashboard.toast("✔  Relevé kilométrique modifié");
+        });
+    }
+
+    private void supprimerReleve(ReleveKilometrage releve) {
+        if (!DialogueSupport.confirmer(dashboard, "Supprimer ce relevé",
+                "Voulez-vous vraiment supprimer le relevé de " + Formats.km(releve.getKilometrage())
+                        + " km du " + releve.getDateReleve().format(Formats.DATE_LONGUE) + " ?",
+                "Oui, supprimer")) {
+            return;
+        }
+        ReleveKilometrageDB.supprimerReleve(releve.getId());
+        rafraichirKilometrage();
+        afficher(vehicule);
+        dashboard.toast("✔  Relevé kilométrique supprimé");
+    }
+
+    /** Aligne l'objet affiché sur le relevé le plus récent après un ajout, une modification ou une suppression. */
+    private void rafraichirKilometrage() {
+        ReleveKilometrageDB.getDernierKilometrage(vehicule.getId())
+                .ifPresent(vehicule::setKilometrageActuel);
     }
 
     // ---------- Contrôle technique ----------
@@ -412,15 +511,15 @@ public class VehiculeController {
         if (vehicule != null) dashboard.ouvrirCalendrier(vehicule);
     }
 
-    /** Met à jour le kilométrage du compteur (refuse une valeur inférieure à l'actuelle). */
+    /** Enregistre un nouveau relevé kilométrique et aligne le compteur du véhicule. */
     @FXML
     public void mettreAJourKilometrage() {
         if (vehicule == null) return;
-        DialogueKilometrageController.ouvrir(dashboard, vehicule).ifPresent(nouveauKm -> {
-            vehicule.setKilometrageActuel(nouveauKm);
-            VehiculeDB.modifierVehicule(vehicule);
+        DialogueKilometrageController.ouvrir(dashboard, vehicule).ifPresent(releve -> {
+            ReleveKilometrageDB.ajouterReleve(releve);
+            rafraichirKilometrage();
             afficher(vehicule);
-            dashboard.toast("✔  Kilométrage mis à jour");
+            dashboard.toast("✔  Relevé kilométrique enregistré");
         });
     }
 

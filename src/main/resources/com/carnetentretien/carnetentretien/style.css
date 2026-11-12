@@ -154,6 +154,7 @@
 .historique-titre { -fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #12263f; }
 .historique-detail { -fx-font-size: 16px; -fx-text-fill: #52606d; }
 .historique-prix  { -fx-font-size: 20px; -fx-font-weight: bold; -fx-text-fill: #12263f; }
+.historique-evolution { -fx-font-size: 15px; -fx-font-weight: bold; -fx-text-fill: #14633a; }
 .historique-vide  { -fx-font-size: 18px; -fx-text-fill: #52606d; -fx-padding: 20; -fx-background-color: #ffffff; -fx-background-radius: 12; -fx-border-color: #d5dde7; -fx-border-style: segments(8, 6); -fx-border-radius: 12; }
 
 .sous-titre-section { -fx-font-size: 19px; -fx-font-weight: bold; -fx-text-fill: #12263f; }
@@ -374,6 +375,7 @@
 
 .compact .historique-titre, .compact .historique-prix { -fx-font-size: 16px; }
 .compact .historique-detail { -fx-font-size: 13px; }
+.compact .historique-evolution { -fx-font-size: 13px; }
 .compact .ligne-historique { -fx-padding: 10 12; }
 .compact .sous-titre-section { -fx-font-size: 15px; }
 

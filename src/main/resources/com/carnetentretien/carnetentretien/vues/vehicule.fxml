@@ -62,6 +62,14 @@
       <VBox fx:id="conteneurJauges" spacing="14.0" />
 
       <HBox alignment="CENTER_LEFT" spacing="12.0">
+        <Label styleClass="titre-section" text="Historique kilométrique" />
+        <Region HBox.hgrow="ALWAYS" />
+        <Button onAction="#mettreAJourKilometrage" styleClass="btn, btn-secondaire, btn-petit" text="➕  Enregistrer un relevé" />
+      </HBox>
+      <Label styleClass="texte-doux" text="Chaque relevé du compteur est daté. Le kilométrage actuel suit le relevé le plus récent." wrapText="true" />
+      <VBox fx:id="conteneurKilometrage" spacing="10.0" />
+
+      <HBox alignment="CENTER_LEFT" spacing="12.0">
         <Label styleClass="titre-section" text="Contrôle technique" />
         <Region HBox.hgrow="ALWAYS" />
         <Button onAction="#enregistrerControleTechnique" styleClass="btn, btn-secondaire, btn-petit" text="➕  Enregistrer un contrôle" />

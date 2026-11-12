@@ -11,6 +11,7 @@
 **Carnet Entretien** est une application JavaFX qui permet de :
 
 - Gérer plusieurs véhicules (marque, modèle, kilométrage)
+- Tenir un historique kilométrique daté et suivre l'évolution du compteur
 - Estimer automatiquement le kilométrage actuel en fonction de votre usage annuel
 - Anticiper les échéances d'entretien (vidange, courroie de distribution, filtres, etc.)
 - Planifier les entretiens à venir et les retrouver dans un calendrier mensuel
@@ -47,10 +48,11 @@ Ce projet propose un outil pour toute personne souhaitant suivre sérieusement l
 - [x] Planification d'un entretien (date, véhicule, remarque) et marquage « Fait »
 - [x] Suivi du contrôle technique : historique, échéance (2 ans ou contre-visite) et alerte à 2 mois
 - [x] Planification d'un contrôle technique dans le calendrier, avec marquage « Fait »
+- [x] Historique kilométrique : relevés datés, évolution entre deux relevés et mise à jour du compteur
+- [x] Export CSV incluant l'historique kilométrique
 
 ### En cours / À venir
 
-- [ ] Historique kilométrique
 - [ ] Gestion des factures PDF
 - [ ] Suivi du carburant
 - [ ] Statistiques financières
@@ -177,6 +179,7 @@ CarnetEntretien/
     │   │       │   ├── Entretien.java                  # Objet Entretien
     │   │       │   ├── EntretienPlanifie.java          # Objet Entretien planifié
     │   │       │   ├── Preconisation.java              # Objet Preconisation
+    │   │       │   ├── ReleveKilometrage.java          # Objet Relevé kilométrique
     │   │       │   └── Vehicule.java                   # Objet Vehicule
     │   │       ├── db/                                 # Accès base de données
     │   │       │   ├── ControleTechniqueDB.java        # Accès aux contrôles techniques
@@ -185,6 +188,7 @@ CarnetEntretien/
     │   │       │   ├── EntretienDB.java                # Accès aux entretiens
     │   │       │   ├── EntretienPlanifieDB.java        # Accès aux entretiens planifiés
     │   │       │   ├── PreconisationDB.java            # Accès aux préconisations
+    │   │       │   ├── ReleveKilometrageDB.java        # Accès aux relevés kilométriques
     │   │       │   └── VehiculeDB.java                 # Accès aux véhicules
     │   │       ├── controller/                         # Contrôleurs FXML
     │   │       │   ├── DashboardController.java        # Fenêtre principale : navigation, toast, taille
@@ -217,6 +221,7 @@ CarnetEntretien/
     │   │           ├── CsvHistorique.java              # Écriture du fichier CSV de l'historique
     │   │           ├── EvenementCalendrier.java        # Événement affiché dans le calendrier
     │   │           ├── ExportService.java              # Export CSV (fenêtre « Enregistrer sous »)
+    │   │           ├── HistoriqueKilometrageService.java # Cohérence des relevés kilométriques
     │   │           ├── ImageService.java               # Import/copie des photos de véhicules
     │   │           └── RecherchePlaqueService.java     # Recherche d'un véhicule par plaque
     │   └── resources/com/carnetentretien/carnetentretien/
@@ -231,7 +236,7 @@ CarnetEntretien/
     │           ├── controle-technique.fxml             # Enregistrement d'un contrôle technique
     │           ├── controle-technique-planification.fxml # Planification d'un contrôle technique
     │           ├── entretien.fxml                      # Ajout/modification d'un entretien
-    │           ├── kilometrage.fxml                    # Mise à jour du compteur
+    │           ├── kilometrage.fxml                    # Saisie d'un relevé kilométrique
     │           ├── planification.fxml                  # Planification d'un entretien
     │           ├── regle.fxml                          # Ajout/modification d'une règle de suivi
     │           ├── reglages.fxml                       # Liste des règles de suivi
@@ -242,6 +247,7 @@ CarnetEntretien/
         ├── model/
         │   ├── EntretienTest.java                      # Test Entretien
         │   ├── PreconisationTest.java                  # Test Preconisation
+        │   ├── ReleveKilometrageTest.java              # Test ReleveKilometrage
         │   └── VehiculeTest.java                       # Test Vehicule
         ├── db/
         │   ├── ControleTechniqueDBTest.java            # Test ControleTechniqueDB
@@ -250,6 +256,7 @@ CarnetEntretien/
         │   ├── EntretienDBTest.java                    # Test EntretienDB
         │   ├── EntretienPlanifieDBTest.java            # Test EntretienPlanifieDB
         │   ├── PreconisationDBTest.java                # Test PreconisationDB
+        │   ├── ReleveKilometrageDBTest.java            # Test ReleveKilometrageDB
         │   └── VehiculeDBTest.java                     # Test VehiculeDB
         └── service/
             ├── AppPathsTest.java                       # Test AppPaths
@@ -258,6 +265,7 @@ CarnetEntretien/
             ├── ConfigServiceTest.java                  # Test ConfigService
             ├── ControleTechniqueServiceTest.java       # Test ControleTechniqueService
             ├── CsvHistoriqueTest.java                  # Test CsvHistorique
+            ├── HistoriqueKilometrageServiceTest.java   # Test HistoriqueKilometrageService
             ├── ImageServiceTest.java                   # Test ImageService
             └── RecherchePlaqueServiceTest.java         # Test RecherchePlaqueService
 ```
@@ -327,6 +335,16 @@ CarnetEntretien/
 | `date_prevue` | DATE | Date à laquelle le contrôle technique est prévu |
 | `note` | TEXT | Remarque libre (facultative) |
 
+### Table `Releve_Kilometrage`
+
+| Colonne | Type | Description |
+|---------|------|-------------|
+| `id` | INTEGER PK | Identifiant unique |
+| `vehicule_id` | INTEGER | Identifiant du véhicule (clé étrangère vers `Vehicule`) |
+| `date_releve` | DATE | Date de la lecture du compteur (jamais dans le futur) |
+| `kilometrage` | INTEGER | Valeur affichée au compteur ce jour-là |
+| `note` | TEXT | Remarque libre (facultative) |
+
 ## Principe de la prédiction
 
 Le moteur extrapole le kilométrage du jour à partir du dernier relevé :
@@ -340,6 +358,25 @@ Chaque pièce d'entretien est ensuite comparée à sa prochaine échéance :
 - **< 80%** de la limite → OK
 - **80% – 100%** → À prévoir
 - **> 100%** → Urgent
+
+## Historique kilométrique
+
+Le kilométrage n'est pas une simple valeur modifiable : chaque lecture du compteur est conservée
+comme un **relevé daté** (table `Releve_Kilometrage`), avec une remarque facultative.
+
+- le relevé le plus récent détermine le `kilometrage_actuel` du véhicule, utilisé par les jauges
+  et les prévisions d'échéance ;
+- plusieurs relevés peuvent être saisis le même jour, mais un nouveau relevé ne peut pas être
+  inférieur au précédent du même jour ;
+- la saisie est refusée si la date est dans le futur, si le kilométrage est négatif ou identique
+  à un relevé existant, ou si le compteur reculerait par rapport au relevé précédent ou
+  dépasserait le relevé suivant ;
+- le champ « Kilomètres au compteur » est désactivé lors de la modification d'un véhicule : la
+  mise à jour passe par le bouton « ➕ Enregistrer un relevé » de l'écran du véhicule ;
+- un véhicule créé reçoit automatiquement un relevé initial daté du jour ; les véhicules créés
+  avant cette fonctionnalité en reçoivent un à la première ouverture de la base migrée ;
+- supprimer un véhicule supprime aussi son historique kilométrique ;
+- l'export CSV contient une section `HISTORIQUE KILOMÉTRIQUE` avec la variation entre deux relevés.
 
 ## Contrôle technique
 

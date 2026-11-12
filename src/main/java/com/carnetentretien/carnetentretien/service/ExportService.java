@@ -4,10 +4,12 @@ import com.carnetentretien.carnetentretien.db.ControleTechniqueDB;
 import com.carnetentretien.carnetentretien.db.EntretienDB;
 import com.carnetentretien.carnetentretien.db.EntretienPlanifieDB;
 import com.carnetentretien.carnetentretien.db.PreconisationDB;
+import com.carnetentretien.carnetentretien.db.ReleveKilometrageDB;
 import com.carnetentretien.carnetentretien.model.ControleTechnique;
 import com.carnetentretien.carnetentretien.model.Entretien;
 import com.carnetentretien.carnetentretien.model.EntretienPlanifie;
 import com.carnetentretien.carnetentretien.model.Preconisation;
+import com.carnetentretien.carnetentretien.model.ReleveKilometrage;
 import com.carnetentretien.carnetentretien.model.Vehicule;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -23,7 +25,8 @@ public class ExportService {
 
     /**
      * Demande à l'utilisateur où enregistrer le fichier CSV puis écrit un export complet
-     * (entretiens réalisés, planifiés, contrôles techniques et échéances). Ne fait rien s'il annule.
+     * (relevés kilométriques, entretiens réalisés, planifiés, contrôles techniques et échéances).
+     * Ne fait rien s'il annule.
      *
      * @param vehicule véhicule concerné
      * @return {@code true} si le fichier a été écrit, {@code false} si l'utilisateur a annulé ou en cas d'erreur
@@ -39,6 +42,7 @@ public class ExportService {
         if (fichier == null) return false;
 
         try {
+            List<ReleveKilometrage> releves = ReleveKilometrageDB.getRelevesPourVehicule(vehicule.getId());
             List<Entretien> historique = EntretienDB.getEntretiensPourVehicule(vehicule.getId());
             List<EntretienPlanifie> planifies = EntretienPlanifieDB.getEntretiensPlanifiesPourVehicule(vehicule.getId());
             List<ControleTechnique> controles = ControleTechniqueDB.getControlesPourVehicule(vehicule.getId());
@@ -46,7 +50,7 @@ public class ExportService {
             List<CalculateurEntretien.Bilan> bilans = CalculateurEntretien.analyserEntretien(vehicule, historique, regles);
             ControleTechniqueService.Suivi suiviCt = ControleTechniqueService.analyser(controles);
 
-            CsvHistorique.ecrire(fichier, vehicule, historique, planifies, controles, bilans, suiviCt);
+            CsvHistorique.ecrire(fichier, vehicule, releves, historique, planifies, controles, bilans, suiviCt);
             return true;
         } catch (Exception e) {
             System.err.println("Erreur lors de l'export : " + e.getMessage());

@@ -1,5 +1,6 @@
 package com.carnetentretien.carnetentretien.db;
 
+import com.carnetentretien.carnetentretien.model.ReleveKilometrage;
 import com.carnetentretien.carnetentretien.model.Vehicule;
 
 import java.sql.Connection;
@@ -7,6 +8,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,12 +18,16 @@ import java.util.List;
  */
 public class VehiculeDB {
 
-    /** Enregistre un nouveau véhicule (son id est généré par la base ; celui de l'objet est ignoré). */
+    /**
+     * Enregistre un nouveau véhicule (son id est généré par la base ; celui de l'objet est ignoré)
+     * et crée son premier relevé kilométrique, daté du jour.
+     */
     public static void ajouterVehicule(Vehicule vehicule) {
         String sql = "INSERT INTO Vehicule(immatriculation, marque, modele, kilometrage_actuel, kilometrage_annuel_estime, image_url, image_locale) " + "VALUES(?,?,?,?,?,?,?)";
+        int id = 0;
 
         try (Connection conn = DatabaseManager.connect();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+             PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             pstmt.setString(1, vehicule.getImmatriculation());
             pstmt.setString(2, vehicule.getMarque());
@@ -33,8 +39,19 @@ public class VehiculeDB {
 
             pstmt.executeUpdate();
 
+            try (ResultSet cles = pstmt.getGeneratedKeys()) {
+                if (cles.next()) {
+                    id = cles.getInt(1);
+                    vehicule.setId(id);
+                }
+            }
         } catch (SQLException e) {
             System.err.println("Erreur lors de l'ajout du véhicule : " + e.getMessage());
+        }
+
+        if (id > 0) {
+            ReleveKilometrageDB.ajouterReleve(new ReleveKilometrage(
+                    0, id, LocalDate.now(), vehicule.getKilometrageActuel(), "Relevé initial"));
         }
     }
 
@@ -63,7 +80,7 @@ public class VehiculeDB {
 
     /**
      * Supprime un véhicule, <b>tout son historique d'entretien</b>, ses entretiens planifiés,
-     * ses contrôles techniques et ses contrôles techniques planifiés.
+     * ses contrôles techniques, ses contrôles techniques planifiés et son historique kilométrique.
      * Le fichier de la photo personnelle n'est pas touché : voir {@code ImageService#supprimer}.
      */
     public static void supprimerVehicule(int id) {
@@ -71,6 +88,7 @@ public class VehiculeDB {
         String sqlPlanifies = "DELETE FROM Entretien_Planifie WHERE vehicule_id = ?";
         String sqlControles = "DELETE FROM ControleTechnique WHERE vehicule_id = ?";
         String sqlControlesPlanifies = "DELETE FROM ControleTechnique_Planifie WHERE vehicule_id = ?";
+        String sqlReleves = "DELETE FROM Releve_Kilometrage WHERE vehicule_id = ?";
         String sqlVehicule = "DELETE FROM Vehicule WHERE id = ?";
 
         try (Connection conn = DatabaseManager.connect();
@@ -78,6 +96,7 @@ public class VehiculeDB {
              PreparedStatement pstmtPlanifies = conn.prepareStatement(sqlPlanifies);
              PreparedStatement pstmtControles = conn.prepareStatement(sqlControles);
              PreparedStatement pstmtControlesPlanifies = conn.prepareStatement(sqlControlesPlanifies);
+             PreparedStatement pstmtReleves = conn.prepareStatement(sqlReleves);
              PreparedStatement pstmtVehicule = conn.prepareStatement(sqlVehicule)) {
 
             pstmtEntretiens.setInt(1, id);
@@ -91,6 +110,9 @@ public class VehiculeDB {
 
             pstmtControlesPlanifies.setInt(1, id);
             pstmtControlesPlanifies.executeUpdate();
+
+            pstmtReleves.setInt(1, id);
+            pstmtReleves.executeUpdate();
 
             pstmtVehicule.setInt(1, id);
             pstmtVehicule.executeUpdate();

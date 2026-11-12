@@ -41,6 +41,7 @@ public class DialogueVehiculeController {
     @FXML private TextField modele;
     @FXML private TextField kmCompteur;
     @FXML private TextField kmAnnuel;
+    @FXML private Label aideKmCompteur;
     @FXML private Button btnRecherche;
     @FXML private Button btnRetirerPhoto;
     @FXML private ImageView photo;
@@ -102,6 +103,9 @@ public class DialogueVehiculeController {
             marque.setText(existant.getMarque());
             modele.setText(existant.getModele());
             kmCompteur.setText(String.valueOf(existant.getKilometrageActuel()));
+            kmCompteur.setDisable(true);
+            aideKmCompteur.setText("Le compteur se met à jour depuis l'historique kilométrique : "
+                    + "utilisez le bouton « ➕ Enregistrer un relevé » sur l'écran du véhicule.");
             kmAnnuel.setText(String.valueOf(existant.getKilometrageAnnuelEstime()));
 
             apercuTitre.setText(existant.getMarque() + " " + existant.getModele());

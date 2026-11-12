@@ -62,7 +62,7 @@
     <VBox prefWidth="300.0" spacing="6.0">
       <Label styleClass="question-champ" text="Kilomètres au compteur" />
       <TextField fx:id="kmCompteur" promptText="Ex : 45000" />
-      <Label styleClass="aide-champ" text="Chiffres uniquement. Ex : 45000" wrapText="true" />
+      <Label fx:id="aideKmCompteur" styleClass="aide-champ" text="Chiffres uniquement. Ex : 45000" wrapText="true" />
     </VBox>
     <VBox prefWidth="300.0" spacing="6.0">
       <Label styleClass="question-champ" text="Kilomètres par an (environ)" />

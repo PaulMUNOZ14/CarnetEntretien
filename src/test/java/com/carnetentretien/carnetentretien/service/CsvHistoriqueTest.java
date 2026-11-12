@@ -4,6 +4,7 @@ import com.carnetentretien.carnetentretien.model.ControleTechnique;
 import com.carnetentretien.carnetentretien.model.Entretien;
 import com.carnetentretien.carnetentretien.model.EntretienPlanifie;
 import com.carnetentretien.carnetentretien.model.Preconisation;
+import com.carnetentretien.carnetentretien.model.ReleveKilometrage;
 import com.carnetentretien.carnetentretien.model.Vehicule;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -68,6 +69,24 @@ class CsvHistoriqueTest {
         assertTrue(contenu.contains("À SURVEILLER"));
         assertTrue(contenu.contains("Entretien;Vidange;"));
         assertTrue(contenu.contains("Contrôle technique;Contrôle technique;2027-05-10;"));
+    }
+
+    @Test
+    void lExportContientLHistoriqueKilometrique(@TempDir Path dossier) throws IOException {
+        File fichier = dossier.resolve("export.csv").toFile();
+        List<ReleveKilometrage> releves = List.of(
+                new ReleveKilometrage(1, 1, LocalDate.of(2026, 3, 1), 50000, "Départ"),
+                new ReleveKilometrage(2, 1, LocalDate.of(2026, 4, 1), 53000, null));
+        List<Preconisation> regles = List.of(new Preconisation(1, "Vidange", 15000, 12));
+        List<CalculateurEntretien.Bilan> bilans = CalculateurEntretien.analyserEntretien(peugeot, List.of(), regles);
+        ControleTechniqueService.Suivi suiviCt = ControleTechniqueService.analyser(List.of());
+
+        CsvHistorique.ecrire(fichier, peugeot, releves, List.of(), List.of(), List.of(), bilans, suiviCt);
+        String contenu = Files.readString(fichier.toPath(), StandardCharsets.UTF_8);
+
+        assertTrue(contenu.contains("HISTORIQUE KILOMÉTRIQUE"));
+        assertTrue(contenu.contains("2026-04-01;53000;+3000;"));
+        assertTrue(contenu.contains("2026-03-01;50000;;Départ"));
     }
 
     @Test

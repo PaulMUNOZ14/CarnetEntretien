@@ -1,6 +1,7 @@
 package com.carnetentretien.carnetentretien.db;
 
 import com.carnetentretien.carnetentretien.BaseBddTest;
+import com.carnetentretien.carnetentretien.model.ReleveKilometrage;
 import com.carnetentretien.carnetentretien.model.Vehicule;
 import com.carnetentretien.carnetentretien.service.AppPaths;
 import org.junit.jupiter.api.Test;
@@ -10,6 +11,7 @@ import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -52,6 +54,16 @@ class DatabaseManagerTest extends BaseBddTest {
         assertTrue(tables.contains("Entretien_Planifie"));
         assertTrue(tables.contains("ControleTechnique"));
         assertTrue(tables.contains("ControleTechnique_Planifie"));
+        assertTrue(tables.contains("Releve_Kilometrage"));
+    }
+
+    @Test
+    void laTableReleveKilometrageAToutesSesColonnes() throws SQLException {
+        List<String> colonnes = valeurs("PRAGMA table_info(Releve_Kilometrage)", "name");
+
+        for (String attendue : List.of("vehicule_id", "date_releve", "kilometrage", "note")) {
+            assertTrue(colonnes.contains(attendue), "colonne manquante : " + attendue);
+        }
     }
 
     @Test
@@ -72,6 +84,28 @@ class DatabaseManagerTest extends BaseBddTest {
         DatabaseManager.initDatabase();
 
         assertEquals(1, VehiculeDB.getTousLesVehicules().size());
+    }
+
+    @Test
+    void unVehiculeSansReleveRecoitUnReleveInitialQuandLaTableEstCreee() throws SQLException {
+        try (Connection conn = DatabaseManager.connect();
+             Statement stmt = conn.createStatement()) {
+            stmt.execute("DROP TABLE Releve_Kilometrage");
+            stmt.execute("INSERT INTO Vehicule(marque, modele, kilometrage_actuel, kilometrage_annuel_estime) "
+                    + "VALUES('Renault','Clio',80000,10000)");
+        }
+
+        DatabaseManager.initDatabase();
+
+        Vehicule v = VehiculeDB.getTousLesVehicules().get(0);
+        List<ReleveKilometrage> releves = ReleveKilometrageDB.getRelevesPourVehicule(v.getId());
+        assertEquals(1, releves.size());
+        assertEquals(80000, releves.get(0).getKilometrage());
+        assertEquals(LocalDate.now(), releves.get(0).getDateReleve());
+        assertEquals("Relevé initial", releves.get(0).getNote());
+
+        DatabaseManager.initDatabase();
+        assertEquals(1, ReleveKilometrageDB.getRelevesPourVehicule(v.getId()).size());
     }
 
     @Test
