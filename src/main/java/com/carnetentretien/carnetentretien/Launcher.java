@@ -1,5 +1,6 @@
 package com.carnetentretien.carnetentretien;
 
+import com.carnetentretien.carnetentretien.service.IdentiteWindows;
 import javafx.application.Application;
 
 /**
@@ -8,8 +9,9 @@ import javafx.application.Application;
  * « modules JavaFX manquants », et c'est la classe à exécuter depuis l'IDE.
  */
 public class Launcher {
-    /** Démarre {@link HelloApplication}. */
+    /** Déclare le nom de l'application à Windows, puis démarre {@link HelloApplication}. */
     public static void main(String[] args) {
+        IdentiteWindows.appliquer();
         Application.launch(HelloApplication.class, args);
     }
 }

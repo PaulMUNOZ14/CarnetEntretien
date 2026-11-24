@@ -1,6 +1,7 @@
 package com.carnetentretien.carnetentretien;
 
 import com.carnetentretien.carnetentretien.db.DatabaseManager;
+import com.carnetentretien.carnetentretien.service.IdentiteWindows;
 import com.carnetentretien.carnetentretien.service.NotificationService;
 import javafx.application.Application;
 import javafx.application.HostServices;
@@ -31,6 +32,16 @@ public class HelloApplication extends Application {
      */
     public static void ouvrirLien(String url) {
         if (services != null) services.showDocument(url);
+    }
+
+    /**
+     * Déclare le nom affiché par Windows dans les notifications, avant la création de la
+     * fenêtre principale. Complète l'appel de {@link Launcher} quand l'application est
+     * lancée directement par JavaFX (IDE, {@code javafx:run}).
+     */
+    @Override
+    public void init() {
+        IdentiteWindows.appliquer();
     }
 
     /**

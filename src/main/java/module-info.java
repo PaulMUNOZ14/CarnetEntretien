@@ -5,6 +5,8 @@ module com.carnetentretien.carnetentretien {
     requires org.controlsfx.controls;
     requires org.kordamp.ikonli.javafx;
     requires org.kordamp.ikonli.core;
+    requires com.sun.jna;
+    requires com.sun.jna.platform;
     requires java.sql;
     requires java.net.http;
     requires java.desktop;
