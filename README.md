@@ -39,7 +39,7 @@ Ce projet propose un outil pour toute personne souhaitant suivre sérieusement l
 - [x] Tableau de bord avec jauges d'usure (ProgressIndicator + CSS)
 - [x] Alertes visuelles (À prévoir / Urgent)
 - [x] Algorithme de prédiction des échéances (extrapolation du kilométrage)
-- [x] Export des données en SVG
+- [x] Export des données en CSV
 - [x] Ajout d'un véhicule avec sa plaque d'immatriculation
 - [x] Affichage de la voiture si saisie par plaque d'immatriculation
 - [x] Photo personnelle du véhicule : importée depuis l'ordinateur et copiée dans l'application
