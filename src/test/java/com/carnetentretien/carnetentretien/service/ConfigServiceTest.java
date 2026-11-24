@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 
 import java.io.IOException;
 import java.nio.file.Files;
+import java.time.LocalDate;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -130,5 +131,54 @@ class ConfigServiceTest extends BaseDonneesTest {
     @Test
     void leLienPourObtenirUneCleVaVersLeServiceUtiliseParLApplication() {
         assertTrue(ConfigService.LIEN_OBTENIR_CLE.startsWith("https://apiplaqueimmatriculation.com/"));
+    }
+
+    // ---------- Notifications ----------
+
+    @Test
+    void lesNotificationsSontActivesParDefaut() {
+        assertTrue(ConfigService.notificationsActives());
+    }
+
+    @Test
+    void leChoixDesNotificationsEstMemoriseSansToucherALaCle() {
+        ConfigService.setCleApi("abc123");
+
+        ConfigService.setNotificationsActives(false);
+        assertFalse(ConfigService.notificationsActives());
+        assertEquals(Optional.of("abc123"), ConfigService.getCleApi());
+
+        ConfigService.setNotificationsActives(true);
+        assertTrue(ConfigService.notificationsActives());
+        assertEquals(Optional.of("abc123"), ConfigService.getCleApi());
+    }
+
+    @Test
+    void laDerniereNotificationEstMemoriseeParDate() {
+        assertTrue(ConfigService.derniereNotification().isEmpty());
+
+        LocalDate date = LocalDate.of(2026, 11, 24);
+        ConfigService.setDerniereNotification(date);
+        assertEquals(Optional.of(date), ConfigService.derniereNotification());
+
+        ConfigService.setDerniereNotification(null);
+        assertTrue(ConfigService.derniereNotification().isEmpty());
+    }
+
+    @Test
+    void uneDateDeDerniereNotificationInvalideEstIgnoree() throws IOException {
+        Files.writeString(AppPaths.fichierConfiguration(), "notifications.derniere=pas-une-date\n");
+
+        assertTrue(ConfigService.derniereNotification().isEmpty());
+    }
+
+    @Test
+    void lesReglagesDeNotificationSontEcritsDansLeFichier() throws IOException {
+        ConfigService.setNotificationsActives(false);
+        ConfigService.setDerniereNotification(LocalDate.of(2026, 11, 24));
+
+        String contenu = Files.readString(AppPaths.fichierConfiguration());
+        assertTrue(contenu.contains("notifications.actives=false"));
+        assertTrue(contenu.contains("notifications.derniere=2026-11-24"));
     }
 }

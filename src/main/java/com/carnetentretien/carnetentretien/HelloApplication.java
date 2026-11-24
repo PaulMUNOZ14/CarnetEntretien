@@ -1,6 +1,7 @@
 package com.carnetentretien.carnetentretien;
 
 import com.carnetentretien.carnetentretien.db.DatabaseManager;
+import com.carnetentretien.carnetentretien.service.NotificationService;
 import javafx.application.Application;
 import javafx.application.HostServices;
 import javafx.fxml.FXMLLoader;
@@ -33,8 +34,9 @@ public class HelloApplication extends Application {
     }
 
     /**
-     * Démarre l'application : crée ou migre la base SQLite, charge l'interface
-     * et affiche la fenêtre (taille limitée à 95 % de la largeur et 92 % de la hauteur de l'écran).
+     * Démarre l'application : crée ou migre la base SQLite, charge l'interface,
+     * affiche la fenêtre (taille limitée à 95 % de la largeur et 92 % de la hauteur de l'écran)
+     * et met en place les rappels dans la zone de notification Windows.
      *
      * @param stage fenêtre principale fournie par JavaFX
      * @throws IOException si le fichier FXML ne peut pas être chargé
@@ -56,6 +58,14 @@ public class HelloApplication extends Application {
         stage.setMinHeight(Math.min(480, ecran.getHeight()));
         stage.setScene(scene);
         stage.show();
+
+        NotificationService.demarrer(stage);
+    }
+
+    /** Retire l'icône de notification et arrête la surveillance quand l'application se ferme. */
+    @Override
+    public void stop() {
+        NotificationService.arreter();
     }
 
     /** Lance l'application (utilisé par l'IDE ; voir aussi {@link Launcher}). */

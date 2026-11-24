@@ -7,12 +7,15 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.Optional;
 import java.util.Properties;
 
 /**
  * Réglages de l'utilisateur, dans {@code config.properties} : clé API (même clé {@code plaque.api.token}
- * qu'avant, les installations existantes continuent donc de fonctionner) et mémoire de la fenêtre d'aide.
+ * qu'avant, les installations existantes continuent donc de fonctionner), mémoire de la fenêtre d'aide
+ * et réglages des notifications Windows.
  * Le fichier est relu à chaque appel : rien n'est gardé en mémoire.
  */
 public final class ConfigService {
@@ -28,6 +31,12 @@ public final class ConfigService {
 
     /** Propriété qui retient que la fenêtre d'explication de la clé a déjà été montrée au premier lancement. */
     static final String AIDE_AFFICHEE = "aide.cle.affichee";
+
+    /** Propriété qui active ou désactive les notifications Windows. */
+    static final String NOTIFICATIONS = "notifications.actives";
+
+    /** Propriété qui retient la date du dernier rappel affiché, pour ne pas le répéter le même jour. */
+    static final String DERNIERE_NOTIFICATION = "notifications.derniere";
 
     /** @return la clé enregistrée dans config.properties, ou vide s'il n'y en a pas */
     public static Optional<String> getCleApi() {
@@ -60,6 +69,44 @@ public final class ConfigService {
     public static void marquerAideAffichee() {
         Properties p = charger();
         p.setProperty(AIDE_AFFICHEE, "true");
+        sauvegarder(p);
+    }
+
+    /** @return {@code true} si les notifications Windows sont activées (valeur par défaut : oui) */
+    public static boolean notificationsActives() {
+        return Boolean.parseBoolean(charger().getProperty(NOTIFICATIONS, "true"));
+    }
+
+    /** Active ou désactive les notifications Windows. */
+    public static void setNotificationsActives(boolean actives) {
+        Properties p = charger();
+        p.setProperty(NOTIFICATIONS, Boolean.toString(actives));
+        sauvegarder(p);
+    }
+
+    /** @return la date du dernier rappel affiché, ou vide si aucun rappel n'a encore été montré */
+    public static Optional<LocalDate> derniereNotification() {
+        String valeur = charger().getProperty(DERNIERE_NOTIFICATION);
+        if (valeur == null || valeur.isBlank()) return Optional.empty();
+        try {
+            return Optional.of(LocalDate.parse(valeur.trim()));
+        } catch (DateTimeParseException e) {
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * Mémorise la date du dernier rappel affiché.
+     *
+     * @param date date du rappel, ou {@code null} pour effacer la mémoire
+     */
+    public static void setDerniereNotification(LocalDate date) {
+        Properties p = charger();
+        if (date == null) {
+            p.remove(DERNIERE_NOTIFICATION);
+        } else {
+            p.setProperty(DERNIERE_NOTIFICATION, date.toString());
+        }
         sauvegarder(p);
     }
 

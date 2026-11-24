@@ -50,6 +50,7 @@ Ce projet propose un outil pour toute personne souhaitant suivre sérieusement l
 - [x] Planification d'un contrôle technique dans le calendrier, avec marquage « Fait »
 - [x] Historique kilométrique : relevés datés, évolution entre deux relevés et mise à jour du compteur
 - [x] Export CSV incluant l'historique kilométrique
+- [x] Notifications Windows : rappels d'échéances, de contrôle technique et de planifications proches
 
 ### En cours / À venir
 
@@ -58,7 +59,6 @@ Ce projet propose un outil pour toute personne souhaitant suivre sérieusement l
 - [ ] Statistiques financières
 - [ ] Graphiques de consommation
 - [ ] Comparaison entre véhicules
-- [ ] Notifications Windows
 - [ ] Sauvegardes automatiques
 - [ ] Import/export JSON
 - [ ] Journal d'activité
@@ -78,6 +78,7 @@ Ce projet propose un outil pour toute personne souhaitant suivre sérieusement l
 | Base de données | SQLite (via `sqlite-jdbc`) |
 | Icônes | Ikonli |
 | UI | ControlsFX |
+| Notifications | Zone de notification Windows (`java.awt.SystemTray`) |
 | Tests | JUnit 5 |
 
 ## Où sont stockées les données ?
@@ -210,7 +211,7 @@ CarnetEntretien/
     │   │       │       ├── DialogueKilometrageController.java
     │   │       │       ├── DialoguePlanificationController.java
     │   │       │       ├── DialogueRegleController.java
-    │   │       │       ├── DialogueReglagesController.java
+    │   │       │       ├── DialogueReglagesController.java # Règles de suivi et notifications
     │   │       │       └── DialogueVehiculeController.java
     │   │       └── service/                            # Logique métier
     │   │           ├── AppPaths.java                   # Emplacement des données (base, images, config)
@@ -223,6 +224,8 @@ CarnetEntretien/
     │   │           ├── ExportService.java              # Export CSV (fenêtre « Enregistrer sous »)
     │   │           ├── HistoriqueKilometrageService.java # Cohérence des relevés kilométriques
     │   │           ├── ImageService.java               # Import/copie des photos de véhicules
+    │   │           ├── NotificationService.java        # Icône et rappels Windows
+    │   │           ├── RappelNotification.java         # Sélection et texte des rappels
     │   │           └── RecherchePlaqueService.java     # Recherche d'un véhicule par plaque
     │   └── resources/com/carnetentretien/carnetentretien/
     │       ├── style.css                               # Styles globaux
@@ -239,7 +242,7 @@ CarnetEntretien/
     │           ├── kilometrage.fxml                    # Saisie d'un relevé kilométrique
     │           ├── planification.fxml                  # Planification d'un entretien
     │           ├── regle.fxml                          # Ajout/modification d'une règle de suivi
-    │           ├── reglages.fxml                       # Liste des règles de suivi
+    │           ├── reglages.fxml                       # Règles de suivi et notifications Windows
     │           └── vehicule.fxml                       # Ajout/modification d'un véhicule
     └── test/java/com/carnetentretien/carnetentretien/  # Tests unitaires JUnit 5
         ├── BaseDonneesTest.java                        # Base des tests : dossier de données temporaire
@@ -267,6 +270,7 @@ CarnetEntretien/
             ├── CsvHistoriqueTest.java                  # Test CsvHistorique
             ├── HistoriqueKilometrageServiceTest.java   # Test HistoriqueKilometrageService
             ├── ImageServiceTest.java                   # Test ImageService
+            ├── RappelNotificationTest.java             # Test RappelNotification
             └── RecherchePlaqueServiceTest.java         # Test RecherchePlaqueService
 ```
 
@@ -390,6 +394,21 @@ Le suivi du contrôle technique s'appuie sur un historique complet (table `Contr
 - un contrôle peut être **planifié** depuis le calendrier (date, véhicule, remarque) : la
   planification remplace alors l'échéance calculée, puis « Fait » enregistre le contrôle réalisé ;
 - la suppression d'un véhicule efface aussi ses contrôles techniques et leurs planifications.
+
+## Notifications Windows
+
+L'application affiche ses rappels dans la zone de notification Windows, avec une icône et un menu
+(ouvrir l'application, vérifier les échéances, désactiver les notifications, quitter).
+
+- un contrôle automatique a lieu quelques secondes après le démarrage, puis toutes les 6 heures ;
+- un rappel n'est affiché **qu'une fois par jour** au maximum : la date du dernier rappel est
+  conservée dans `notifications.derniere` (`config.properties`) ;
+- sont signalés : les entretiens en retard, à échéance dans les 30 jours ou usés à 80 % ou plus,
+  les contrôles techniques en retard ou à prévoir dans les 2 mois, et les entretiens ou contrôles
+  planifiés dans les 7 jours (ou déjà passés) ;
+- l'option « Afficher les notifications Windows » et le bouton « Tester la notification » se
+  trouvent dans **⚙ Réglages** ; le choix est conservé dans `notifications.actives` ;
+- l'application doit rester ouverte (ou réduite) pour continuer à surveiller les échéances.
 
 ## Contribution
 

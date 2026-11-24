@@ -3,11 +3,14 @@
 <?import java.net.URL?>
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.Label?>
 <?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Separator?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<!-- Fenêtre de gestion des règles de suivi. Contrôleur : DialogueReglagesController. -->
+<!-- Fenêtre de réglages : règles de suivi et notifications Windows. Contrôleur : DialogueReglagesController. -->
 <VBox spacing="16.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.carnetentretien.carnetentretien.controller.dialogue.DialogueReglagesController">
   <stylesheets>
     <URL value="@../style.css" />
@@ -27,4 +30,16 @@
   </ScrollPane>
 
   <Button onAction="#ajouter" styleClass="btn, btn-succes" text="➕  Ajouter un entretien à surveiller" />
+
+  <Separator />
+
+  <VBox spacing="8.0">
+    <Label styleClass="sous-titre-section" text="🔔  Notifications Windows" />
+    <Label styleClass="texte-doux" text="Un rappel s'affiche au plus une fois par jour lorsqu'un entretien approche (30 jours), que le contrôle technique arrive dans les 2 mois, ou qu'une planification est proche. L'application doit rester ouverte ou réduite pour vous prévenir." wrapText="true" />
+    <CheckBox fx:id="notifications" onAction="#changerNotifications" text="Afficher les notifications Windows" />
+    <HBox alignment="CENTER_LEFT" spacing="12.0">
+      <Button fx:id="boutonTester" minWidth="-Infinity" onAction="#testerNotifications" styleClass="btn, btn-secondaire, btn-petit" text="🔔  Tester la notification" />
+      <Label fx:id="etatNotifications" HBox.hgrow="ALWAYS" styleClass="aide-champ" wrapText="true" />
+    </HBox>
+  </VBox>
 </VBox>
