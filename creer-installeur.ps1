@@ -1,7 +1,7 @@
 $ErrorActionPreference = "Stop"
 
 ./mvnw clean package -DskipTests
-Copy-Item target/CarnetEntretien-1.0-SNAPSHOT.jar target/installer/
+Copy-Item target/CarnetEntretien-1.1-SNAPSHOT.jar target/installer/
 
 jpackage `
   --type exe `
@@ -10,7 +10,7 @@ jpackage `
   --vendor "PaulMUNOZ14" `
   --app-version 1.1.0 `
   --input target/installer `
-  --main-jar CarnetEntretien-1.0-SNAPSHOT.jar `
+  --main-jar CarnetEntretien-1.1-SNAPSHOT.jar `
   --main-class com.carnetentretien.carnetentretien.Launcher `
     --runtime-image "$env:JAVA_HOME" `
   --java-options "--enable-native-access=ALL-UNNAMED" `
