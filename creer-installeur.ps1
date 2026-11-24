@@ -8,7 +8,7 @@ jpackage `
   --name "Carnet Entretien" `
   --description "Suivi de l'entretien de vos vehicules" `
   --vendor "PaulMUNOZ14" `
-  --app-version 1.0.0 `
+  --app-version 1.1.0 `
   --input target/installer `
   --main-jar CarnetEntretien-1.0-SNAPSHOT.jar `
   --main-class com.carnetentretien.carnetentretien.Launcher `
