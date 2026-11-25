@@ -4,7 +4,7 @@
   <p align="center">Application de bureau pour gérer l'entretien de vos véhicules</p>
 </p>
 
-### Site web : https://paulmunoz14.github.io/CarnetEntretien/
+### Site web : https://carnet-entretien.paulmunoz.fr/
 
 ## Description
 
