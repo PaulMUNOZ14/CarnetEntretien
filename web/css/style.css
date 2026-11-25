@@ -187,6 +187,11 @@ a:hover {
   color: var(--lien);
 }
 
+.nav a.btn-succes:hover {
+  background: #176b3a;
+  color: #fff;
+}
+
 .nav a[aria-current="page"] {
   text-decoration: underline;
   text-underline-offset: 6px;
